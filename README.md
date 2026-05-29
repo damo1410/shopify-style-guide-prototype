@@ -11,12 +11,15 @@ Right side = a live sample store that updates in real time.
 One-way flow, the whole point of the prototype:
 
 1. **TOKENS** — raw global values set once (palette swatches, fonts, base size +
-   ratio, radius, spacing, shadows). Palette swatches are the **only** place a hex
-   value is ever typed.
+   ratio, named radius/spacing/stroke scales). Palette swatches are the **only**
+   place a hex value is ever typed; each swatch auto-generates an 11-step shade
+   ramp (`50…950`).
 2. **ROLES** — semantic names (`heading color`, `surface`, `button fill`…),
-   implemented as CSS custom properties on `:root` (e.g. `--c-heading`, `--radius`).
-   A **color scheme** is just a mapping of *role → palette swatch* (dropdowns only,
-   never free hex — so a scheme can never reference an undefined color).
+   implemented as CSS custom properties on the `.store` element (e.g.
+   `--c-heading`, `--radius`). A **color scheme** is just a mapping of *role →
+   palette token* such as `neutral.950` (dropdowns only, never free hex — so a
+   scheme can never reference an undefined color). Button colors auto-derive from
+   the palette and contrast with each scheme's background.
 3. **PREVIEW** — every store element binds to a role var (`var(--c-heading)`),
    never to a raw value. Change one global token and it ripples everywhere.
 
