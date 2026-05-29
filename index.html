@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shopify Style Guide Prototype — Global Theme Settings</title>
+
+<!--
+  ============================================================================
+  SHOPIFY STYLE GUIDE PROTOTYPE  —  v1 skeleton
+  ============================================================================
+  A sandbox for testing the GLOBAL theme-settings of a premium Shopify theme.
+
+  THE BIG IDEA — three layers, one-way flow:
+
+      TOKENS  ->  ROLES  ->  PREVIEW
+
+   1) TOKENS  : raw global values you set once.
+                - Palette swatches (the ONLY place hex is ever typed)
+                - font families, base size + ratio, radius scale, spacing,
+                  shadow definitions.
+
+   2) ROLES   : semantic names ("heading color", "surface", "button bg")
+                implemented as CSS custom properties on :root.
+                Roles POINT AT tokens. A color scheme is just a mapping of
+                "role -> palette swatch". Controls only ever set role vars.
+
+   3) PREVIEW : every element in the sample store binds to a ROLE
+                (var(--c-heading), var(--radius), ...) and NEVER to a raw
+                value. So one global change ripples everywhere automatically.
+
+  HOW THE WIRING WORKS (read this before editing):
+   - All editable values live in the STATE object (search "const STATE").
+   - Any control change mutates STATE, then calls applyRoles().
+   - applyRoles() resolves TOKENS through the active scheme and writes the
+     ROLE custom properties onto <html> (document.documentElement).
+   - The preview markup below references only those role vars in its CSS.
+
+  This file is intentionally framework-free and heavily commented so it can
+  be edited from the Claude Code mobile app. Local per-section overrides are
+  NOT in this version — global settings only.
+  ============================================================================
+-->
+
+<style>
+  /* ==========================================================================
+     ROLE LAYER  —  semantic CSS custom properties (the preview reads ONLY these)
+     The defaults below let the page render before JS runs; applyRoles()
+     overwrites them at runtime from STATE.
+     ========================================================================== */
+  :root {
+    /* --- color roles (resolved from palette via the active scheme) --- */
+    --c-bg:            #ffffff;  /* page background            */
+    --c-surface:       #f2f3f5;  /* cards / raised sections    */
+    --c-heading:       #15171c;  /* heading text               */
+    --c-body:          #15171c;  /* body text                  */
+    --c-border:        #e6e8eb;  /* hairlines / dividers       */
+    --c-btn-fill:      #3257be;  /* primary button fill        */
+    --c-btn-text:      #ffffff;  /* primary button text        */
+    --c-btn2-fill:     #e2703a;  /* secondary button fill      */
+    --c-btn2-text:     #ffffff;  /* secondary button text      */
+
+    /* --- typography roles --- */
+    --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --fs-base: 16px;
+    --fs-h1: 48px; --fs-h2: 39px; --fs-h3: 31px;
+    --fs-h4: 25px; --fs-h5: 20px; --fs-h6: 16px;
+
+    /* --- shape / spacing / elevation roles --- */
+    --radius: 14px;            /* one global corner radius, reused everywhere */
+    --section-padding: 64px;   /* vertical padding of preview sections        */
+    --container-max: 1100px;   /* max width of the centered container          */
+    --gutter: 20px;            /* gap between grid / carousel items            */
+    --shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+    --btn-primary-style: fill;     /* informational; real switch is in CSS classes */
+    --btn-secondary-style: outline;
+  }
+
+  /* ==========================================================================
+     APP CHROME  (the editor shell — deliberately neutral, not themed)
+     ========================================================================== */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1c1c1c;
+    background: #fafafa;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    height: 100vh;
+  }
+
+  /* ---- left: settings panel ---- */
+  .panel {
+    background: #ffffff;
+    border-right: 1px solid #e6e6e6;
+    overflow-y: auto;
+    padding: 18px 18px 80px;
+  }
+  .panel h1 {
+    font-size: 15px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin: 4px 0 16px;
+  }
+  .group {
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .group > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 12px 14px;
+    font-weight: 600;
+    font-size: 14px;
+    background: #fbfbfb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  .group > summary::-webkit-details-marker { display: none; }
+  .group > summary::after { content: "▸"; color: #9aa0a6; transition: transform .15s; }
+  .group[open] > summary::after { transform: rotate(90deg); }
+  .group .group-body { padding: 12px 14px; }
+  .group .hint { font-size: 11px; color: #9aa0a6; font-weight: 400; margin-top: 2px; }
+
+  .row { margin-bottom: 12px; }
+  .row:last-child { margin-bottom: 0; }
+  .row label { display: block; font-size: 12px; color: #44474c; margin-bottom: 5px; font-weight: 500; }
+  .row input[type="text"],
+  .row input[type="number"],
+  .row select {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid #d9dadd;
+    border-radius: 7px;
+    font-size: 13px;
+    background: #fff;
+    color: #1c1c1c;
+  }
+  .row input[type="range"] { width: 100%; }
+  .inline { display: flex; gap: 8px; align-items: center; }
+  .inline > * { flex: 1; }
+  .val { font-size: 12px; color: #6b7280; min-width: 46px; text-align: right; flex: 0 0 auto; }
+
+  /* swatch editor (palette) */
+  .swatch { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .swatch input[type="color"] {
+    width: 34px; height: 34px; padding: 0; border: 1px solid #d9dadd;
+    border-radius: 7px; background: #fff; flex: 0 0 auto; cursor: pointer;
+  }
+  .swatch input[type="text"].sw-name { flex: 1 1 auto; }
+  .swatch input[type="text"].sw-hex  { flex: 0 0 92px; font-family: ui-monospace, Menlo, monospace; }
+  .swatch button.rm {
+    flex: 0 0 auto; border: none; background: #f3f4f6; color: #9aa0a6;
+    width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px;
+  }
+  .addbtn {
+    margin-top: 6px; width: 100%; padding: 7px; border: 1px dashed #c8cacd;
+    background: #fff; border-radius: 7px; cursor: pointer; font-size: 12px; color: #44474c;
+  }
+  .seg { display: flex; border: 1px solid #d9dadd; border-radius: 7px; overflow: hidden; }
+  .seg button {
+    flex: 1; border: none; background: #fff; padding: 7px 4px; font-size: 12px;
+    cursor: pointer; color: #44474c;
+  }
+  .seg button.active { background: #1c1c1c; color: #fff; }
+  .schemepicker { display: flex; gap: 6px; margin-bottom: 12px; }
+  .schemepicker button {
+    flex: 1; border: 1px solid #d9dadd; background: #fff; padding: 7px;
+    border-radius: 7px; cursor: pointer; font-size: 12px; color: #44474c;
+  }
+  .schemepicker button.active { border-color: #1c1c1c; background: #1c1c1c; color: #fff; }
+
+  /* ==========================================================================
+     PREVIEW SHELL  (right side). The inner store binds ONLY to role vars.
+     ========================================================================== */
+  .preview-wrap { overflow-y: auto; background: #e9eaec; }
+  .preview-bar {
+    position: sticky; top: 0; z-index: 5;
+    background: #1c1c1c; color: #fff; font-size: 12px;
+    padding: 8px 16px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .preview-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: #36c46b; display: inline-block; margin-right: 6px; }
+
+  /* The sample store — THIS is the themed surface. Everything here uses roles. */
+  .store {
+    font-family: var(--font-body);
+    color: var(--c-body);
+    background: var(--c-bg);
+    font-size: var(--fs-base);
+    line-height: 1.6;
+    min-height: 100%;
+  }
+  .store h1, .store h2, .store h3, .store h4, .store h5, .store h6 {
+    font-family: var(--font-heading);
+    color: var(--c-heading);
+    line-height: 1.15;
+    margin: 0 0 .4em;
+  }
+  .store h1 { font-size: var(--fs-h1); }
+  .store h2 { font-size: var(--fs-h2); }
+  .store h3 { font-size: var(--fs-h3); }
+  .store h4 { font-size: var(--fs-h4); }
+  .store h5 { font-size: var(--fs-h5); }
+  .store h6 { font-size: var(--fs-h6); }
+  .store p { margin: 0 0 1em; }
+  .container { max-width: var(--container-max); margin: 0 auto; padding: 0 24px; }
+  .section { padding: var(--section-padding) 0; }
+
+  /* buttons — bind to button roles + global radius */
+  .btn {
+    display: inline-block; cursor: pointer; font: inherit; font-weight: 600;
+    padding: 12px 22px; border-radius: var(--radius); text-decoration: none;
+    border: 2px solid transparent; transition: opacity .15s; font-family: var(--font-body);
+  }
+  .btn:hover { opacity: .88; }
+  /* primary */
+  .btn-primary.fill    { background: var(--c-btn-fill); color: var(--c-btn-text); border-color: var(--c-btn-fill); }
+  .btn-primary.outline { background: transparent; color: var(--c-btn-fill); border-color: var(--c-btn-fill); }
+  /* secondary */
+  .btn-secondary.fill    { background: var(--c-btn2-fill); color: var(--c-btn2-text); border-color: var(--c-btn2-fill); }
+  .btn-secondary.outline { background: transparent; color: var(--c-btn2-fill); border-color: var(--c-btn2-fill); }
+
+  /* hero */
+  .hero {
+    position: relative; color: var(--c-btn-text);
+    min-height: 460px; display: flex; align-items: center;
+    border-radius: 0;
+    overflow: hidden;
+    background-size: cover; background-position: center;
+    background-image:
+      linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.45)),
+      url("https://picsum.photos/seed/shopifyhero/1600/900");
+  }
+  .hero .hero-inner { padding: var(--section-padding) 0; }
+  .hero h1 { color: #fff; max-width: 16ch; }
+  .hero p { color: rgba(255,255,255,.92); max-width: 42ch; font-size: 1.05em; }
+  .hero .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* product carousel */
+  .carousel {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 1fr);
+    gap: var(--gutter); overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory;
+  }
+  .card {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    scroll-snap-align: start; display: flex; flex-direction: column;
+  }
+  .card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 0; display: block; }
+  .card .card-body { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .card .price { color: var(--c-body); opacity: .7; font-size: .95em; }
+  .card .btn { margin-top: auto; text-align: center; }
+
+  /* feature section */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); }
+  .feature {
+    background: var(--c-surface); border: 1px solid var(--c-border);
+    border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow);
+  }
+  .feature .ic {
+    width: 42px; height: 42px; border-radius: var(--radius);
+    background: var(--c-btn-fill); color: var(--c-btn-text);
+    display: grid; place-items: center; font-size: 20px; margin-bottom: 12px;
+  }
+
+  /* footer */
+  .store-footer {
+    background: var(--c-surface); border-top: 1px solid var(--c-border);
+    padding: 40px 0;
+  }
+  .store-footer .cols { display: flex; gap: 48px; flex-wrap: wrap; justify-content: space-between; }
+  .store-footer a { color: var(--c-body); opacity: .8; text-decoration: none; display: block; margin: 6px 0; font-size: .92em; }
+  .store-footer .brandmark { font-family: var(--font-heading); color: var(--c-heading); font-weight: 700; font-size: 1.3em; }
+
+  .eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .72em; font-weight: 700; color: var(--c-btn2-fill); margin-bottom: 8px; }
+
+  /* small screens: stack the editor above the preview so it still works on a phone */
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 45vh 55vh; height: 100vh; }
+    .panel { border-right: none; border-bottom: 1px solid #e6e6e6; }
+    .features { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ===================== LEFT: SETTINGS PANEL ========================= -->
+  <aside class="panel">
+    <h1>Theme settings · Global</h1>
+    <div id="controls"><!-- control groups are injected by JS --></div>
+  </aside>
+
+  <!-- ===================== RIGHT: LIVE PREVIEW ========================== -->
+  <main class="preview-wrap">
+    <div class="preview-bar">
+      <span><span class="dot"></span>Live preview</span>
+      <span id="scheme-label">Light scheme</span>
+    </div>
+
+    <!-- The themed sample store. Every element here uses ROLE variables only. -->
+    <div class="store" id="store">
+
+      <!-- HERO -->
+      <header class="hero">
+        <div class="container hero-inner">
+          <div class="eyebrow">New season</div>
+          <h1>Crafted goods for considered living.</h1>
+          <p>A premium storefront skeleton. Tune the global tokens on the left and watch every role-bound element respond instantly.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary fill" id="hero-primary">Shop the collection</a>
+            <a class="btn btn-secondary outline" id="hero-secondary">Our story</a>
+          </div>
+        </div>
+      </header>
+
+      <!-- PRODUCT CAROUSEL -->
+      <section class="section">
+        <div class="container">
+          <h2>Featured products</h2>
+          <p>Four dummy products — cards inherit surface, border, radius, shadow and button roles.</p>
+          <div class="carousel" id="carousel"><!-- product cards injected by JS --></div>
+        </div>
+      </section>
+
+      <!-- FEATURE SECTION -->
+      <section class="section" style="background: var(--c-surface);">
+        <div class="container">
+          <h2>Why shop with us</h2>
+          <div class="features">
+            <div class="feature"><div class="ic">⚡</div><h4>Fast shipping</h4><p>Dispatched within 24 hours, worldwide.</p></div>
+            <div class="feature"><div class="ic">♻︎</div><h4>Sustainable</h4><p>Responsibly sourced, built to last.</p></div>
+            <div class="feature"><div class="ic">★</div><h4>Loved by many</h4><p>Rated 4.9 from thousands of reviews.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="store-footer">
+        <div class="container cols">
+          <div>
+            <div class="brandmark">Atelier</div>
+            <p style="max-width:32ch; opacity:.7;">A prototype storefront for testing global theme styling.</p>
+          </div>
+          <div><a>Shop all</a><a>New arrivals</a><a>Best sellers</a></div>
+          <div><a>About</a><a>Journal</a><a>Contact</a></div>
+          <div><a>Shipping</a><a>Returns</a><a>FAQ</a></div>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================================
+   STATE  —  the single source of truth (TOKENS + role mappings).
+   Edit defaults here, or use the controls. Every change funnels through
+   applyRoles() which writes the ROLE custom properties onto <html>.
+   ============================================================================ */
+const STATE = {
+
+  /* ---- TOKENS: palette swatches. THE ONLY PLACE HEX IS ENTERED. ---------- */
+  palette: [
+    { id: 'ink',    name: 'Ink',    hex: '#15171c' },
+    { id: 'paper',  name: 'Paper',  hex: '#ffffff' },
+    { id: 'brand',  name: 'Brand',  hex: '#3257be' },
+    { id: 'accent', name: 'Accent', hex: '#e2703a' },
+    { id: 'mist',   name: 'Mist',   hex: '#f2f3f5' },
+    { id: 'slate',  name: 'Slate',  hex: '#2a2e37' },
+  ],
+
+  /* ---- COLOR SCHEMES: role -> palette id (dropdowns only, no hex here) ----
+     The color roles every scheme must map. Schemes can therefore NEVER use an
+     undefined color — only swatches that exist in the palette above.        */
+  colorRoles: [
+    { key: 'bg',        label: 'Background',      cssVar: '--c-bg'        },
+    { key: 'surface',   label: 'Surface',         cssVar: '--c-surface'   },
+    { key: 'heading',   label: 'Heading text',    cssVar: '--c-heading'   },
+    { key: 'body',      label: 'Body text',       cssVar: '--c-body'      },
+    { key: 'border',    label: 'Border',          cssVar: '--c-border'    },
+    { key: 'btnFill',   label: 'Button fill',     cssVar: '--c-btn-fill'  },
+    { key: 'btnText',   label: 'Button text',     cssVar: '--c-btn-text'  },
+    { key: 'btn2Fill',  label: 'Secondary fill',  cssVar: '--c-btn2-fill' },
+    { key: 'btn2Text',  label: 'Secondary text',  cssVar: '--c-btn2-text' },
+  ],
+  schemes: {
+    Light: { bg:'paper', surface:'mist',  heading:'ink',   body:'ink',   border:'mist',   btnFill:'brand',  btnText:'paper', btn2Fill:'accent', btn2Text:'paper' },
+    Dark:  { bg:'ink',   surface:'slate', heading:'paper', body:'mist',  border:'slate',  btnFill:'brand',  btnText:'paper', btn2Fill:'accent', btn2Text:'paper' },
+    Brand: { bg:'brand', surface:'paper', heading:'paper', body:'paper', border:'accent', btnFill:'accent', btnText:'ink',   btn2Fill:'paper',  btn2Text:'brand' },
+  },
+  activeScheme: 'Light',
+
+  /* ---- TYPOGRAPHY tokens ------------------------------------------------- */
+  fonts: {
+    System: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    Grotesk:'"Helvetica Neue", Arial, sans-serif',
+    Serif:  'Georgia, "Times New Roman", serif',
+    Slab:   '"Rockwell", "Roboto Slab", Georgia, serif',
+    Mono:   'ui-monospace, "SF Mono", Menlo, monospace',
+  },
+  headingFont: 'System',
+  bodyFont: 'System',
+  baseSize: 16,     // px — body text size
+  ratio: 1.25,      // modular scale ratio that auto-generates H1–H6
+  // per-level overrides (px). Empty string = use the auto-generated size.
+  headingOverrides: { h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
+
+  /* ---- BUTTON tokens ----------------------------------------------------- */
+  buttons: { primaryStyle: 'fill', secondaryStyle: 'outline' },
+
+  /* ---- SHAPE / SPACING / ELEVATION tokens -------------------------------- */
+  radius: 14,                 // px (global corner radius; "pill" preset = 999)
+  spacing: { sectionPadding: 64, containerMax: 1100, gutter: 20 },
+  shadows: {
+    none: 'none',
+    soft: '0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08)',
+    hard: '0 18px 40px rgba(0,0,0,.28)',
+  },
+  elevation: 'soft',
+};
+
+/* Dummy product data for the carousel. */
+const PRODUCTS = [
+  { name: 'Linen Throw',   price: '$48',  seed: 'p1' },
+  { name: 'Ceramic Mug',   price: '$22',  seed: 'p2' },
+  { name: 'Oak Stool',     price: '$140', seed: 'p3' },
+  { name: 'Wool Runner',   price: '$95',  seed: 'p4' },
+];
+
+/* ============================================================================
+   RESOLVERS  —  turn TOKENS + active scheme into concrete role values.
+   ============================================================================ */
+function swatchHex(id) {
+  const s = STATE.palette.find(p => p.id === id);
+  return s ? s.hex : '#ff00ff'; // magenta = "undefined color" tell (shouldn't happen)
+}
+
+// Compute H1–H6 from base size + ratio, honouring any per-level override.
+// h6 is the base step; each step up multiplies by the ratio.
+function computeHeadingSizes() {
+  const exp = { h1:5, h2:4, h3:3, h4:2, h5:1, h6:0 };
+  const out = {};
+  for (const level of Object.keys(exp)) {
+    const override = STATE.headingOverrides[level];
+    out[level] = (override !== '' && override != null)
+      ? Number(override)
+      : +(STATE.baseSize * Math.pow(STATE.ratio, exp[level])).toFixed(1);
+  }
+  return out;
+}
+
+/* ============================================================================
+   applyRoles()  —  THE HEART OF THE WIRING.
+   Writes every ROLE custom property onto <html>. The preview CSS reads these.
+   ============================================================================ */
+function applyRoles() {
+  const root = document.documentElement.style;
+  const scheme = STATE.schemes[STATE.activeScheme];
+
+  // 1) COLOR roles: role -> palette swatch -> hex
+  for (const role of STATE.colorRoles) {
+    root.setProperty(role.cssVar, swatchHex(scheme[role.key]));
+  }
+
+  // 2) TYPOGRAPHY roles
+  root.setProperty('--font-heading', STATE.fonts[STATE.headingFont]);
+  root.setProperty('--font-body',    STATE.fonts[STATE.bodyFont]);
+  root.setProperty('--fs-base', STATE.baseSize + 'px');
+  const h = computeHeadingSizes();
+  for (const level of ['h1','h2','h3','h4','h5','h6']) {
+    root.setProperty('--fs-' + level, h[level] + 'px');
+  }
+
+  // 3) SHAPE / SPACING / ELEVATION roles
+  root.setProperty('--radius', STATE.radius + 'px');
+  root.setProperty('--section-padding', STATE.spacing.sectionPadding + 'px');
+  root.setProperty('--container-max',   STATE.spacing.containerMax + 'px');
+  root.setProperty('--gutter',          STATE.spacing.gutter + 'px');
+  root.setProperty('--shadow', STATE.shadows[STATE.elevation]);
+
+  // 4) BUTTON style (fill vs outline) — swap CSS classes on the demo buttons
+  applyButtonStyles();
+
+  // keep the preview bar label in sync
+  document.getElementById('scheme-label').textContent = STATE.activeScheme + ' scheme';
+}
+
+function applyButtonStyles() {
+  document.querySelectorAll('.btn-primary').forEach(b => {
+    b.classList.remove('fill', 'outline'); b.classList.add(STATE.buttons.primaryStyle);
+  });
+  document.querySelectorAll('.btn-secondary').forEach(b => {
+    b.classList.remove('fill', 'outline'); b.classList.add(STATE.buttons.secondaryStyle);
+  });
+}
+
+/* ============================================================================
+   CONTROL RENDERERS  —  build the left panel from STATE and wire up listeners.
+   Pattern for every control: on change -> mutate STATE -> applyRoles().
+   ============================================================================ */
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+function group(title, hint) {
+  const d = el(`<details class="group" open>
+    <summary>${title}${hint ? `<span class="hint">${hint}</span>` : ''}</summary>
+    <div class="group-body"></div>
+  </details>`);
+  return { wrap: d, body: d.querySelector('.group-body') };
+}
+
+/* ---- PALETTE: the only hex-entry surface -------------------------------- */
+function renderPalette(body) {
+  const list = el('<div></div>');
+  function draw() {
+    list.innerHTML = '';
+    STATE.palette.forEach((sw, i) => {
+      const row = el(`<div class="swatch">
+        <input type="color" value="${sw.hex}" title="Pick ${sw.name}">
+        <input type="text" class="sw-name" value="${sw.name}">
+        <input type="text" class="sw-hex"  value="${sw.hex}">
+        <button class="rm" title="Remove">×</button>
+      </div>`);
+      const [color, name, hex, rm] = row.querySelectorAll('input,button');
+      color.oninput = () => { sw.hex = color.value; hex.value = color.value; applyRoles(); };
+      hex.onchange  = () => { sw.hex = hex.value;  color.value = hex.value;  applyRoles(); };
+      name.onchange = () => { sw.name = name.value; renderSchemes(schemesBody); }; // labels in scheme dropdowns follow
+      rm.onclick    = () => { STATE.palette.splice(i, 1); draw(); renderSchemes(schemesBody); applyRoles(); };
+      list.appendChild(row);
+    });
+  }
+  draw();
+  const add = el('<button class="addbtn">+ Add swatch</button>');
+  add.onclick = () => {
+    const n = STATE.palette.length + 1;
+    STATE.palette.push({ id: 'swatch' + n + '_' + Date.now().toString(36), name: 'Swatch ' + n, hex: '#888888' });
+    draw(); renderSchemes(schemesBody);
+  };
+  body.append(list, add);
+}
+
+/* ---- COLOR SCHEMES: per-role dropdowns limited to palette swatches ------- */
+let schemesBody; // kept so palette edits can refresh the dropdown labels
+function renderSchemes(body) {
+  body.innerHTML = '';
+
+  // scheme switcher
+  const picker = el('<div class="schemepicker"></div>');
+  Object.keys(STATE.schemes).forEach(name => {
+    const b = el(`<button>${name}</button>`);
+    if (name === STATE.activeScheme) b.classList.add('active');
+    b.onclick = () => { STATE.activeScheme = name; renderSchemes(body); applyRoles(); };
+    picker.appendChild(b);
+  });
+  body.appendChild(picker);
+
+  // one dropdown per color role for the ACTIVE scheme
+  const scheme = STATE.schemes[STATE.activeScheme];
+  STATE.colorRoles.forEach(role => {
+    const opts = STATE.palette.map(p =>
+      `<option value="${p.id}" ${scheme[role.key] === p.id ? 'selected' : ''}>${p.name}</option>`
+    ).join('');
+    const row = el(`<div class="row">
+      <label>${role.label}</label>
+      <select>${opts}</select>
+    </div>`);
+    row.querySelector('select').onchange = (e) => { scheme[role.key] = e.target.value; applyRoles(); };
+    body.appendChild(row);
+  });
+}
+
+/* ---- TYPOGRAPHY --------------------------------------------------------- */
+function renderTypography(body) {
+  const fontOpts = (sel) => Object.keys(STATE.fonts)
+    .map(f => `<option value="${f}" ${f === sel ? 'selected' : ''}>${f}</option>`).join('');
+
+  const hf = el(`<div class="row"><label>Heading font</label><select>${fontOpts(STATE.headingFont)}</select></div>`);
+  hf.querySelector('select').onchange = e => { STATE.headingFont = e.target.value; applyRoles(); };
+
+  const bf = el(`<div class="row"><label>Body font</label><select>${fontOpts(STATE.bodyFont)}</select></div>`);
+  bf.querySelector('select').onchange = e => { STATE.bodyFont = e.target.value; applyRoles(); };
+
+  const base = el(`<div class="row"><label>Base size</label>
+    <div class="inline"><input type="range" min="12" max="22" step="1" value="${STATE.baseSize}">
+    <span class="val">${STATE.baseSize}px</span></div></div>`);
+  base.querySelector('input').oninput = e => {
+    STATE.baseSize = +e.target.value; base.querySelector('.val').textContent = STATE.baseSize + 'px'; applyRoles();
+  };
+
+  const ratios = [[1.125,'Major 2nd'],[1.2,'Minor 3rd'],[1.25,'Major 3rd'],[1.333,'Perfect 4th'],[1.414,'Aug 4th'],[1.5,'Perfect 5th'],[1.618,'Golden']];
+  const ratioOpts = ratios.map(([v,n]) => `<option value="${v}" ${v === STATE.ratio ? 'selected' : ''}>${n} (${v})</option>`).join('');
+  const ratio = el(`<div class="row"><label>Type scale ratio</label><select>${ratioOpts}</select></div>`);
+  ratio.querySelector('select').onchange = e => { STATE.ratio = +e.target.value; drawOverrides(); applyRoles(); };
+
+  body.append(hf, bf, base, ratio);
+
+  // per-level overrides (placeholder shows the auto-generated size)
+  const ovWrap = el(`<div class="row"><label>Per-level size overrides (px — blank = auto)</label><div class="ov"></div></div>`);
+  const ov = ovWrap.querySelector('.ov');
+  function drawOverrides() {
+    const computed = computeHeadingSizes();
+    ov.innerHTML = '';
+    ['h1','h2','h3','h4','h5','h6'].forEach(level => {
+      const r = el(`<div class="inline" style="margin-bottom:6px;">
+        <label style="margin:0; flex:0 0 28px; text-transform:uppercase;">${level}</label>
+        <input type="number" placeholder="${computed[level]}" value="${STATE.headingOverrides[level]}">
+      </div>`);
+      r.querySelector('input').oninput = e => {
+        STATE.headingOverrides[level] = e.target.value === '' ? '' : +e.target.value;
+        applyRoles();
+      };
+      ov.appendChild(r);
+    });
+  }
+  drawOverrides();
+  body.append(ovWrap);
+}
+
+/* ---- BUTTONS ------------------------------------------------------------ */
+function segmented(value, options, onPick) {
+  const seg = el('<div class="seg"></div>');
+  options.forEach(opt => {
+    const b = el(`<button>${opt}</button>`);
+    if (opt === value) b.classList.add('active');
+    b.onclick = () => { seg.querySelectorAll('button').forEach(x => x.classList.remove('active')); b.classList.add('active'); onPick(opt); };
+    seg.appendChild(b);
+  });
+  return seg;
+}
+function renderButtons(body) {
+  const p = el(`<div class="row"><label>Primary button style</label></div>`);
+  p.appendChild(segmented(STATE.buttons.primaryStyle, ['fill','outline'], v => { STATE.buttons.primaryStyle = v; applyRoles(); }));
+  const s = el(`<div class="row"><label>Secondary button style</label></div>`);
+  s.appendChild(segmented(STATE.buttons.secondaryStyle, ['fill','outline'], v => { STATE.buttons.secondaryStyle = v; applyRoles(); }));
+  const note = el(`<div class="hint">Button fill &amp; text colors come from the palette via the active scheme (Button fill / text / secondary roles).</div>`);
+  body.append(p, s, note);
+}
+
+/* ---- SHAPE (global corner radius) --------------------------------------- */
+function renderShape(body) {
+  const presets = [['Sharp',0],['Soft',6],['Rounded',14],['Pill',999]];
+  const pr = el(`<div class="row"><label>Corner radius preset</label></div>`);
+  pr.appendChild(segmented(
+    (presets.find(p => p[1] === STATE.radius) || [])[0] || 'Custom',
+    presets.map(p => p[0]),
+    name => { STATE.radius = presets.find(p => p[0] === name)[1]; slider.querySelector('input').value = Math.min(STATE.radius,40); slider.querySelector('.val').textContent = STATE.radius + 'px'; applyRoles(); }
+  ));
+  const slider = el(`<div class="row"><label>Fine-tune radius</label>
+    <div class="inline"><input type="range" min="0" max="40" step="1" value="${Math.min(STATE.radius,40)}">
+    <span class="val">${STATE.radius}px</span></div></div>`);
+  slider.querySelector('input').oninput = e => {
+    STATE.radius = +e.target.value; slider.querySelector('.val').textContent = STATE.radius + 'px'; applyRoles();
+  };
+  body.append(pr, slider);
+}
+
+/* ---- SPACING ------------------------------------------------------------ */
+function renderSpacing(body) {
+  const mk = (label, key, min, max, step) => {
+    const cur = STATE.spacing[key];
+    const r = el(`<div class="row"><label>${label}</label>
+      <div class="inline"><input type="range" min="${min}" max="${max}" step="${step}" value="${cur}">
+      <span class="val">${cur}px</span></div></div>`);
+    r.querySelector('input').oninput = e => {
+      STATE.spacing[key] = +e.target.value; r.querySelector('.val').textContent = e.target.value + 'px'; applyRoles();
+    };
+    return r;
+  };
+  body.append(
+    mk('Section vertical padding', 'sectionPadding', 24, 140, 4),
+    mk('Container max-width', 'containerMax', 720, 1400, 20),
+    mk('Gutter (grid / carousel gap)', 'gutter', 8, 48, 2),
+  );
+}
+
+/* ---- ELEVATION ---------------------------------------------------------- */
+function renderElevation(body) {
+  const r = el(`<div class="row"><label>Card &amp; surface shadow</label></div>`);
+  r.appendChild(segmented(STATE.elevation, ['none','soft','hard'], v => { STATE.elevation = v; applyRoles(); }));
+  body.append(r);
+}
+
+/* ============================================================================
+   PREVIEW BUILDERS
+   ============================================================================ */
+function buildCarousel() {
+  const c = document.getElementById('carousel');
+  c.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    c.appendChild(el(`<article class="card">
+      <img src="https://picsum.photos/seed/${p.seed}/600/450" alt="${p.name}">
+      <div class="card-body">
+        <h5 style="margin:0">${p.name}</h5>
+        <span class="price">${p.price}</span>
+        <a class="btn btn-primary fill">Add to cart</a>
+      </div>
+    </article>`));
+  });
+}
+
+/* ============================================================================
+   BOOT
+   ============================================================================ */
+function buildPanel() {
+  const host = document.getElementById('controls');
+
+  const gPal = group('Palette', 'The only place you type hex');
+  renderPalette(gPal.body);
+
+  const gSch = group('Color schemes', 'Roles pick from palette only');
+  schemesBody = gSch.body;
+  renderSchemes(gSch.body);
+
+  const gTyp = group('Typography');           renderTypography(gTyp.body);
+  const gBtn = group('Buttons');              renderButtons(gBtn.body);
+  const gShp = group('Shape · corner radius');renderShape(gShp.body);
+  const gSpc = group('Spacing');              renderSpacing(gSpc.body);
+  const gElv = group('Elevation');            renderElevation(gElv.body);
+
+  host.append(gPal.wrap, gSch.wrap, gTyp.wrap, gBtn.wrap, gShp.wrap, gSpc.wrap, gElv.wrap);
+}
+
+buildPanel();
+buildCarousel();
+applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
+</script>
+</body>
+</html>
