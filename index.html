@@ -140,24 +140,37 @@
   .colorinput .sw input[type=color] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; padding: 0; }
   .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 11px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
 
-  /* ---- palette / scheme rows ---- */
+  /* ---- palette rows: derived name label above, color input + delete beside ---- */
   .palette-row { display: flex; flex-direction: column; gap: 6px; }
-  .palette-row .name-row { display: flex; align-items: center; gap: 4px; }
-  .palette-row .name-row .txt { flex: 1; }
+  .palette-input-row { display: flex; align-items: center; gap: 6px; }
+  .palette-input-row .field { flex: 1; }
   .icon-btn { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; }
   .icon-btn:hover { color: #dc2626; }
   .icon-btn svg { width: 12px; height: 12px; }
   .add-btn { width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500); transition: all .12s; }
   .add-btn:hover { color: var(--stone-900); border-color: var(--stone-300); background: var(--stone-50); }
   .add-btn svg { width: 12px; height: 12px; }
-  .scheme-switch { margin-bottom: 2px; }
+
+  /* ---- scheme list (preview square + name, expands to its tokens) ---- */
+  .scheme-list { display: flex; flex-direction: column; gap: 2px; }
+  .scheme-item { border-radius: 6px; }
+  .scheme-item.active { background: var(--stone-50); }
+  .scheme-head { width: 100%; display: flex; align-items: center; gap: 10px; padding: 6px; border: none; background: none; cursor: pointer; border-radius: 6px; font: inherit; }
+  .scheme-head:hover { background: var(--stone-100); }
+  .scheme-name { flex: 1; text-align: left; font-size: 12px; font-weight: 600; color: var(--stone-800); }
+  .scheme-sq { width: 40px; height: 40px; border-radius: 6px; box-shadow: 0 0 0 1px var(--stone-200); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; flex: 0 0 auto; overflow: hidden; }
+  .scheme-sq span { font-family: "Inter", sans-serif; font-weight: 700; font-size: 15px; line-height: 1; letter-spacing: -0.02em; }
+  .scheme-sq .bar { width: 20px; height: 4px; border-radius: 999px; }
+  .scheme-chev { width: 14px; height: 14px; color: var(--stone-400); transition: transform .15s; flex: 0 0 auto; }
+  .scheme-item.expanded .scheme-chev { transform: rotate(180deg); }
+  .scheme-tokens { display: flex; flex-direction: column; gap: 10px; padding: 6px 6px 12px; }
 
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
      ========================================================================== */
   .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; }
-  .preview-pad { min-height: 100%; padding: 28px 24px; }
-  .store-frame { border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 12px 40px -16px rgba(0,0,0,.18); }
+  .preview-pad { min-height: 100%; padding: 0; }            /* full-bleed: store extends to the edges */
+  .store-frame { border-radius: 0; overflow: hidden; box-shadow: none; }
 
   /* ROLE DEFAULTS — overwritten at runtime by applyRoles(). */
   .store {
@@ -321,6 +334,27 @@
 function hexToRgb(hex){ let h=(hex||'').replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); if(isNaN(n))return{r:128,g:128,b:128}; return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}; }
 function rgba(hex,a){ const {r,g,b}=hexToRgb(hex); return `rgba(${r}, ${g}, ${b}, ${a})`; }
 const clone = (o)=>JSON.parse(JSON.stringify(o));
+
+/* Palette names are DERIVED from the hex (not user-editable): pick the nearest
+   named colour by RGB distance, so changing a swatch's hex renames it to match. */
+const NAMED_COLORS = [
+  ['White','#ffffff'],['Ivory','#fffff0'],['Cream','#fdf6e3'],['Beige','#f5f0e6'],
+  ['Light Gray','#e7e5e4'],['Sand','#d8c4a0'],['Tan','#c8a165'],['Silver','#c0c0c0'],
+  ['Gray','#808080'],['Slate','#57534e'],['Dim Gray','#4b4b4b'],['Charcoal','#2a2724'],
+  ['Black','#1a1a1a'],['Brown','#6b4f3a'],['Sienna','#8a4b2f'],['Rust','#a83716'],
+  ['Tomato','#dc4a2a'],['Orange','#f97316'],['Amber','#f59e0b'],['Gold','#d4af37'],
+  ['Yellow','#eab308'],['Olive','#6b7a2f'],['Lime','#84cc16'],['Green','#16a34a'],
+  ['Emerald','#10b981'],['Teal','#14b8a6'],['Cyan','#06b6d4'],['Sky','#0ea5e9'],
+  ['Blue','#2563eb'],['Indigo','#4f46e5'],['Navy','#1e3a8a'],['Violet','#7c3aed'],
+  ['Purple','#a855f7'],['Magenta','#d946ef'],['Pink','#ec4899'],['Rose','#e11d48'],
+  ['Red','#dc2626'],['Maroon','#7f1d1d'],
+];
+function colorName(hex){
+  const {r,g,b}=hexToRgb(hex); let best='Color', bestD=Infinity;
+  for(const [name,h] of NAMED_COLORS){ const c=hexToRgb(h); const d=(c.r-r)**2+(c.g-g)**2+(c.b-b)**2; if(d<bestD){ bestD=d; best=name; } }
+  return best;
+}
+function refreshNames(){ STATE.palette.forEach(c=>{ c.name=colorName(c.hex); }); }
 
 /* Font registry — options for the font pickers. */
 const FONTS = {
@@ -556,29 +590,30 @@ function fontDropdown(value, onChange){
    PANEL GROUPS  (each control: change -> mutate STATE -> applyRoles())
    ============================================================================ */
 let schemesHost;
+let expandedScheme = 'Light';   // which scheme is expanded for editing (and previewed)
 
 function renderColor(body){
-  // ---- Palette (only hex entry) ----
+  // ---- Palette: derived name label above, color input + delete beside ----
   const pal = subgroup('Palette');
   function drawPalette(){
     pal.body.innerHTML='';
     STATE.palette.forEach((c,i)=>{
       const row = el('<div class="palette-row"></div>');
-      const nameRow = el('<div class="name-row"></div>');
-      const nm = el(`<input type="text" class="txt" value="${c.name}">`);
-      nm.onchange = ()=>{ c.name=nm.value; renderSchemes(); };
-      nameRow.appendChild(nm);
-      if(STATE.palette.length > 2){
-        const rm = el(`<button class="icon-btn" title="Remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',12)}</button>`);
+      const label = el(`<span class="ctl-label">${c.name}</span>`);
+      row.appendChild(label);
+      const inputRow = el('<div class="palette-input-row"></div>');
+      // changing the hex updates the derived name + everything that references the swatch
+      inputRow.appendChild(colorInput(c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); label.textContent=c.name; renderSchemes(); applyRoles(); }));
+      if(STATE.palette.length > 1){
+        const rm = el(`<button class="icon-btn" title="Remove colour">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',12)}</button>`);
         rm.onclick = ()=>{ STATE.palette.splice(i,1); reconcileSchemes(); drawPalette(); renderSchemes(); applyRoles(); };
-        nameRow.appendChild(rm);
+        inputRow.appendChild(rm);
       }
-      row.appendChild(nameRow);
-      row.appendChild(colorInput(c.hex, hex=>{ c.hex=hex; renderSchemes(); applyRoles(); }));
+      row.appendChild(inputRow);
       pal.body.appendChild(row);
     });
-    const add = el(`<button class="add-btn">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add swatch</button>`);
-    add.onclick = ()=>{ let n=STATE.palette.length+1; STATE.palette.push({ id:'sw'+Date.now().toString(36), name:'Swatch '+n, hex:'#888888' }); drawPalette(); renderSchemes(); };
+    const add = el(`<button class="add-btn">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add colour</button>`);
+    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'sw'+Date.now().toString(36), name:colorName(hex), hex }); drawPalette(); renderSchemes(); };
     pal.body.appendChild(add);
   }
   drawPalette();
@@ -587,6 +622,7 @@ function renderColor(body){
   // ---- Schemes ----
   const sch = subgroup('Color schemes', true);
   schemesHost = sch.body;
+  if(!STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
   renderSchemes();
   body.appendChild(sch.wrap);
 }
@@ -598,18 +634,66 @@ function reconcileSchemes(){
   Object.values(STATE.schemes).forEach(sc => { STATE.colorRoles.forEach(r=>{ if(!valid.has(sc[r.key])) sc[r.key]=fallback; }); });
 }
 
+// Small visual square: scheme background, "Aa" in heading color, accent bar.
+function paintSquare(sq, scheme){
+  sq.style.background = swatchHex(scheme.bg);
+  sq.querySelector('span').style.color = swatchHex(scheme.heading);
+  sq.querySelector('.bar').style.background = swatchHex(scheme.btnFill);
+}
+function schemePreview(scheme){
+  const sq = el('<div class="scheme-sq"><span>Aa</span><div class="bar"></div></div>');
+  paintSquare(sq, scheme);
+  return sq;
+}
+function addScheme(){
+  let n = Object.keys(STATE.schemes).length + 1; let name = 'Scheme ' + n;
+  while(STATE.schemes[name]){ n++; name = 'Scheme ' + n; }
+  STATE.schemes[name] = clone(STATE.schemes[STATE.activeScheme] || Object.values(STATE.schemes)[0]);
+  expandedScheme = name; STATE.activeScheme = name;
+  renderSchemes(); applyRoles();
+}
+function removeScheme(id){
+  if(Object.keys(STATE.schemes).length <= 1) return;
+  delete STATE.schemes[id];
+  if(STATE.activeScheme === id) STATE.activeScheme = Object.keys(STATE.schemes)[0];
+  if(expandedScheme === id) expandedScheme = STATE.activeScheme;
+  renderSchemes(); applyRoles();
+}
+
 function renderSchemes(){
   if(!schemesHost) return;
   schemesHost.innerHTML='';
-  // active-scheme switcher (toggle group)
-  const sw = controlRow('Active scheme', segmented(STATE.activeScheme, Object.keys(STATE.schemes), v=>{ STATE.activeScheme=v; renderSchemes(); applyRoles(); }));
-  sw.classList.add('scheme-switch');
-  schemesHost.appendChild(sw);
-  // one swatch-dropdown per role for the active scheme
-  const scheme = STATE.schemes[STATE.activeScheme];
-  STATE.colorRoles.forEach(r=>{
-    schemesHost.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; applyRoles(); })));
+  const list = el('<div class="scheme-list"></div>');
+  Object.keys(STATE.schemes).forEach(id=>{
+    const scheme = STATE.schemes[id];
+    const expanded = expandedScheme === id;
+    const item = el(`<div class="scheme-item ${id===STATE.activeScheme?'active':''} ${expanded?'expanded':''}"></div>`);
+    const head = el('<button type="button" class="scheme-head"></button>');
+    const sq = schemePreview(scheme);
+    head.appendChild(sq);
+    head.appendChild(el(`<span class="scheme-name">${id}</span>`));
+    if(Object.keys(STATE.schemes).length > 1){
+      const rm = el(`<button class="icon-btn" title="Remove scheme">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',12)}</button>`);
+      rm.onclick = (e)=>{ e.stopPropagation(); removeScheme(id); };
+      head.appendChild(rm);
+    }
+    head.appendChild(el('<svg class="scheme-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
+    // expand to edit; expanding also makes this the scheme shown in the preview
+    head.onclick = ()=>{ if(expandedScheme===id){ expandedScheme=null; } else { expandedScheme=id; STATE.activeScheme=id; } renderSchemes(); applyRoles(); };
+    item.appendChild(head);
+    if(expanded){
+      const tokens = el('<div class="scheme-tokens"></div>');
+      STATE.colorRoles.forEach(r=>{
+        tokens.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; paintSquare(sq, scheme); if(STATE.activeScheme===id) applyRoles(); })));
+      });
+      item.appendChild(tokens);
+    }
+    list.appendChild(item);
   });
+  schemesHost.appendChild(list);
+  const add = el(`<button class="add-btn" style="margin-top:8px">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add scheme</button>`);
+  add.onclick = addScheme;
+  schemesHost.appendChild(add);
 }
 
 function renderTypography(body){
@@ -697,14 +781,15 @@ function buildPanel(){
     ['Color','palette',true,renderColor],
     ['Typography','type',false,renderTypography],
     ['Buttons','click',false,renderButtons],
-    ['Shape · corner radius','square',false,renderShape],
+    ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
     ['Elevation','layers',false,renderElevation],
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); buildPanel(); applyRoles(); };
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; buildPanel(); applyRoles(); };
 
+refreshNames();   // derive palette names from their hex values
 buildPanel();
 buildCarousel();
 buildFeatures();
