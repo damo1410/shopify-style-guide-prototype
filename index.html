@@ -5,106 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Shopify Style Guide Prototype — Global Theme Settings</title>
 
-<!-- Web fonts for the font picker (Inter is the default). The live site has
-     network; everything falls back to system fonts if a font fails to load. -->
+<!-- Web fonts for the font picker (Inter is the default). Falls back to system. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!--
   ============================================================================
-  SHOPIFY STYLE GUIDE PROTOTYPE  —  v2  (UI matched to the Design Levers ref)
+  SHOPIFY STYLE GUIDE PROTOTYPE  —  v1 system, reference-matched panel UI
   ============================================================================
-  A sandbox for testing the GLOBAL theme-settings of a premium Shopify theme.
-
-  THREE LAYERS, ONE-WAY FLOW:
-
-      TOKENS  ->  ROLES  ->  PREVIEW
+  THREE LAYERS, ONE-WAY FLOW:   TOKENS -> ROLES -> PREVIEW
 
    1) TOKENS  : raw global values set once.
-                - Palette swatches: the ONLY place a hex is typed. Each swatch
-                  auto-generates an 11-step shade ramp (50..950).
-                - fonts, base size + ratio, named spacing/radius/stroke scales.
+                - Palette swatches: the ONLY place a hex is typed.
+                - fonts, base size + ratio, radius, spacing (px), shadow.
 
-   2) ROLES   : semantic names ("heading color", "surface", "button bg"),
-                implemented as CSS custom properties on the .store element.
-                A COLOR SCHEME is just a mapping of role -> palette TOKEN
-                (e.g. heading -> neutral.950). Schemes pick tokens from
-                dropdowns only — never free hex — so a scheme can never use an
-                undefined color.
+   2) ROLES   : semantic CSS custom properties on the .store element
+                (--c-heading, --c-btn-fill, --radius, --section-padding, ...).
+                A COLOR SCHEME maps each role DIRECTLY to a palette swatch
+                (chosen from a custom dropdown — never free hex). Schemes can
+                therefore never reference an undefined color.
 
-   3) PREVIEW : every store element binds to a role var (var(--c-heading),
-                var(--radius), ...) and NEVER to a raw value.
+   3) PREVIEW : every store element binds to a role var, never a raw value.
 
   CONTROL -> PREVIEW WIRING:
-   - All editable values live in STATE.
-   - Any control change mutates STATE, then calls applyRoles().
-   - applyRoles() resolves TOKENS through the active scheme + scales and writes
-     the ROLE custom properties onto the .store element. Preview CSS reads only
-     those role vars, so one global change ripples everywhere.
+   - Editable values live in STATE.
+   - A control change mutates STATE, then calls applyRoles().
+   - applyRoles() resolves swatches through the active scheme and writes the
+     role custom properties onto .store. Preview CSS reads only those vars.
 
-  The panel chrome (accordions, sliders, selects, color inputs, sizes, 320px
-  width) mirrors the "Design Levers" reference. Toggle groups are restyled to
-  match the selects/inputs but remain button toggle groups.
+  DESIGN-SYSTEM OF THE PANEL ITSELF (important for consistency):
+   Every control reuses ONE of these shared components —
+     • slider()        single continuous slider (rail/fill/thumb)
+     • customDropdown() popup menu showing color-token swatches / font previews
+     • colorInput()     swatch + hex field (palette only)
+     • segmented()      button toggle group (kept as buttons, styled like fields)
+   No native <select> or <input type=range> anywhere in the panel.
 
-  No build step, no frameworks — single self-contained file, edit-from-phone
-  friendly. Global settings only; local per-section overrides come later.
+  No build step, no frameworks; single self-contained, edit-from-phone friendly.
+  Global settings only — local per-section overrides come later.
   ============================================================================
 -->
 
 <style>
   /* ==========================================================================
-     APP CHROME PALETTE — Tailwind "stone" values, used for the editor shell.
+     APP CHROME PALETTE — Tailwind "stone" values for the editor shell.
      ========================================================================== */
   :root {
     --stone-50:#fafaf9; --stone-100:#f5f5f4; --stone-200:#e7e5e4; --stone-300:#d6d3d1;
     --stone-400:#a8a29e; --stone-500:#78716c; --stone-600:#57534e; --stone-700:#44403c;
     --stone-800:#292524; --stone-900:#1c1917; --stone-950:#0c0a09;
-    --accent-sel:#6248FF; /* selection highlight, matches reference */
   }
-
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: var(--stone-900);
-    background: var(--stone-50);
-    -webkit-font-smoothing: antialiased;
+    color: var(--stone-900); background: var(--stone-50); -webkit-font-smoothing: antialiased;
   }
   .app { display: flex; height: 100vh; width: 100%; }
 
-  /* ---------------- LEFT: settings panel (320px, like the reference) ------- */
-  .panel {
-    display: flex; flex-direction: column;
-    width: 320px; flex-shrink: 0;
-    border-right: 1px solid var(--stone-200);
-    background: #fff;
-  }
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px; border-bottom: 1px solid var(--stone-200);
-  }
+  /* ---------------- LEFT: settings panel (320px) -------------------------- */
+  .panel { display: flex; flex-direction: column; width: 320px; flex-shrink: 0; border-right: 1px solid var(--stone-200); background: #fff; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--stone-200); }
   .brand { display: flex; align-items: center; gap: 8px; }
-  .brand .logo {
-    width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900);
-    display: flex; align-items: center; justify-content: center; color: #fff;
-  }
+  .brand .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; }
   .brand .t1 { font-size: 13px; font-weight: 600; line-height: 1.2; }
   .brand .t2 { font-size: 11px; color: var(--stone-500); line-height: 1.2; }
-  .reset {
-    display: flex; align-items: center; gap: 6px; border: none; background: none;
-    font-size: 11px; color: var(--stone-500); cursor: pointer; font-family: inherit;
-  }
+  .reset { display: flex; align-items: center; gap: 6px; border: none; background: none; font-size: 11px; color: var(--stone-500); cursor: pointer; font-family: inherit; }
   .reset:hover { color: var(--stone-900); }
   .groups { flex: 1; overflow-y: auto; }
 
-  /* ---- accordion group (LeverGroup) ---- */
+  /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
-  .group > summary {
-    list-style: none; cursor: pointer; user-select: none;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 20px;
-  }
+  .group > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
   .group > summary::-webkit-details-marker { display: none; }
   .group > summary:hover { background: var(--stone-50); }
   .group .gtitle { display: flex; align-items: center; gap: 10px; }
@@ -120,159 +93,108 @@
   .subgroup-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--stone-400); }
   .subgroup-items { display: flex; flex-direction: column; gap: 10px; }
 
-  /* ---- control row ---- */
+  /* ---- control row + CONSISTENT label sizing (fixes the oversized labels) -- */
   .ctl { display: flex; flex-direction: column; gap: 6px; }
   .ctl.inline { flex-direction: row; align-items: center; justify-content: space-between; }
-  .ctl > label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  .ctl > label, .ctl-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
   .ctl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .ctl-head .val { font-size: 11px; color: var(--stone-400); font-weight: 500; font-variant-numeric: tabular-nums; }
 
-  /* ---- shared 32px control surface ---- */
-  .field {
-    min-height: 32px; border-radius: 6px; background: var(--stone-100);
-    display: flex; align-items: center; padding: 0 12px; transition: background .12s;
-  }
+  /* ---- shared 32px field surface ---- */
+  .field { min-height: 32px; border-radius: 6px; background: var(--stone-100); display: flex; align-items: center; padding: 0 12px; transition: background .12s; }
   .field:hover { background: var(--stone-200); }
 
-  /* ---- select (native, styled to match) ---- */
-  select.sel {
-    width: 100%; min-height: 32px; border: none; background: var(--stone-100);
-    border-radius: 6px; padding: 0 28px 0 12px; font: inherit; font-size: 11px;
-    font-weight: 500; color: var(--stone-900); cursor: pointer; transition: background .12s;
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-    background-repeat: no-repeat; background-position: right 10px center;
-  }
-  select.sel:hover { background-color: var(--stone-200); }
-
   /* ---- text inputs ---- */
-  input.txt {
-    width: 100%; min-height: 32px; border: none; background: var(--stone-100);
-    border-radius: 6px; padding: 0 12px; font: inherit; font-size: 11px; font-weight: 500;
-    color: var(--stone-900); transition: background .12s; outline: none;
-  }
+  input.txt { width: 100%; min-height: 32px; border: none; background: var(--stone-100); border-radius: 6px; padding: 0 12px; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-900); transition: background .12s; outline: none; }
   input.txt:hover, input.txt:focus { background: var(--stone-200); }
 
-  /* ---- segmented toggle group (kept as buttons, styled like the selects) -- */
-  .seg {
-    display: flex; gap: 2px; background: var(--stone-100); border-radius: 6px;
-    padding: 3px; min-height: 32px;
-  }
-  .seg button {
-    flex: 1; border: none; background: transparent; border-radius: 4px; cursor: pointer;
-    font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500);
-    padding: 0 6px; transition: all .12s; white-space: nowrap;
-  }
+  /* ---- segmented toggle group (kept as buttons, styled like the fields) ---- */
+  .seg { display: flex; gap: 2px; background: var(--stone-100); border-radius: 6px; padding: 3px; min-height: 32px; }
+  .seg button { flex: 1; border: none; background: transparent; border-radius: 4px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500); padding: 0 6px; transition: all .12s; white-space: nowrap; text-transform: capitalize; }
   .seg button:hover { color: var(--stone-900); }
   .seg button.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
 
-  /* ---- step slider (dotted track, like the reference) ---- */
-  .slider-track {
-    position: relative; width: 100%; height: 20px; cursor: pointer;
-    display: flex; align-items: center; touch-action: none;
-  }
+  /* ---- single shared slider ---- */
+  .slider-track { position: relative; width: 100%; height: 20px; cursor: pointer; display: flex; align-items: center; touch-action: none; }
   .slider-rail { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 4px; background: var(--stone-300); border-radius: 999px; }
   .slider-fill { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 4px; background: var(--stone-700); border-radius: 999px; pointer-events: none; }
-  .slider-dot { position: absolute; top: 50%; width: 2px; height: 2px; border-radius: 999px; background: var(--stone-400); transform: translate(-50%,-50%); pointer-events: none; }
   .slider-thumb { position: absolute; top: 50%; width: 14px; height: 14px; background: #fff; border-radius: 999px; box-shadow: 0 1px 2px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.1); pointer-events: none; }
 
-  /* ---- color input ---- */
-  .colorinput { display: flex; align-items: center; gap: 8px; }
+  /* ---- custom dropdown (replaces the native select menu) ---- */
+  .dd { width: 100%; }
+  .dd-trigger { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; }
+  .dd-cur { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+  .dd-label { font-size: 11px; font-weight: 500; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+  .dd-sw { width: 18px; height: 18px; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.10); flex: 0 0 auto; }
+  .dd-chev { width: 12px; height: 12px; color: var(--stone-500); flex: 0 0 auto; transition: transform .15s; }
+  .dd-trigger.open .dd-chev { transform: rotate(180deg); }
+  .dd-menu { background: #fff; border: 1px solid var(--stone-200); border-radius: 6px; box-shadow: 0 8px 24px -8px rgba(0,0,0,.2); padding: 4px; z-index: 1000; overflow-y: auto; overscroll-behavior: contain; }
+  .dd-item { width: 100%; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: none; background: none; border-radius: 4px; cursor: pointer; font: inherit; }
+  .dd-item:hover { background: var(--stone-50); }
+  .dd-item .dd-label { flex: 1; }
+  .dd-check { width: 12px; height: 12px; color: var(--stone-700); flex: 0 0 auto; }
+
+  /* ---- color input (the only hex-entry surface) ---- */
+  .colorinput { display: flex; align-items: center; gap: 8px; width: 100%; }
   .colorinput .sw { position: relative; width: 20px; height: 20px; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 1px var(--stone-200); flex: 0 0 auto; }
   .colorinput .sw input[type=color] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; padding: 0; }
   .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 11px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
 
-  /* ---- shade strip ---- */
-  .shades { display: flex; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 1px var(--stone-200); }
-  .shades > div { flex: 1; height: 12px; }
-
   /* ---- palette / scheme rows ---- */
   .palette-row { display: flex; flex-direction: column; gap: 6px; }
   .palette-row .name-row { display: flex; align-items: center; gap: 4px; }
-  .palette-row .name-row input { flex: 1; }
+  .palette-row .name-row .txt { flex: 1; }
   .icon-btn { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; }
   .icon-btn:hover { color: #dc2626; }
   .icon-btn svg { width: 12px; height: 12px; }
-  .add-btn {
-    width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px;
-    border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer;
-    font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500); transition: all .12s;
-  }
+  .add-btn { width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500); transition: all .12s; }
   .add-btn:hover { color: var(--stone-900); border-color: var(--stone-300); background: var(--stone-50); }
   .add-btn svg { width: 12px; height: 12px; }
-
-  .scheme-preview { width: 44px; height: 44px; border-radius: 6px; box-shadow: 0 0 0 1px var(--stone-200); flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; overflow: hidden; }
-  .scheme-preview .aa { font-family: "Inter"; font-weight: 700; font-size: 17px; line-height: 1; letter-spacing: -0.02em; }
-  .scheme-preview .bar { width: 22px; height: 4px; border-radius: 999px; }
-  .scheme-switch { display: flex; gap: 8px; }
+  .scheme-switch { margin-bottom: 2px; }
 
   /* ==========================================================================
-     PREVIEW SHELL (right side). The .store inner element is the themed surface;
-     it reads ONLY role vars.
+     PREVIEW SHELL — the .store inner element is the themed surface (role vars).
      ========================================================================== */
   .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; }
   .preview-pad { min-height: 100%; padding: 28px 24px; }
-  .store-frame {
-    border-radius: 12px; overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 12px 40px -16px rgba(0,0,0,.18);
-  }
+  .store-frame { border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 12px 40px -16px rgba(0,0,0,.18); }
 
   /* ROLE DEFAULTS — overwritten at runtime by applyRoles(). */
   .store {
-    --c-bg:#ffffff; --c-surface:#f4f3f1; --c-heading:#1a1814; --c-body:#57534e;
-    --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12); --c-border:#e7e5e4;
-    --btn-p-bg:#2a2723; --btn-p-text:#ffffff;
-    --btn-s-bg:#f5f5f4; --btn-s-text:#292524; --btn-s-border:#d6d3d1;
-
+    --c-bg:#ffffff; --c-surface:#f0efed; --c-heading:#1c1917; --c-body:#57534e; --c-border:#f0efed;
+    --c-btn-fill:#dc4a2a; --c-btn-text:#ffffff; --c-btn2-fill:#1c1917; --c-btn2-text:#ffffff;
+    --c-accent-soft:rgba(220,74,42,.12);
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
-    --fw-heading:700; --fw-body:400; --lh-heading:1.1; --lh-body:1.55;
-    --ls-heading:-0.02em; --tt-heading:none;
-    --fs-base:16px; --fs-h1:52px; --fs-h2:40px; --fs-h3:25px; --fs-h4:20px; --fs-h5:17px; --fs-h6:15px;
-
-    --radius:8px; --stroke:1px; --shadow:0 1px 3px rgba(0,0,0,.08);
-    --section-y:6rem; --section-x:2rem; --container:64rem; --gutter:1.75rem;
-    --card-pad:2rem; --header-gap:1rem; --card-gap:1rem; --card-border:1px solid var(--c-border);
-
-    background: var(--c-bg); color: var(--c-body);
-    font-family: var(--font-body); font-size: var(--fs-base); line-height: var(--lh-body);
+    --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
+    --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    --section-padding:80px; --container-max:1120px; --gutter:24px;
+    background: var(--c-bg); color: var(--c-body); font-family: var(--font-body); font-size: var(--fs-base); line-height: 1.6;
   }
   .store h1,.store h2,.store h3,.store h4,.store h5,.store h6 {
-    font-family: var(--font-heading); color: var(--c-heading); font-weight: var(--fw-heading);
-    line-height: var(--lh-heading); letter-spacing: var(--ls-heading); text-transform: var(--tt-heading);
-    margin: 0;
+    font-family: var(--font-heading); color: var(--c-heading); font-weight: 700; line-height: 1.14; letter-spacing: -0.01em; margin: 0;
   }
   .store h1 { font-size: var(--fs-h1); } .store h2 { font-size: var(--fs-h2); }
   .store h3 { font-size: var(--fs-h3); } .store h4 { font-size: var(--fs-h4); }
   .store h5 { font-size: var(--fs-h5); } .store h6 { font-size: var(--fs-h6); }
   .store p { margin: 0; }
-  .store .container { max-width: var(--container); margin: 0 auto; }
-  .store .section { padding: var(--section-y) var(--section-x); }
+  .store .container { max-width: var(--container-max); margin: 0 auto; padding: 0 32px; }
+  .store .section { padding: var(--section-padding) 0; }
 
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--c-accent);
-  }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-btn-fill); }
   .eyebrow .line { width: 20px; height: 2px; background: currentColor; border-radius: 1px; }
 
   /* buttons */
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit;
-    font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2;
-    padding: 12px 22px; border-radius: var(--radius); border: var(--stroke) solid transparent;
-    text-decoration: none; transition: transform .08s, opacity .15s, box-shadow .15s; white-space: nowrap;
-  }
-  .btn:hover { opacity: .9; }
-  .btn:active { transform: translateY(1px); }
-  .btn-primary.fill    { background: var(--btn-p-bg); color: var(--btn-p-text); border-color: var(--btn-p-bg); }
-  .btn-primary.outline { background: transparent; color: var(--btn-p-bg); border-color: var(--btn-p-bg); }
-  .btn-secondary.fill    { background: var(--btn-s-bg); color: var(--btn-s-text); border-color: var(--btn-s-bg); }
-  .btn-secondary.outline { background: transparent; color: var(--btn-s-text); border-color: var(--btn-s-border); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 12px 22px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, opacity .15s; white-space: nowrap; }
+  .btn:hover { opacity: .9; } .btn:active { transform: translateY(1px); }
+  .btn-primary.fill    { background: var(--c-btn-fill); color: var(--c-btn-text); border-color: var(--c-btn-fill); }
+  .btn-primary.outline { background: transparent; color: var(--c-btn-fill); border-color: var(--c-btn-fill); }
+  .btn-secondary.fill    { background: var(--c-btn2-fill); color: var(--c-btn2-text); border-color: var(--c-btn2-fill); }
+  .btn-secondary.outline { background: transparent; color: var(--c-btn2-fill); border-color: var(--c-btn2-fill); }
 
   /* hero */
   .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 520px; background-size: cover; background-position: center; }
   .hero::after { content:""; position:absolute; inset:0; background: linear-gradient(100deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.30) 55%, rgba(0,0,0,.12) 100%); }
-  .hero .container { position: relative; z-index: 1; padding-top: var(--section-y); padding-bottom: var(--section-y); }
+  .hero .container { position: relative; z-index: 1; padding-top: var(--section-padding); padding-bottom: var(--section-padding); }
   .hero .eyebrow { color: #fff; opacity: .92; }
   .hero h1 { color: #fff; max-width: 18ch; margin-bottom: 1.2rem; }
   .hero p { color: rgba(255,255,255,.9); max-width: 46ch; font-size: 1.1rem; margin-bottom: 1.8rem; }
@@ -282,7 +204,7 @@
   .rowhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
   .rowhead .ey { display: flex; flex-direction: column; gap: .75rem; }
   .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr); gap: var(--gutter); overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
-  .card { background: var(--c-surface); border: var(--card-border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; scroll-snap-align: start; }
+  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; scroll-snap-align: start; }
   .card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
   .card .cbody { padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
   .card .cbody h5 { color: var(--c-heading); }
@@ -291,11 +213,11 @@
 
   /* feature section */
   .features-section { background: var(--c-surface); }
-  .feat-head { display: flex; flex-direction: column; align-items: flex-start; gap: var(--header-gap); max-width: 40rem; }
+  .feat-head { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; max-width: 40rem; }
   .feat-head p { color: var(--c-body); font-size: 1.0625rem; }
-  .features { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--gutter); margin-top: calc(var(--header-gap) * 2.5); }
-  .feature { background: var(--c-bg); border: var(--card-border); border-radius: var(--radius); padding: var(--card-pad); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: var(--card-gap); }
-  .feature .ic { width: fit-content; padding: .75rem; border-radius: var(--radius); background: var(--c-accent-soft); color: var(--c-accent); display: inline-flex; }
+  .features { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--gutter); margin-top: 3rem; }
+  .feature { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1rem; }
+  .feature .ic { width: fit-content; padding: .75rem; border-radius: var(--radius); background: var(--c-accent-soft); color: var(--c-btn-fill); display: inline-flex; }
   .feature .ic svg { width: 24px; height: 24px; }
   .feature h4 { color: var(--c-heading); }
   .feature p { color: var(--c-body); flex: 1; }
@@ -303,14 +225,13 @@
   .feature .link svg { width: 15px; height: 15px; }
 
   /* footer */
-  .store-footer { background: var(--c-surface); border-top: var(--stroke) solid var(--c-border); }
+  .store-footer { background: var(--c-surface); border-top: 1px solid var(--c-border); }
   .store-footer .container { padding-top: 3.5rem; padding-bottom: 3.5rem; }
   .store-footer .cols { display: flex; flex-wrap: wrap; gap: 3rem; justify-content: space-between; }
   .store-footer .brandmark { font-family: var(--font-heading); font-weight: 700; font-size: 1.4rem; color: var(--c-heading); margin-bottom: .5rem; }
   .store-footer a { display: block; color: var(--c-body); opacity: .8; text-decoration: none; font-size: .95rem; margin: 8px 0; }
   .store-footer h6 { margin-bottom: .5rem; }
 
-  /* responsive: stack editor above preview on a phone */
   @media (max-width: 860px) {
     .app { flex-direction: column; height: 100vh; }
     .panel { width: 100%; height: 46vh; border-right: none; border-bottom: 1px solid var(--stone-200); }
@@ -327,18 +248,10 @@
   <aside class="panel">
     <div class="panel-header">
       <div class="brand">
-        <div class="logo">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
-        </div>
-        <div>
-          <div class="t1">Theme Settings</div>
-          <div class="t2">Global · v2</div>
-        </div>
+        <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
+        <div><div class="t1">Theme Settings</div><div class="t2">Global · v1</div></div>
       </div>
-      <button class="reset" id="reset-btn">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        Reset
-      </button>
+      <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
     </div>
     <div class="groups" id="groups"><!-- accordion groups injected by JS --></div>
   </aside>
@@ -347,12 +260,11 @@
   <main class="preview">
     <div class="preview-pad">
       <div class="store-frame">
-        <!-- Themed sample store. Every element binds to ROLE vars only. -->
         <div class="store" id="store">
 
           <!-- HERO -->
           <header class="hero" id="hero" style="background-image:url('https://picsum.photos/seed/atelierstore/1600/1000')">
-            <div class="container" style="padding-left:var(--section-x);padding-right:var(--section-x)">
+            <div class="container">
               <div class="eyebrow" style="margin-bottom:1rem"><span class="line"></span>New season</div>
               <h1>Crafted goods for considered living.</h1>
               <p>A premium storefront skeleton. Tune the global tokens on the left and watch every role-bound element respond instantly.</p>
@@ -365,37 +277,31 @@
 
           <!-- PRODUCT CAROUSEL -->
           <section class="section">
-            <div class="container" style="padding-left:var(--section-x);padding-right:var(--section-x)">
+            <div class="container">
               <div class="rowhead">
-                <div class="ey">
-                  <div class="eyebrow"><span class="line"></span>Featured</div>
-                  <h2>This week's edit</h2>
-                </div>
+                <div class="ey"><div class="eyebrow"><span class="line"></span>Featured</div><h2>This week's edit</h2></div>
                 <a class="btn btn-secondary outline">View all</a>
               </div>
-              <div class="carousel" id="carousel"><!-- product cards injected by JS --></div>
+              <div class="carousel" id="carousel"></div>
             </div>
           </section>
 
           <!-- FEATURE SECTION -->
           <section class="section features-section">
-            <div class="container" style="padding-left:var(--section-x);padding-right:var(--section-x)">
+            <div class="container">
               <div class="feat-head">
                 <div class="eyebrow"><span class="line"></span>Why choose us</div>
                 <h2>Designed to move at the speed of your ideas</h2>
                 <p>Build, iterate, and ship a storefront that feels handcrafted — without the overhead. A styling system that adapts to whatever you're making.</p>
               </div>
-              <div class="features" id="features"><!-- feature cards injected by JS --></div>
+              <div class="features" id="features"></div>
             </div>
           </section>
 
           <!-- FOOTER -->
           <footer class="store-footer">
-            <div class="container cols" style="padding-left:var(--section-x);padding-right:var(--section-x)">
-              <div style="max-width:30ch">
-                <div class="brandmark">Atelier</div>
-                <p style="opacity:.7">A prototype storefront for testing global theme styling.</p>
-              </div>
+            <div class="container cols">
+              <div style="max-width:30ch"><div class="brandmark">Atelier</div><p style="opacity:.7">A prototype storefront for testing global theme styling.</p></div>
               <div><h6>Shop</h6><a>New arrivals</a><a>Best sellers</a><a>Collections</a></div>
               <div><h6>Company</h6><a>About</a><a>Journal</a><a>Contact</a></div>
               <div><h6>Support</h6><a>Shipping</a><a>Returns</a><a>FAQ</a></div>
@@ -410,104 +316,60 @@
 
 <script>
 /* ============================================================================
-   COLOR UTILITIES + SHADE GENERATION  (ported from the Design Levers ref)
-   Each palette swatch's hex auto-generates an 11-step ramp (50..950). This is
-   the TOKEN layer: schemes pick "palette.shade" tokens, never raw hex.
+   SMALL UTILS
    ============================================================================ */
-function hexToRgb(hex){
-  let h=(hex||'').replace('#',''); let v;
-  if(h.length===3) v=h.split('').map(c=>c+c).join('');
-  else if(h.length===6) v=h; else return {r:128,g:128,b:128};
-  const n=parseInt(v,16); if(isNaN(n)) return {r:128,g:128,b:128};
-  return {r:(n>>16)&255,g:(n>>8)&255,b:n&255};
-}
-function rgbToHsl(r,g,b){
-  r/=255;g/=255;b/=255; const max=Math.max(r,g,b),min=Math.min(r,g,b);
-  let h=0,s=0; const l=(max+min)/2;
-  if(max!==min){ const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
-    switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}
-    h*=60; }
-  return {h,s:s*100,l:l*100};
-}
-function hslToHex(h,s,l){
-  s/=100;l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l);
-  const f=n=>{const c=l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return Math.round(255*c).toString(16).padStart(2,'0');};
-  return `#${f(0)}${f(8)}${f(4)}`;
-}
-function hexToHsl(hex){const {r,g,b}=hexToRgb(hex);return rgbToHsl(r,g,b);}
-const SHADE_LIGHTNESS={50:97,100:94,200:86,300:76,400:64,500:52,600:44,700:35,800:26,900:17,950:10};
-const SHADE_STOPS=['50','100','200','300','400','500','600','700','800','900','950'];
-function generateShades(hex){
-  const {h,s}=hexToHsl(hex); const out={};
-  for(const [stop,l] of Object.entries(SHADE_LIGHTNESS)){
-    const ratio=Math.abs(l-50)/50; const sat=Math.max(0,s*(1-ratio*0.35));
-    out[stop]=hslToHex(h,sat,l);
-  }
-  return out;
-}
-function rgba(hex,a){const {r,g,b}=hexToRgb(hex);return `rgba(${r}, ${g}, ${b}, ${a})`;}
-function isColorDark(hex){
-  let h=(hex||'').replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join('');
-  if(h.length!==6) return false;
-  const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;
-  return (0.299*r+0.587*g+0.114*b)<0.55;  // ITU BT.601 perceived brightness
-}
+function hexToRgb(hex){ let h=(hex||'').replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); if(isNaN(n))return{r:128,g:128,b:128}; return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}; }
+function rgba(hex,a){ const {r,g,b}=hexToRgb(hex); return `rgba(${r}, ${g}, ${b}, ${a})`; }
+const clone = (o)=>JSON.parse(JSON.stringify(o));
 
-/* ============================================================================
-   NAMED SCALES  (curated steps -> tasteful results, like the reference)
-   ============================================================================ */
+/* Font registry — options for the font pickers. */
 const FONTS = {
   Inter:'"Inter", sans-serif', Manrope:'"Manrope", sans-serif', 'DM Sans':'"DM Sans", sans-serif',
   'Plus Jakarta Sans':'"Plus Jakarta Sans", sans-serif', 'Space Grotesk':'"Space Grotesk", sans-serif',
-  Fraunces:'"Fraunces", serif', 'Playfair Display':'"Playfair Display", serif',
-  'JetBrains Mono':'"JetBrains Mono", monospace',
+  Fraunces:'"Fraunces", serif', 'Playfair Display':'"Playfair Display", serif', 'JetBrains Mono':'"JetBrains Mono", monospace',
 };
-const HEADING_WEIGHT={Weak:400,Regular:600,Strong:800};
-const BODY_WEIGHT={Weak:300,Regular:400,Strong:500};
-const LINE_HEIGHT={Tight:1.1,Regular:1.3,Loose:1.5};
-const BODY_LINE_HEIGHT={Tight:1.35,Regular:1.55,Loose:1.8};
-const LETTER_SPACING={Tight:'-0.02em',Regular:'0em',Loose:'0.06em'};
-const CASE={Default:'none',UPPERCASE:'uppercase','Title Case':'capitalize',lowercase:'lowercase'};
-const RADIUS_SCALE={Sharp:0,Subtle:4,Regular:8,Soft:16,Rounded:24,Pill:999};
-const STROKE_WEIGHT={Regular:1,Heavy:2};
-const SECTION_SPACING={Compact:{y:4,x:1.5},Regular:{y:6,x:2},Spacious:{y:9,x:2.5}};
-const CONTENT_WIDTH={Narrow:56,Regular:64,Wide:72};
-const DENSITY={Dense:{header:0.5,grid:1,cardPad:1.5,cardGap:0.75},Regular:{header:1,grid:1.75,cardPad:2,cardGap:1},Airy:{header:1.5,grid:2.5,cardPad:2.75,cardGap:1.5}};
-const SHADOWS={None:'none',Soft:'0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06)',Hard:'0 18px 40px -12px rgba(0,0,0,.28)'};
+const SHADOWS = { None:'none', Soft:'0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06)', Hard:'0 18px 40px -12px rgba(0,0,0,.28)' };
+const RADIUS_PRESETS = { Sharp:0, Soft:8, Rounded:16, Pill:999 };
 
 /* ============================================================================
-   STATE  —  the single source of truth (TOKENS + role mappings).
-   Defaults mirror the reference: warm Neutral + warm Primary on Inter.
+   STATE  —  V1 system (named swatches mapped DIRECTLY to roles), nicer colors.
    ============================================================================ */
 const DEFAULTS = {
+  // TOKENS: palette swatches — the ONLY place a hex is entered.
   palette: [
-    { id:'neutral', name:'Neutral', hex:'#3d3a36' },
-    { id:'primary', name:'Primary', hex:'#dc4a2a' },
+    { id:'ink',   name:'Ink',   hex:'#1c1917' },
+    { id:'stone', name:'Stone', hex:'#57534e' },
+    { id:'mist',  name:'Mist',  hex:'#f0efed' },
+    { id:'paper', name:'Paper', hex:'#ffffff' },
+    { id:'brand', name:'Brand', hex:'#dc4a2a' },
+    { id:'rust',  name:'Rust',  hex:'#a83716' },
+    { id:'night', name:'Night', hex:'#292524' },
   ],
-  // COLOR SCHEMES: role -> palette TOKEN ("white" or "<id>.<stop>"). Dropdowns only.
+  // The color roles every scheme maps (role -> swatch id, via dropdown only).
+  colorRoles: [
+    { key:'bg',       label:'Background',     cssVar:'--c-bg' },
+    { key:'surface',  label:'Surface',        cssVar:'--c-surface' },
+    { key:'heading',  label:'Heading text',   cssVar:'--c-heading' },
+    { key:'body',     label:'Body text',      cssVar:'--c-body' },
+    { key:'border',   label:'Border',         cssVar:'--c-border' },
+    { key:'btnFill',  label:'Button fill',    cssVar:'--c-btn-fill' },
+    { key:'btnText',  label:'Button text',    cssVar:'--c-btn-text' },
+    { key:'btn2Fill', label:'Secondary fill', cssVar:'--c-btn2-fill' },
+    { key:'btn2Text', label:'Secondary text', cssVar:'--c-btn2-text' },
+  ],
   schemes: {
-    Light: { bg:'white',        surface:'neutral.100', heading:'neutral.950', body:'neutral.700', accent:'primary.500', border:'neutral.200' },
-    Dark:  { bg:'neutral.900',  surface:'neutral.800', heading:'white',       body:'neutral.300', accent:'primary.400', border:'neutral.700' },
-    Brand: { bg:'primary.500',  surface:'primary.600', heading:'white',       body:'primary.100', accent:'white',       border:'primary.400' },
+    Light: { bg:'paper', surface:'mist',  heading:'ink',   body:'stone', border:'mist',  btnFill:'brand', btnText:'paper', btn2Fill:'ink',   btn2Text:'paper' },
+    Dark:  { bg:'ink',   surface:'night', heading:'paper', body:'mist',  border:'night', btnFill:'brand', btnText:'paper', btn2Fill:'paper', btn2Text:'ink'   },
+    Brand: { bg:'brand', surface:'rust',  heading:'paper', body:'paper', border:'rust',  btnFill:'paper', btnText:'brand', btn2Fill:'paper', btn2Text:'brand' },
   },
   activeScheme: 'Light',
-  typography: {
-    headingFont:'Inter', bodyFont:'Inter',
-    headingWeight:'Strong', bodyWeight:'Regular',
-    headingLineHeight:'Tight', bodyLineHeight:'Regular',
-    headingLetterSpacing:'Tight', headingCase:'Default',
-    baseSize:16, ratio:1.25,
-    overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
-  },
+  // TYPOGRAPHY: font + base size + ratio (auto-generates H1–H6) + per-level overrides.
+  typography: { headingFont:'Inter', bodyFont:'Inter', baseSize:16, ratio:1.25, overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' } },
   buttons: { primaryStyle:'fill', secondaryStyle:'outline' },
-  spacing: { section:'Regular', density:'Regular', contentWidth:'Regular' },
-  radius: 'Regular',
-  stroke: 'Regular',
-  containerBorder: true,
+  radius: 10,                                   // px, one global corner radius
+  spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
   elevation: 'Soft',
 };
-// deep clone helper so Reset restores cleanly
-const clone = (o) => JSON.parse(JSON.stringify(o));
 let STATE = clone(DEFAULTS);
 
 const PRODUCTS = [
@@ -517,412 +379,291 @@ const PRODUCTS = [
   { name:'Wool Runner', price:'$95',  seed:'woo4' },
 ];
 
-/* Cached shade ramps, recomputed whenever the palette changes. */
-let SHADES = {};
-function rebuildShades(){
-  SHADES = {};
-  STATE.palette.forEach(c => { SHADES[c.id] = Object.assign(generateShades(c.hex), { base:c.hex }); });
-}
-
 /* ============================================================================
-   RESOLVERS  —  TOKENS + active scheme -> concrete role values.
+   RESOLVERS + applyRoles()  — THE HEART OF THE WIRING.
    ============================================================================ */
-function resolveToken(token){
-  if(!token) return '#888';
-  if(token==='white') return '#ffffff';
-  const [id,stop]=token.split('.');
-  return (SHADES[id] && SHADES[id][stop]) || '#888';
-}
-function resolveScheme(scheme){
-  const background = resolveToken(scheme.bg);
-  return {
-    bg: background,
-    surface: resolveToken(scheme.surface),
-    heading: resolveToken(scheme.heading),
-    body: resolveToken(scheme.body),
-    accent: resolveToken(scheme.accent),
-    border: resolveToken(scheme.border),
-    useAlternateUI: isColorDark(background), // dark bg -> lighter UI element set
-  };
-}
-// Button colors auto-contrast per scheme (Main for light bg, Alternate for dark).
-// Text is always white on Main / near-black on Alternate — never the raw brand color.
-function getUITokens(useAlternate){
-  const neutral = SHADES.neutral || {};
-  const brandHex = (SHADES.primary && SHADES.primary.base) || '#000';
-  const brandIsDark = isColorDark(brandHex);
-  const dark = neutral[950] || '#0c0a09';
-  const main = {
-    primary:   brandIsDark ? {bg:brandHex,text:'#fff'} : {bg:dark,text:'#fff'},
-    secondary: {bg:neutral[100]||'#f5f5f4', text:neutral[900]||'#1c1917', border:neutral[300]||'#d6d3d1'},
-  };
-  const alt = {
-    primary:   brandIsDark ? {bg:'#fff',text:dark} : {bg:brandHex,text:dark},
-    secondary: {bg:neutral[800]||'#292524', text:'#fff', border:neutral[700]||'#44403c'},
-  };
-  return useAlternate ? alt : main;
-}
-
-// Compute H1–H6 from base size + ratio, honoring per-level overrides.
+function swatchHex(id){ const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
 function computeHeadingSizes(){
-  const exp={h1:5,h2:4,h3:2.4,h4:1.6,h5:0.9,h6:0.4};
-  const t=STATE.typography; const out={};
+  const exp = { h1:5, h2:4, h3:3, h4:2, h5:1, h6:0 };  // h6 = base; each step up *= ratio
+  const t = STATE.typography; const out = {};
   for(const lvl of Object.keys(exp)){
-    const ov=t.overrides[lvl];
-    out[lvl]=(ov!==''&&ov!=null)?Number(ov):+(t.baseSize*Math.pow(t.ratio,exp[lvl])).toFixed(1);
+    const ov = t.overrides[lvl];
+    out[lvl] = (ov!==''&&ov!=null) ? Number(ov) : +(t.baseSize*Math.pow(t.ratio,exp[lvl])).toFixed(1);
   }
   return out;
 }
-
-/* ============================================================================
-   applyRoles()  —  THE HEART OF THE WIRING.
-   Writes every role custom property onto the .store element.
-   ============================================================================ */
 function applyRoles(){
-  const store = document.getElementById('store');
-  const s = store.style;
-  const scheme = resolveScheme(STATE.schemes[STATE.activeScheme]);
-  const ui = getUITokens(scheme.useAlternateUI);
+  const s = document.getElementById('store').style;
+  const scheme = STATE.schemes[STATE.activeScheme];
 
-  // 1) COLOR roles
-  s.setProperty('--c-bg', scheme.bg);
-  s.setProperty('--c-surface', scheme.surface);
-  s.setProperty('--c-heading', scheme.heading);
-  s.setProperty('--c-body', scheme.body);
-  s.setProperty('--c-accent', scheme.accent);
-  s.setProperty('--c-accent-soft', rgba(scheme.accent, 0.12));
-  s.setProperty('--c-border', scheme.border);
+  // 1) COLOR roles — each maps directly to a palette swatch.
+  STATE.colorRoles.forEach(r => s.setProperty(r.cssVar, swatchHex(scheme[r.key])));
+  s.setProperty('--c-accent-soft', rgba(swatchHex(scheme.btnFill), 0.12));
 
-  // 2) BUTTON roles (auto-contrasting)
-  s.setProperty('--btn-p-bg', ui.primary.bg);
-  s.setProperty('--btn-p-text', ui.primary.text);
-  s.setProperty('--btn-s-bg', ui.secondary.bg);
-  s.setProperty('--btn-s-text', ui.secondary.text);
-  s.setProperty('--btn-s-border', ui.secondary.border);
-
-  // 3) TYPOGRAPHY roles
+  // 2) TYPOGRAPHY roles.
   const t = STATE.typography;
   s.setProperty('--font-heading', FONTS[t.headingFont]);
   s.setProperty('--font-body', FONTS[t.bodyFont]);
-  s.setProperty('--fw-heading', HEADING_WEIGHT[t.headingWeight]);
-  s.setProperty('--fw-body', BODY_WEIGHT[t.bodyWeight]);
-  s.setProperty('--lh-heading', LINE_HEIGHT[t.headingLineHeight]);
-  s.setProperty('--lh-body', BODY_LINE_HEIGHT[t.bodyLineHeight]);
-  s.setProperty('--ls-heading', LETTER_SPACING[t.headingLetterSpacing]);
-  s.setProperty('--tt-heading', CASE[t.headingCase]);
   s.setProperty('--fs-base', t.baseSize+'px');
   const h = computeHeadingSizes();
   for(const lvl of ['h1','h2','h3','h4','h5','h6']) s.setProperty('--fs-'+lvl, h[lvl]+'px');
 
-  // 4) SHAPE / SPACING / ELEVATION roles
-  const radiusPx = RADIUS_SCALE[STATE.radius];
-  s.setProperty('--radius', radiusPx+'px');
-  s.setProperty('--stroke', STROKE_WEIGHT[STATE.stroke]+'px');
+  // 3) SHAPE / SPACING / ELEVATION roles.
+  s.setProperty('--radius', STATE.radius+'px');
   s.setProperty('--shadow', SHADOWS[STATE.elevation]);
-  const sec=SECTION_SPACING[STATE.spacing.section];
-  s.setProperty('--section-y', sec.y+'rem');
-  s.setProperty('--section-x', sec.x+'rem');
-  s.setProperty('--container', CONTENT_WIDTH[STATE.spacing.contentWidth]+'rem');
-  const den=DENSITY[STATE.spacing.density];
-  s.setProperty('--gutter', den.grid+'rem');
-  s.setProperty('--card-pad', den.cardPad+'rem');
-  s.setProperty('--header-gap', den.header+'rem');
-  s.setProperty('--card-gap', den.cardGap+'rem');
-  s.setProperty('--card-border', STATE.containerBorder ? `var(--stroke) solid var(--c-border)` : 'none');
+  s.setProperty('--section-padding', STATE.spacing.sectionPadding+'px');
+  s.setProperty('--container-max', STATE.spacing.containerMax+'px');
+  s.setProperty('--gutter', STATE.spacing.gutter+'px');
 
-  // 5) BUTTON style (fill vs outline) — swap classes on demo buttons
+  // 4) BUTTON style (fill vs outline) — swap classes on demo buttons.
   document.querySelectorAll('.btn-primary').forEach(b=>{ b.classList.remove('fill','outline'); b.classList.add(STATE.buttons.primaryStyle); });
   document.querySelectorAll('.btn-secondary').forEach(b=>{ b.classList.remove('fill','outline'); b.classList.add(STATE.buttons.secondaryStyle); });
 }
 
 /* ============================================================================
-   DOM HELPERS + CONTROL PRIMITIVES  (mirroring the reference's components)
+   SHARED PANEL COMPONENTS (one of each — used by every control for consistency)
    ============================================================================ */
-const el = (html) => { const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; };
+const el = (html)=>{ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; };
 const ICONS = {
-  palette:'<path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>',
+  palette:'<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C21.0 6.012 17.0 2 12 2z"/>',
   type:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
-  layout:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
-  square:'<rect width="18" height="18" x="3" y="3" rx="2"/>',
-  minus:'<path d="M5 12h14"/>',
-  box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>',
   click:'<path d="M9 9l5 12 1.8-5.2L21 14Z"/><path d="M7.2 2.2 8 5.1"/><path d="m5.1 8-2.9-.8"/><path d="M14 4.1 12 6"/><path d="m6 12-1.9 2"/>',
+  square:'<rect width="18" height="18" x="3" y="3" rx="2"/>',
+  layout:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
   layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+  box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>',
 };
-function svg(path, w=14){ return `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`; }
+const svg = (path,w=14)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
 function group(title, iconKey, open){
   const d = el(`<details class="group" ${open?'open':''}>
-    <summary>
-      <span class="gtitle">${svg(ICONS[iconKey])}<span>${title}</span></span>
-      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </summary>
-    <div class="group-body"></div>
-  </details>`);
+    <summary><span class="gtitle">${svg(ICONS[iconKey])}<span>${title}</span></span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></summary>
+    <div class="group-body"></div></details>`);
   return { wrap:d, body:d.querySelector('.group-body') };
 }
 function subgroup(label, divider){
-  const w = el(`<div class="subgroup ${divider?'divider':''}">
-    <div class="subgroup-label">${label}</div>
-    <div class="subgroup-items"></div>
-  </div>`);
+  const w = el(`<div class="subgroup ${divider?'divider':''}"><div class="subgroup-label">${label}</div><div class="subgroup-items"></div></div>`);
   return { wrap:w, body:w.querySelector('.subgroup-items') };
 }
 function controlRow(label, control, inline){
   const w = el(`<div class="ctl ${inline?'inline':''}"><label>${label}</label></div>`);
-  w.appendChild(control);
-  return w;
+  w.appendChild(control); return w;
 }
 
-// Select dropdown (native <select> styled to match the reference look).
-function select(value, options, onChange){
-  const s = el(`<select class="sel"></select>`);
-  options.forEach(o => { const opt=el(`<option value="${o}">${o}</option>`); if(o===value) opt.selected=true; s.appendChild(opt); });
-  s.onchange = () => onChange(s.value);
-  return s;
-}
-function fontSelect(value, onChange){
-  const s = select(value, Object.keys(FONTS), onChange);
-  // preview each option in its own typeface
-  Array.from(s.options).forEach(o => { o.style.fontFamily = FONTS[o.value]; });
-  return s;
+// ---- custom dropdown: trigger + popup menu showing swatches / font previews ----
+function customDropdown(value, options, onChange){
+  // options: [{ value, label, color?:hex, font?:stack }]
+  let current = value;
+  const wrap = el('<div class="dd"></div>');
+  const trigger = el('<button type="button" class="field dd-trigger"></button>');
+  wrap.appendChild(trigger);
+  let menu = null;
+
+  function optByVal(v){ return options.find(o=>o.value===v) || { label:String(v) }; }
+  function renderTrigger(){
+    const o = optByVal(current);
+    trigger.innerHTML = '';
+    const cur = el('<span class="dd-cur"></span>');
+    if(o.color){ const sw=el('<span class="dd-sw"></span>'); sw.style.background=o.color; cur.appendChild(sw); }
+    const lbl = el('<span class="dd-label"></span>'); lbl.textContent=o.label; if(o.font) lbl.style.fontFamily=o.font;
+    cur.appendChild(lbl); trigger.appendChild(cur);
+    trigger.appendChild(el('<svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
+  }
+  function close(){ if(menu){ menu.remove(); menu=null; } trigger.classList.remove('open'); document.removeEventListener('mousedown',onDoc,true); document.removeEventListener('scroll',onScroll,true); window.removeEventListener('resize',close); }
+  function onDoc(e){ if(!trigger.contains(e.target) && menu && !menu.contains(e.target)) close(); }
+  function onScroll(e){ if(menu && menu.contains(e.target)) return; close(); }
+  function position(){
+    const r = trigger.getBoundingClientRect(); const maxH=240;
+    const below=window.innerHeight-r.bottom-8, above=r.top-8, up = below<180 && above>below;
+    menu.style.position='fixed'; menu.style.left=r.left+'px'; menu.style.width=r.width+'px';
+    menu.style.maxHeight=Math.min(maxH, up?above:below)+'px';
+    if(up){ menu.style.bottom=(window.innerHeight-r.top+4)+'px'; menu.style.top='auto'; }
+    else  { menu.style.top=(r.bottom+4)+'px'; menu.style.bottom='auto'; }
+  }
+  function open(){
+    if(menu){ close(); return; }
+    menu = el('<div class="dd-menu"></div>');
+    options.forEach(o=>{
+      const it = el('<button type="button" class="dd-item"></button>');
+      if(o.color){ const sw=el('<span class="dd-sw"></span>'); sw.style.background=o.color; it.appendChild(sw); }
+      const lbl = el('<span class="dd-label"></span>'); lbl.textContent=o.label; if(o.font) lbl.style.fontFamily=o.font; it.appendChild(lbl);
+      if(o.value===current) it.appendChild(el('<svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'));
+      it.onclick = ()=>{ current=o.value; renderTrigger(); close(); onChange(o.value); };
+      menu.appendChild(it);
+    });
+    document.body.appendChild(menu); position(); trigger.classList.add('open');
+    setTimeout(()=>{ document.addEventListener('mousedown',onDoc,true); document.addEventListener('scroll',onScroll,true); window.addEventListener('resize',close); }, 0);
+  }
+  trigger.onclick = (e)=>{ e.stopPropagation(); open(); };
+  renderTrigger();
+  return wrap;
 }
 
-// Segmented toggle group — styled like a select, but stays a button group.
+// ---- segmented toggle group (kept as buttons, styled like the fields) ----
 function segmented(value, options, onChange){
   const w = el('<div class="seg"></div>');
-  options.forEach(o => {
-    const b = el(`<button type="button">${o}</button>`);
-    if(o===value) b.classList.add('active');
-    b.onclick = () => { w.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); onChange(o); };
+  options.forEach(o=>{
+    const b = el(`<button type="button">${o}</button>`); if(o===value) b.classList.add('active');
+    b.onclick = ()=>{ w.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); onChange(o); };
     w.appendChild(b);
   });
   return w;
 }
 
-// Step slider with dotted track (ported from the reference).
-function stepSlider(label, value, options, onChange){
-  const n = options.length;
+// ---- single shared slider (continuous). wrap.setValue(v) updates externally. ----
+function slider(label, value, min, max, step, suffix, onChange){
   const wrap = el(`<div class="ctl">
-    <div class="ctl-head"><label>${label}</label><span class="val"></span></div>
-    <div class="field" style="padding:0 12px">
-      <div class="slider-track">
-        <div class="slider-rail"></div>
-        <div class="slider-fill"></div>
-        <div class="slider-thumb"></div>
-      </div>
-    </div>
+    <div class="ctl-head"><span class="ctl-label">${label}</span><span class="val"></span></div>
+    <div class="field"><div class="slider-track"><div class="slider-rail"></div><div class="slider-fill"></div><div class="slider-thumb"></div></div></div>
   </div>`);
-  const track = wrap.querySelector('.slider-track');
-  const fill = wrap.querySelector('.slider-fill');
-  const thumb = wrap.querySelector('.slider-thumb');
-  const valEl = wrap.querySelector('.val');
-  const INSET = 2;
-  const insetPos = (p)=>`calc(${INSET}px + ${p} * (100% - ${2*INSET}px))`;
-  // dots
-  for(let i=0;i<n;i++){ const dot=el('<div class="slider-dot"></div>'); dot.style.left=insetPos(n>1?i/(n-1):0.5); track.appendChild(dot); }
+  const track=wrap.querySelector('.slider-track'), fill=wrap.querySelector('.slider-fill'), thumb=wrap.querySelector('.slider-thumb'), valEl=wrap.querySelector('.val');
   let cur = value;
-  function paint(){
-    const idx=Math.max(0,options.indexOf(cur)); const pct=n>1?idx/(n-1):0.5;
-    fill.style.width=insetPos(pct); thumb.style.left=insetPos(pct); thumb.style.transform='translate(-50%,-50%)';
-    valEl.textContent=cur;
-  }
-  function setFromX(clientX){
-    const rect=track.getBoundingClientRect(); const usable=Math.max(1,rect.width-2*INSET);
-    const p=Math.max(0,Math.min(1,(clientX-rect.left-INSET)/usable));
-    const idx=Math.round(p*(n-1));
-    if(options[idx]!==cur){ cur=options[idx]; paint(); onChange(cur); }
-  }
+  const clamp = (v)=> Math.max(min, Math.min(max, Math.round(v/step)*step));
+  function paint(){ const pct=(cur-min)/(max-min); fill.style.width=pct*100+'%'; thumb.style.left=pct*100+'%'; thumb.style.transform='translate(-50%,-50%)'; valEl.textContent=cur+suffix; }
+  function setFromX(x){ const r=track.getBoundingClientRect(); const p=Math.max(0,Math.min(1,(x-r.left)/r.width)); const v=clamp(min+p*(max-min)); if(v!==cur){ cur=v; paint(); onChange(cur); } }
   let dragging=false;
-  track.addEventListener('pointerdown', e=>{ e.preventDefault(); dragging=true; track.setPointerCapture(e.pointerId); setFromX(e.clientX); thumb.style.transform='translate(-50%,-50%) scale(1.1)'; });
+  track.addEventListener('pointerdown', e=>{ e.preventDefault(); dragging=true; track.setPointerCapture(e.pointerId); thumb.style.transform='translate(-50%,-50%) scale(1.1)'; setFromX(e.clientX); });
   track.addEventListener('pointermove', e=>{ if(dragging) setFromX(e.clientX); });
   track.addEventListener('pointerup', ()=>{ dragging=false; paint(); });
+  wrap.setValue = (v)=>{ cur=clamp(v); paint(); };
   paint();
   return wrap;
 }
 
-// Range input for continuous numeric values (base size), styled minimally.
-function rangeRow(label, value, min, max, step, suffix, onChange){
-  const wrap = el(`<div class="ctl">
-    <div class="ctl-head"><label>${label}</label><span class="val">${value}${suffix}</span></div>
-    <input type="range" min="${min}" max="${max}" step="${step}" value="${value}" style="width:100%">
-  </div>`);
-  const val=wrap.querySelector('.val'); const inp=wrap.querySelector('input');
-  inp.oninput = () => { val.textContent=inp.value+suffix; onChange(+inp.value); };
-  return wrap;
-}
-
-// Toggle switch.
-function toggle(value, onChange){
-  const b = el(`<button type="button" role="switch" aria-checked="${value}" style="position:relative;width:36px;height:20px;border:none;border-radius:999px;cursor:pointer;transition:background .15s;background:${value?'var(--stone-900)':'var(--stone-300)'}"><span style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s;transform:${value?'translateX(16px)':'none'}"></span></button>`);
-  let v=value;
-  b.onclick = () => { v=!v; b.setAttribute('aria-checked',v); b.style.background=v?'var(--stone-900)':'var(--stone-300)'; b.querySelector('span').style.transform=v?'translateX(16px)':'none'; onChange(v); };
-  return b;
-}
-
-// Color input (swatch picker + hex field) — the only hex-entry surface.
+// ---- color input (swatch picker + hex field) — the only hex-entry surface ----
 function colorInput(value, onChange){
-  const wrap = el(`<div class="field"><div class="colorinput" style="width:100%">
+  const wrap = el(`<div class="field"><div class="colorinput">
     <span class="sw" style="background:${value}"><input type="color" value="${value}"></span>
-    <input type="text" class="hex" value="${value.toUpperCase()}">
-  </div></div>`);
-  const sw=wrap.querySelector('.sw'); const picker=wrap.querySelector('input[type=color]'); const hex=wrap.querySelector('.hex');
-  picker.oninput = () => { hex.value=picker.value.toUpperCase(); sw.style.background=picker.value; onChange(picker.value); };
-  hex.onchange = () => { let v=hex.value.trim(); if(!v.startsWith('#'))v='#'+v; if(/^#[0-9A-Fa-f]{6}$/.test(v)){ picker.value=v; sw.style.background=v; onChange(v); } };
+    <input type="text" class="hex" value="${value.toUpperCase()}"></div></div>`);
+  const sw=wrap.querySelector('.sw'), picker=wrap.querySelector('input[type=color]'), hex=wrap.querySelector('.hex');
+  picker.oninput = ()=>{ hex.value=picker.value.toUpperCase(); sw.style.background=picker.value; onChange(picker.value); };
+  hex.onchange = ()=>{ let v=hex.value.trim(); if(!v.startsWith('#'))v='#'+v; if(/^#[0-9A-Fa-f]{6}$/.test(v)){ picker.value=v; sw.style.background=v; onChange(v); } };
   return wrap;
-}
-function shadeStrip(id){
-  const w = el('<div class="shades"></div>');
-  SHADE_STOPS.forEach(s => { const d=el('<div></div>'); d.style.background=(SHADES[id]&&SHADES[id][s])||'#888'; d.title=`${s} · ${(SHADES[id]&&SHADES[id][s])||''}`; w.appendChild(d); });
-  return w;
 }
 
-// Token picker: a <select> of "White" + every palette swatch's 11 shades.
-// This is how a scheme role points at a TOKEN (never a raw hex).
-function tokenPicker(value, onChange){
-  const wrap = el(`<div class="field" style="padding:0 8px;gap:8px">
-    <span class="sw" style="width:20px;height:20px;border-radius:4px;box-shadow:0 0 0 1px var(--stone-200);flex:0 0 auto"></span>
-    <select class="sel" style="background:transparent;padding-left:0"></select>
-  </div>`);
-  const sw=wrap.querySelector('.sw'); const sel=wrap.querySelector('select');
-  const add=(val,label)=>{ const o=el(`<option value="${val}">${label}</option>`); if(val===value)o.selected=true; sel.appendChild(o); };
-  add('white','White');
-  STATE.palette.forEach(c => SHADE_STOPS.forEach(s => add(`${c.id}.${s}`, `${c.name} ${s}`)));
-  const paintSw=()=> sw.style.background=resolveToken(sel.value);
-  paintSw();
-  sel.onchange = () => { paintSw(); onChange(sel.value); };
-  return wrap;
+// swatch-token dropdown for scheme roles: lists every palette swatch.
+function swatchDropdown(value, onChange){
+  const opts = STATE.palette.map(c => ({ value:c.id, label:c.name, color:c.hex }));
+  return customDropdown(value, opts, onChange);
+}
+function fontDropdown(value, onChange){
+  const opts = Object.keys(FONTS).map(f => ({ value:f, label:f, font:FONTS[f] }));
+  return customDropdown(value, opts, onChange);
 }
 
 /* ============================================================================
    PANEL GROUPS  (each control: change -> mutate STATE -> applyRoles())
    ============================================================================ */
-let schemesHost; // re-rendered when palette names/colors change
+let schemesHost;
 
 function renderColor(body){
   // ---- Palette (only hex entry) ----
   const pal = subgroup('Palette');
   function drawPalette(){
     pal.body.innerHTML='';
-    STATE.palette.forEach((c,i) => {
-      const protectedId = (c.id==='neutral'||c.id==='primary');
-      const row = el(`<div class="palette-row"></div>`);
-      const nameRow = el(`<div class="name-row"></div>`);
-      if(protectedId){
-        nameRow.appendChild(el(`<span class="ctl"><label style="color:var(--stone-600);font-weight:500">${c.name}</label></span>`));
-      } else {
-        const nm = el(`<input type="text" class="txt" value="${c.name}">`);
-        nm.onchange = () => { c.name=nm.value; renderSchemes(); };
-        nameRow.appendChild(nm);
+    STATE.palette.forEach((c,i)=>{
+      const row = el('<div class="palette-row"></div>');
+      const nameRow = el('<div class="name-row"></div>');
+      const nm = el(`<input type="text" class="txt" value="${c.name}">`);
+      nm.onchange = ()=>{ c.name=nm.value; renderSchemes(); };
+      nameRow.appendChild(nm);
+      if(STATE.palette.length > 2){
         const rm = el(`<button class="icon-btn" title="Remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',12)}</button>`);
-        rm.onclick = () => { STATE.palette.splice(i,1); rebuildShades(); drawPalette(); renderSchemes(); applyRoles(); };
+        rm.onclick = ()=>{ STATE.palette.splice(i,1); reconcileSchemes(); drawPalette(); renderSchemes(); applyRoles(); };
         nameRow.appendChild(rm);
       }
       row.appendChild(nameRow);
-      row.appendChild(colorInput(c.hex, hex => { c.hex=hex; rebuildShades(); row.querySelector('.shades').replaceWith(shadeStrip(c.id)); renderSchemes(); applyRoles(); }));
-      row.appendChild(shadeStrip(c.id));
+      row.appendChild(colorInput(c.hex, hex=>{ c.hex=hex; renderSchemes(); applyRoles(); }));
       pal.body.appendChild(row);
     });
-    const add = el(`<button class="add-btn">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add Color</button>`);
-    add.onclick = () => {
-      const presets=['#5b8def','#10b981','#f59e0b','#a855f7','#ec4899','#06b6d4','#84cc16'];
-      let n=1; const ids=new Set(STATE.palette.map(c=>c.id)); while(ids.has('c'+n)) n++;
-      STATE.palette.push({ id:'c'+n, name:'Color '+n, hex:presets[(STATE.palette.length-2)%presets.length] });
-      rebuildShades(); drawPalette(); renderSchemes(); applyRoles();
-    };
+    const add = el(`<button class="add-btn">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add swatch</button>`);
+    add.onclick = ()=>{ let n=STATE.palette.length+1; STATE.palette.push({ id:'sw'+Date.now().toString(36), name:'Swatch '+n, hex:'#888888' }); drawPalette(); renderSchemes(); };
     pal.body.appendChild(add);
   }
   drawPalette();
   body.appendChild(pal.wrap);
 
   // ---- Schemes ----
-  const sch = subgroup('Schemes', true);
+  const sch = subgroup('Color schemes', true);
   schemesHost = sch.body;
   renderSchemes();
   body.appendChild(sch.wrap);
 }
 
+// If a swatch is deleted, repoint any scheme role that referenced it.
+function reconcileSchemes(){
+  const valid = new Set(STATE.palette.map(c=>c.id));
+  const fallback = STATE.palette[0].id;
+  Object.values(STATE.schemes).forEach(sc => { STATE.colorRoles.forEach(r=>{ if(!valid.has(sc[r.key])) sc[r.key]=fallback; }); });
+}
+
 function renderSchemes(){
   if(!schemesHost) return;
   schemesHost.innerHTML='';
-
-  // active-scheme switcher (toggle group, restyled)
-  const names = Object.keys(STATE.schemes);
-  schemesHost.appendChild(controlRow('Active scheme', segmented(STATE.activeScheme, names, v => { STATE.activeScheme=v; renderSchemes(); applyRoles(); })));
-
-  // per-role token pickers for the active scheme
-  const roles = [
-    ['bg','Background'],['surface','Surface'],['heading','Heading text'],
-    ['body','Body text'],['accent','Accent'],['border','Border'],
-  ];
+  // active-scheme switcher (toggle group)
+  const sw = controlRow('Active scheme', segmented(STATE.activeScheme, Object.keys(STATE.schemes), v=>{ STATE.activeScheme=v; renderSchemes(); applyRoles(); }));
+  sw.classList.add('scheme-switch');
+  schemesHost.appendChild(sw);
+  // one swatch-dropdown per role for the active scheme
   const scheme = STATE.schemes[STATE.activeScheme];
-  const wrap = el('<div class="subgroup-items"></div>');
-  roles.forEach(([key,label]) => {
-    wrap.appendChild(controlRow(label, tokenPicker(scheme[key], v => { scheme[key]=v; applyRoles(); })));
+  STATE.colorRoles.forEach(r=>{
+    schemesHost.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; applyRoles(); })));
   });
-  schemesHost.appendChild(wrap);
 }
 
 function renderTypography(body){
   const t = STATE.typography;
-  const head = subgroup('Heading');
-  head.body.appendChild(controlRow('Font', fontSelect(t.headingFont, v => { t.headingFont=v; applyRoles(); })));
-  head.body.appendChild(stepSlider('Weight', t.headingWeight, ['Weak','Regular','Strong'], v => { t.headingWeight=v; applyRoles(); }));
-  head.body.appendChild(stepSlider('Line Height', t.headingLineHeight, ['Tight','Regular','Loose'], v => { t.headingLineHeight=v; applyRoles(); }));
-  head.body.appendChild(stepSlider('Letter Spacing', t.headingLetterSpacing, ['Tight','Regular','Loose'], v => { t.headingLetterSpacing=v; applyRoles(); }));
-  head.body.appendChild(controlRow('Case', select(t.headingCase, ['Default','UPPERCASE','Title Case','lowercase'], v => { t.headingCase=v; applyRoles(); })));
-  body.appendChild(head.wrap);
+  const fonts = subgroup('Fonts');
+  fonts.body.appendChild(controlRow('Heading font', fontDropdown(t.headingFont, v=>{ t.headingFont=v; applyRoles(); })));
+  fonts.body.appendChild(controlRow('Body font', fontDropdown(t.bodyFont, v=>{ t.bodyFont=v; applyRoles(); })));
+  body.appendChild(fonts.wrap);
 
-  const bod = subgroup('Body', true);
-  bod.body.appendChild(controlRow('Font', fontSelect(t.bodyFont, v => { t.bodyFont=v; applyRoles(); })));
-  bod.body.appendChild(stepSlider('Weight', t.bodyWeight, ['Weak','Regular','Strong'], v => { t.bodyWeight=v; applyRoles(); }));
-  bod.body.appendChild(stepSlider('Line Height', t.bodyLineHeight, ['Tight','Regular','Loose'], v => { t.bodyLineHeight=v; applyRoles(); }));
-  body.appendChild(bod.wrap);
-
-  const scale = subgroup('Type Scale', true);
-  scale.body.appendChild(rangeRow('Base size', t.baseSize, 13, 20, 1, 'px', v => { t.baseSize=v; applyRoles(); drawOverrides(); }));
-  const ratios=['1.125','1.2','1.25','1.333','1.414','1.5','1.618'];
-  scale.body.appendChild(controlRow('Scale ratio', select(String(t.ratio), ratios, v => { t.ratio=+v; applyRoles(); drawOverrides(); })));
-  const ovLabel = el('<div class="ctl"><label>Per-level overrides (blank = auto)</label></div>');
+  const scale = subgroup('Type scale', true);
+  scale.body.appendChild(slider('Base size', t.baseSize, 13, 20, 1, 'px', v=>{ t.baseSize=v; applyRoles(); drawOverrides(); }));
+  const ratios = ['1.125','1.2','1.25','1.333','1.414','1.5','1.618'].map(r=>({value:r,label:r}));
+  scale.body.appendChild(controlRow('Scale ratio', customDropdown(String(t.ratio), ratios, v=>{ t.ratio=+v; applyRoles(); drawOverrides(); })));
+  const ovWrap = el('<div class="ctl"><span class="ctl-label">Per-level overrides (blank = auto)</span></div>');
   const ov = el('<div style="display:flex;flex-direction:column;gap:6px"></div>');
   function drawOverrides(){
-    const computed=computeHeadingSizes(); ov.innerHTML='';
+    const computed = computeHeadingSizes(); ov.innerHTML='';
     ['h1','h2','h3','h4','h5','h6'].forEach(lvl=>{
-      const r=el(`<div style="display:flex;align-items:center;gap:8px">
-        <label style="font-size:11px;color:var(--stone-500);text-transform:uppercase;width:24px">${lvl}</label>
-        <input type="number" class="txt" placeholder="${computed[lvl]}" value="${t.overrides[lvl]}">
-      </div>`);
-      r.querySelector('input').oninput = e => { t.overrides[lvl]=e.target.value===''?'':+e.target.value; applyRoles(); };
+      const r = el(`<div style="display:flex;align-items:center;gap:8px">
+        <span class="ctl-label" style="width:22px;text-transform:uppercase">${lvl}</span>
+        <input type="number" class="txt" placeholder="${computed[lvl]}" value="${t.overrides[lvl]}"></div>`);
+      r.querySelector('input').oninput = e=>{ t.overrides[lvl]=e.target.value===''?'':+e.target.value; applyRoles(); };
       ov.appendChild(r);
     });
   }
   drawOverrides();
-  ovLabel.appendChild(ov);
-  scale.body.appendChild(ovLabel);
+  ovWrap.appendChild(ov); scale.body.appendChild(ovWrap);
   body.appendChild(scale.wrap);
 }
 
-function renderSpacing(body){
-  body.appendChild(stepSlider('Section Spacing', STATE.spacing.section, ['Compact','Regular','Spacious'], v => { STATE.spacing.section=v; applyRoles(); }));
-  body.appendChild(stepSlider('Density', STATE.spacing.density, ['Dense','Regular','Airy'], v => { STATE.spacing.density=v; applyRoles(); }));
-  body.appendChild(stepSlider('Content Width', STATE.spacing.contentWidth, ['Narrow','Regular','Wide'], v => { STATE.spacing.contentWidth=v; applyRoles(); }));
-}
-function renderRadius(body){
-  body.appendChild(stepSlider('Corner radius', STATE.radius, ['Sharp','Subtle','Regular','Soft','Rounded','Pill'], v => { STATE.radius=v; applyRoles(); }));
-}
-function renderStroke(body){
-  body.appendChild(stepSlider('Weight', STATE.stroke, ['Regular','Heavy'], v => { STATE.stroke=v; applyRoles(); }));
-}
-function renderContainers(body){
-  body.appendChild(controlRow('Card border', toggle(STATE.containerBorder, v => { STATE.containerBorder=v; applyRoles(); }), true));
-}
 function renderButtons(body){
-  body.appendChild(controlRow('Primary style', segmented(STATE.buttons.primaryStyle, ['fill','outline'], v => { STATE.buttons.primaryStyle=v; applyRoles(); })));
-  body.appendChild(controlRow('Secondary style', segmented(STATE.buttons.secondaryStyle, ['fill','outline'], v => { STATE.buttons.secondaryStyle=v; applyRoles(); })));
-  body.appendChild(el(`<div class="ctl"><label style="color:var(--stone-400);font-weight:400;line-height:1.4">Button colors auto-derive from the palette and contrast with each scheme's background.</label></div>`));
+  body.appendChild(controlRow('Primary style', segmented(STATE.buttons.primaryStyle, ['fill','outline'], v=>{ STATE.buttons.primaryStyle=v; applyRoles(); })));
+  body.appendChild(controlRow('Secondary style', segmented(STATE.buttons.secondaryStyle, ['fill','outline'], v=>{ STATE.buttons.secondaryStyle=v; applyRoles(); })));
+  body.appendChild(el(`<div class="ctl"><span class="ctl-label" style="color:var(--stone-400);font-weight:400;line-height:1.4">Button fill &amp; text colors come from the palette via the active scheme's Button / Secondary roles.</span></div>`));
 }
+
+function renderShape(body){
+  const radiusSlider = slider('Corner radius', STATE.radius, 0, 40, 1, 'px', v=>{ STATE.radius=v; applyRoles(); });
+  body.appendChild(controlRow('Preset', segmented(
+    Object.keys(RADIUS_PRESETS).find(k=>RADIUS_PRESETS[k]===STATE.radius) || 'Custom',
+    Object.keys(RADIUS_PRESETS),
+    name=>{ STATE.radius=RADIUS_PRESETS[name]; radiusSlider.setValue(Math.min(STATE.radius,40)); applyRoles(); }
+  )));
+  body.appendChild(radiusSlider);
+}
+
+function renderSpacing(body){
+  body.appendChild(slider('Section padding', STATE.spacing.sectionPadding, 24, 140, 4, 'px', v=>{ STATE.spacing.sectionPadding=v; applyRoles(); }));
+  body.appendChild(slider('Container max-width', STATE.spacing.containerMax, 720, 1400, 20, 'px', v=>{ STATE.spacing.containerMax=v; applyRoles(); }));
+  body.appendChild(slider('Gutter', STATE.spacing.gutter, 8, 48, 2, 'px', v=>{ STATE.spacing.gutter=v; applyRoles(); }));
+}
+
 function renderElevation(body){
-  body.appendChild(controlRow('Shadow', segmented(STATE.elevation, ['None','Soft','Hard'], v => { STATE.elevation=v; applyRoles(); })));
+  body.appendChild(controlRow('Shadow', segmented(STATE.elevation, ['None','Soft','Hard'], v=>{ STATE.elevation=v; applyRoles(); })));
 }
 
 /* ============================================================================
@@ -930,24 +671,21 @@ function renderElevation(body){
    ============================================================================ */
 function buildCarousel(){
   const c=document.getElementById('carousel'); c.innerHTML='';
-  PRODUCTS.forEach(p => c.appendChild(el(`<article class="card">
+  PRODUCTS.forEach(p=> c.appendChild(el(`<article class="card">
     <img src="https://picsum.photos/seed/${p.seed}/600/450" alt="${p.name}">
     <div class="cbody"><h5>${p.name}</h5><span class="price">${p.price}</span>
-      <a class="btn btn-primary fill">Add to cart</a></div>
-  </article>`)));
+      <a class="btn btn-primary fill">Add to cart</a></div></article>`)));
 }
 function buildFeatures(){
   const data=[
-    { icon:'click', h:'Move quickly', p:'Compose your storefront in minutes. Every component is built to be configured, not customized.' },
+    { icon:'click',  h:'Move quickly',    p:'Compose your storefront in minutes. Every component is built to be configured, not customized.' },
     { icon:'layers', h:'Stay consistent', p:'Global tokens keep the whole theme on-system. Tweak one control and the entire site stays in tune.' },
-    { icon:'box', h:'Scale with ease', p:'Layered tokens mean brand, content and components evolve together — never against each other.' },
+    { icon:'box',    h:'Scale with ease', p:'Layered tokens mean brand, content and components evolve together — never against each other.' },
   ];
   const f=document.getElementById('features'); f.innerHTML='';
-  data.forEach(d => f.appendChild(el(`<div class="feature">
-    <div class="ic">${svg(ICONS[d.icon],24)}</div>
+  data.forEach(d=> f.appendChild(el(`<div class="feature"><div class="ic">${svg(ICONS[d.icon],24)}</div>
     <h4>${d.h}</h4><p>${d.p}</p>
-    <span class="link">Learn more ${svg('<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',15)}</span>
-  </div>`)));
+    <span class="link">Learn more ${svg('<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',15)}</span></div>`)));
 }
 
 /* ============================================================================
@@ -955,23 +693,18 @@ function buildFeatures(){
    ============================================================================ */
 function buildPanel(){
   const host=document.getElementById('groups'); host.innerHTML='';
-  const g=[
+  [
     ['Color','palette',true,renderColor],
     ['Typography','type',false,renderTypography],
-    ['Spacing','layout',false,renderSpacing],
-    ['Radius','square',false,renderRadius],
-    ['Stroke','minus',false,renderStroke],
-    ['Containers','box',false,renderContainers],
     ['Buttons','click',false,renderButtons],
+    ['Shape · corner radius','square',false,renderShape],
+    ['Spacing','layout',false,renderSpacing],
     ['Elevation','layers',false,renderElevation],
-  ];
-  g.forEach(([title,icon,open,fn]) => { const grp=group(title,icon,open); fn(grp.body); host.appendChild(grp.wrap); });
+  ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); buildPanel(); applyRoles(); };
 
-document.getElementById('reset-btn').onclick = () => { STATE=clone(DEFAULTS); rebuildShades(); buildPanel(); applyRoles(); };
-
-rebuildShades();
 buildPanel();
 buildCarousel();
 buildFeatures();
