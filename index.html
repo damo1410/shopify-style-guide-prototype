@@ -78,7 +78,7 @@
   .brand .t2 { font-size: 11px; color: var(--stone-500); line-height: 1.2; }
   .reset { display: flex; align-items: center; gap: 6px; border: none; background: none; font-size: 11px; color: var(--stone-500); cursor: pointer; font-family: inherit; }
   .reset:hover { color: var(--stone-900); }
-  .groups { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+  .groups { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 
   /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
@@ -256,11 +256,11 @@
     .preview { position: absolute; inset: 0; height: 100dvh; }
     .preview-pad { padding-bottom: var(--peek); }   /* keep the footer reachable above the peeking sheet */
     .panel {
-      position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 92dvh;
+      position: absolute; left: 0; right: 0; bottom: 0; width: 100%;
+      height: var(--sheet-h, var(--peek)); max-height: 92dvh;
       border-right: none; border-top: 1px solid var(--stone-200);
       border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px -12px rgba(0,0,0,.28);
-      transform: translateY(var(--sheet-y, calc(92dvh - var(--peek))));
-      transition: transform .28s cubic-bezier(.22,.61,.36,1); z-index: 10;
+      transition: height .28s cubic-bezier(.22,.61,.36,1); z-index: 10;
     }
     .panel.dragging { transition: none; }
     .sheet-handle { display: flex; }
@@ -822,33 +822,32 @@ applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
   const panel = document.querySelector('.panel');
   const handle = document.getElementById('sheet-handle');
   const PEEK = 84;
-  let curY = null, snaps = {}, dragging = false, moved = false, startPointer = 0, startY = 0;
+  let curH = null, dragging = false, moved = false, startPointer = 0, startH = 0;
 
-  function computeSnaps(){
-    const sheetH = panel.offsetHeight, vh = window.innerHeight;
-    snaps = { full: 0, half: Math.max(0, Math.round(sheetH - vh * 0.5)), peek: Math.max(0, sheetH - PEEK) };
-  }
-  function setY(y){ curY = y; panel.style.setProperty('--sheet-y', y + 'px'); }
-  function snapTo(name){ computeSnaps(); setY(snaps[name]); }
-  function nearest(y){ computeSnaps(); let best = 'peek', bd = Infinity; for(const k of ['full','half','peek']){ const d = Math.abs(snaps[k] - y); if(d < bd){ bd = d; best = k; } } return best; }
+  // Snap points are the panel's VISIBLE HEIGHT — so the scroll area always
+  // matches what's on screen and every control is reachable at each snap.
+  function snaps(){ const vh = window.innerHeight; return { peek: PEEK, half: Math.round(vh * 0.5), full: Math.round(vh * 0.92) }; }
+  function setH(h){ curH = h; panel.style.setProperty('--sheet-h', h + 'px'); }
+  function snapTo(name){ setH(snaps()[name]); }
+  function nearest(h){ const s = snaps(); let best = 'peek', bd = Infinity; for(const k of ['peek','half','full']){ const d = Math.abs(s[k] - h); if(d < bd){ bd = d; best = k; } } return best; }
 
   function onDown(e){
     if(!mq.matches) return;
     dragging = true; moved = false; panel.classList.add('dragging');
-    startPointer = e.clientY; computeSnaps(); startY = curY != null ? curY : snaps.peek;
+    startPointer = e.clientY; startH = curH != null ? curH : PEEK;
     try { handle.setPointerCapture(e.pointerId); } catch(_) {}
     e.preventDefault();
   }
   function onMove(e){
     if(!dragging) return;
-    const dy = e.clientY - startPointer; if(Math.abs(dy) > 4) moved = true;
-    setY(Math.max(snaps.full, Math.min(snaps.peek, startY + dy)));
+    const dy = startPointer - e.clientY; if(Math.abs(dy) > 4) moved = true;   // drag up = taller
+    const s = snaps(); setH(Math.max(s.peek, Math.min(s.full, startH + dy)));
   }
   function onUp(){
     if(!dragging) return;
     dragging = false; panel.classList.remove('dragging');
-    if(!moved){ const c = nearest(curY); snapTo(c === 'peek' ? 'half' : 'peek'); }
-    else { snapTo(nearest(curY)); }
+    if(!moved){ const c = nearest(curH); snapTo(c === 'peek' ? 'half' : 'peek'); }
+    else { snapTo(nearest(curH)); }
   }
 
   handle.addEventListener('pointerdown', onDown);
@@ -856,9 +855,9 @@ applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
   window.addEventListener('pointerup', onUp);
   handle.addEventListener('click', e => e.preventDefault());
 
-  function apply(){ if(mq.matches){ snapTo(curY != null ? nearest(curY) : 'peek'); } else { panel.style.removeProperty('--sheet-y'); curY = null; } }
+  function apply(){ if(mq.matches){ snapTo(curH != null ? nearest(curH) : 'peek'); } else { panel.style.removeProperty('--sheet-h'); curH = null; } }
   if(mq.addEventListener) mq.addEventListener('change', apply); else if(mq.addListener) mq.addListener(apply);
-  window.addEventListener('resize', () => { if(mq.matches && curY != null) snapTo(nearest(curY)); });
+  window.addEventListener('resize', () => { if(mq.matches && curH != null) snapTo(nearest(curH)); });
   apply();
 })();
 </script>
