@@ -55,17 +55,22 @@
     --stone-50:#fafaf9; --stone-100:#f5f5f4; --stone-200:#e7e5e4; --stone-300:#d6d3d1;
     --stone-400:#a8a29e; --stone-500:#78716c; --stone-600:#57534e; --stone-700:#44403c;
     --stone-800:#292524; --stone-900:#1c1917; --stone-950:#0c0a09;
+    --peek: 84px;   /* mobile bottom-sheet: visible height at the "peek" snap */
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--stone-900); background: var(--stone-50); -webkit-font-smoothing: antialiased;
+    overflow: hidden; overscroll-behavior: none;   /* lock the outer page so inner scrolls can't push it */
   }
-  .app { display: flex; height: 100vh; width: 100%; }
+  .app { display: flex; height: 100vh; height: 100dvh; width: 100%; }
 
   /* ---------------- LEFT: settings panel (320px) -------------------------- */
   .panel { display: flex; flex-direction: column; width: 320px; flex-shrink: 0; border-right: 1px solid var(--stone-200); background: #fff; }
+  .sheet-handle { display: none; align-items: center; justify-content: center; padding: 8px 0 5px; cursor: grab; touch-action: none; flex: 0 0 auto; }
+  .sheet-handle .grip { width: 36px; height: 4px; border-radius: 999px; background: var(--stone-300); }
+  .panel.dragging .sheet-handle { cursor: grabbing; }
   .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--stone-200); }
   .brand { display: flex; align-items: center; gap: 8px; }
   .brand .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; }
@@ -73,7 +78,7 @@
   .brand .t2 { font-size: 11px; color: var(--stone-500); line-height: 1.2; }
   .reset { display: flex; align-items: center; gap: 6px; border: none; background: none; font-size: 11px; color: var(--stone-500); cursor: pointer; font-family: inherit; }
   .reset:hover { color: var(--stone-900); }
-  .groups { flex: 1; overflow-y: auto; }
+  .groups { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
 
   /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
@@ -168,7 +173,7 @@
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
      ========================================================================== */
-  .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; }
+  .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .preview-pad { min-height: 100%; padding: 0; }            /* full-bleed: store extends to the edges */
   .store-frame { border-radius: 0; overflow: hidden; box-shadow: none; }
 
@@ -245,10 +250,20 @@
   .store-footer a { display: block; color: var(--c-body); opacity: .8; text-decoration: none; font-size: .95rem; margin: 8px 0; }
   .store-footer h6 { margin-bottom: .5rem; }
 
+  /* mobile: preview fills the screen; controls become a draggable bottom sheet */
   @media (max-width: 860px) {
-    .app { flex-direction: column; height: 100vh; }
-    .panel { width: 100%; height: 46vh; border-right: none; border-bottom: 1px solid var(--stone-200); }
-    .preview { height: 54vh; }
+    .app { display: block; position: relative; height: 100dvh; }
+    .preview { position: absolute; inset: 0; height: 100dvh; }
+    .preview-pad { padding-bottom: var(--peek); }   /* keep the footer reachable above the peeking sheet */
+    .panel {
+      position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 92dvh;
+      border-right: none; border-top: 1px solid var(--stone-200);
+      border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px -12px rgba(0,0,0,.28);
+      transform: translateY(var(--sheet-y, calc(92dvh - var(--peek))));
+      transition: transform .28s cubic-bezier(.22,.61,.36,1); z-index: 10;
+    }
+    .panel.dragging { transition: none; }
+    .sheet-handle { display: flex; }
     .features { grid-template-columns: 1fr; }
   }
 </style>
@@ -259,6 +274,7 @@
 
   <!-- ===================== LEFT: SETTINGS PANEL ========================= -->
   <aside class="panel">
+    <div class="sheet-handle" id="sheet-handle"><span class="grip"></span></div>
     <div class="panel-header">
       <div class="brand">
         <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
@@ -794,6 +810,57 @@ buildPanel();
 buildCarousel();
 buildFeatures();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
+
+/* ============================================================================
+   MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
+   Drag the handle to move; releases snap to peek / half / full. Tap toggles
+   peek<->half. Desktop is unaffected.
+   ============================================================================ */
+(function(){
+  const mq = window.matchMedia ? window.matchMedia('(max-width: 860px)')
+                               : { matches:false, addEventListener(){}, addListener(){} };
+  const panel = document.querySelector('.panel');
+  const handle = document.getElementById('sheet-handle');
+  const PEEK = 84;
+  let curY = null, snaps = {}, dragging = false, moved = false, startPointer = 0, startY = 0;
+
+  function computeSnaps(){
+    const sheetH = panel.offsetHeight, vh = window.innerHeight;
+    snaps = { full: 0, half: Math.max(0, Math.round(sheetH - vh * 0.5)), peek: Math.max(0, sheetH - PEEK) };
+  }
+  function setY(y){ curY = y; panel.style.setProperty('--sheet-y', y + 'px'); }
+  function snapTo(name){ computeSnaps(); setY(snaps[name]); }
+  function nearest(y){ computeSnaps(); let best = 'peek', bd = Infinity; for(const k of ['full','half','peek']){ const d = Math.abs(snaps[k] - y); if(d < bd){ bd = d; best = k; } } return best; }
+
+  function onDown(e){
+    if(!mq.matches) return;
+    dragging = true; moved = false; panel.classList.add('dragging');
+    startPointer = e.clientY; computeSnaps(); startY = curY != null ? curY : snaps.peek;
+    try { handle.setPointerCapture(e.pointerId); } catch(_) {}
+    e.preventDefault();
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const dy = e.clientY - startPointer; if(Math.abs(dy) > 4) moved = true;
+    setY(Math.max(snaps.full, Math.min(snaps.peek, startY + dy)));
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false; panel.classList.remove('dragging');
+    if(!moved){ const c = nearest(curY); snapTo(c === 'peek' ? 'half' : 'peek'); }
+    else { snapTo(nearest(curY)); }
+  }
+
+  handle.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  handle.addEventListener('click', e => e.preventDefault());
+
+  function apply(){ if(mq.matches){ snapTo(curY != null ? nearest(curY) : 'peek'); } else { panel.style.removeProperty('--sheet-y'); curY = null; } }
+  if(mq.addEventListener) mq.addEventListener('change', apply); else if(mq.addListener) mq.addListener(apply);
+  window.addEventListener('resize', () => { if(mq.matches && curY != null) snapTo(nearest(curY)); });
+  apply();
+})();
 </script>
 </body>
 </html>
