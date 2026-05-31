@@ -173,7 +173,7 @@
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
      ========================================================================== */
-  .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; container-type: inline-size; container-name: store; }
   .preview-pad { min-height: 100%; padding: 0; }            /* full-bleed: store extends to the edges */
   .store-frame { border-radius: 0; overflow: hidden; box-shadow: none; }
 
@@ -198,57 +198,167 @@
   .store .container { max-width: var(--container-max); margin: 0 auto; padding: 0 32px; }
   .store .section { padding: var(--section-padding) 0; }
 
-  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-btn-fill); }
+  /* shared bits */
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-btn-fill); }
   .eyebrow .line { width: 20px; height: 2px; background: currentColor; border-radius: 1px; }
+  .sec-surface { background: var(--c-surface); }
+  .section-head { text-align: center; max-width: 46rem; margin: 0 auto 3rem; display: flex; flex-direction: column; gap: .9rem; align-items: center; }
+  .section-head .eyebrow { justify-content: center; }
+  .section-head p { color: var(--c-body); font-size: 1.05rem; line-height: 1.6; }
 
   /* buttons */
-  .btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 12px 22px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, opacity .15s; white-space: nowrap; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, opacity .15s; white-space: nowrap; }
   .btn:hover { opacity: .9; } .btn:active { transform: translateY(1px); }
   .btn-primary.fill    { background: var(--c-btn-fill); color: var(--c-btn-text); border-color: var(--c-btn-fill); }
   .btn-primary.outline { background: transparent; color: var(--c-btn-fill); border-color: var(--c-btn-fill); }
   .btn-secondary.fill    { background: var(--c-btn2-fill); color: var(--c-btn2-text); border-color: var(--c-btn2-fill); }
   .btn-secondary.outline { background: transparent; color: var(--c-btn2-fill); border-color: var(--c-btn2-fill); }
 
+  /* announcement + nav */
+  .announce { background: var(--c-heading); color: var(--c-bg); text-align: center; font-size: .82rem; font-weight: 500; letter-spacing: .02em; padding: 9px 16px; }
+  .nav { background: var(--c-bg); border-bottom: 1px solid var(--c-border); }
+  .nav .container { display: flex; align-items: center; justify-content: space-between; padding-top: 1.05rem; padding-bottom: 1.05rem; }
+  .nav .logo { font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; letter-spacing: .14em; color: var(--c-heading); }
+  .nav-links { display: flex; gap: 1.6rem; }
+  .nav-links a { color: var(--c-body); text-decoration: none; font-size: .92rem; font-weight: 500; }
+  .nav-links a:hover { color: var(--c-heading); }
+  .nav-actions { display: flex; gap: 1.1rem; align-items: center; color: var(--c-heading); }
+  .nav-actions svg { width: 20px; height: 20px; cursor: pointer; }
+  .nav .cart { position: relative; display: inline-flex; }
+  .nav .cart .dot { position: absolute; top: -7px; right: -8px; background: var(--c-btn-fill); color: var(--c-btn-text); font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: grid; place-items: center; padding: 0 3px; }
+
   /* hero */
-  .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 520px; background-size: cover; background-position: center; }
-  .hero::after { content:""; position:absolute; inset:0; background: linear-gradient(100deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.30) 55%, rgba(0,0,0,.12) 100%); }
+  .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 560px; background-size: cover; background-position: center; }
+  .hero::after { content:""; position:absolute; inset:0; background: linear-gradient(100deg, rgba(0,0,0,.66) 0%, rgba(0,0,0,.34) 55%, rgba(0,0,0,.12) 100%); }
   .hero .container { position: relative; z-index: 1; padding-top: var(--section-padding); padding-bottom: var(--section-padding); }
   .hero .eyebrow { color: #fff; opacity: .92; }
-  .hero h1 { color: #fff; max-width: 18ch; margin-bottom: 1.2rem; }
-  .hero p { color: rgba(255,255,255,.9); max-width: 46ch; font-size: 1.1rem; margin-bottom: 1.8rem; }
+  .hero h1 { color: #fff; max-width: 16ch; margin-bottom: 1.1rem; }
+  .hero p { color: rgba(255,255,255,.92); max-width: 44ch; font-size: 1.12rem; margin-bottom: 1.4rem; }
+  .hero .rating { display: flex; align-items: center; gap: 10px; margin-bottom: 1.6rem; color: #fff; font-size: .92rem; }
+  .hero .rating .stars { color: #ffd479; font-size: 16px; }
   .hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
 
-  /* product carousel */
+  /* value props */
+  .valueprops { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); }
+  .vp { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .6rem; }
+  .vp .ic { padding: .85rem; border-radius: 999px; background: var(--c-accent-soft); color: var(--c-btn-fill); display: inline-flex; }
+  .vp .ic svg { width: 24px; height: 24px; }
+  .vp h5 { color: var(--c-heading); font-size: 1rem; }
+  .vp p { color: var(--c-body); font-size: .9rem; opacity: .85; }
+
+  /* collections */
+  .collections { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); }
+  .collection { position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 3/4; display: flex; align-items: flex-end; box-shadow: var(--shadow); cursor: pointer; }
+  .collection img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+  .collection:hover img { transform: scale(1.05); }
+  .collection::after { content:""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,0) 60%); }
+  .collection .clabel { position: relative; z-index: 1; padding: 1.1rem 1.2rem; color: #fff; }
+  .collection .cname { font-family: var(--font-heading); font-weight: 700; font-size: 1.25rem; }
+  .collection .cgo { font-size: .85rem; opacity: .92; display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; }
+  .collection .cgo svg { width: 14px; height: 14px; }
+
+  /* products carousel */
   .rowhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
   .rowhead .ey { display: flex; flex-direction: column; gap: .75rem; }
-  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr); gap: var(--gutter); overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
-  .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; scroll-snap-align: start; }
-  .card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-  .card .cbody { padding: 1.25rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
-  .card .cbody h5 { color: var(--c-heading); }
-  .card .price { color: var(--c-body); opacity: .75; font-size: .95rem; }
-  .card .btn { margin-top: .75rem; justify-content: center; }
+  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+  .product { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; scroll-snap-align: start; transition: transform .15s, box-shadow .15s; }
+  .product:hover { transform: translateY(-4px); box-shadow: 0 16px 32px -16px rgba(0,0,0,.3); }
+  .product .thumb { position: relative; aspect-ratio: 4/3; display: grid; place-items: center; background: linear-gradient(140deg, #eef1f4, #dfe4ea); }
+  .product .thumb .sg { width: 64%; height: auto; }
+  .product .badge { position: absolute; top: 10px; left: 10px; background: var(--c-btn-fill); color: var(--c-btn-text); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; }
+  .product .pbody { padding: 1rem 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .35rem; flex: 1; }
+  .product .pname { color: var(--c-heading); font-weight: 600; font-size: 1.02rem; }
+  .rrow { display: flex; align-items: center; gap: .5rem; }
+  .product .rev { font-size: .82rem; color: var(--c-body); opacity: .7; }
+  .product .price { color: var(--c-heading); font-weight: 700; font-size: 1.02rem; }
+  .product .price s { color: var(--c-body); opacity: .5; font-weight: 400; margin-right: 6px; }
+  .product .btn { margin-top: .7rem; }
 
-  /* feature section */
-  .features-section { background: var(--c-surface); }
-  .feat-head { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; max-width: 40rem; }
-  .feat-head p { color: var(--c-body); font-size: 1.0625rem; }
-  .features { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--gutter); margin-top: 3rem; }
-  .feature { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1rem; }
-  .feature .ic { width: fit-content; padding: .75rem; border-radius: var(--radius); background: var(--c-accent-soft); color: var(--c-btn-fill); display: inline-flex; }
-  .feature .ic svg { width: 24px; height: 24px; }
-  .feature h4 { color: var(--c-heading); }
-  .feature p { color: var(--c-body); flex: 1; }
-  .feature .link { display: inline-flex; align-items: center; gap: 6px; color: var(--c-heading); font-weight: 600; font-size: 15px; cursor: pointer; width: fit-content; }
-  .feature .link svg { width: 15px; height: 15px; }
+  .stars { display: inline-flex; gap: 1px; color: var(--c-btn-fill); font-size: 13px; letter-spacing: .5px; line-height: 1; }
+
+  /* guarantee */
+  .guarantee { background: var(--c-surface); }
+  .guarantee .container { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+  .guarantee .gmedia { border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/3; box-shadow: var(--shadow); }
+  .guarantee .gmedia img { width: 100%; height: 100%; object-fit: cover; }
+  .guarantee h2 { margin-bottom: 1rem; }
+  .guarantee .gtext p { color: var(--c-body); margin-bottom: 1.4rem; max-width: 42ch; font-size: 1.05rem; line-height: 1.6; }
+  .glist { display: flex; flex-direction: column; gap: .8rem; margin-bottom: 1.6rem; }
+  .gitem { display: flex; gap: .7rem; align-items: center; color: var(--c-body); font-weight: 500; }
+  .gitem svg { width: 20px; height: 20px; color: var(--c-btn-fill); flex: 0 0 auto; }
+
+  /* reviews */
+  .reviews-agg { text-align: center; margin-bottom: 2.5rem; display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+  .reviews-agg .big { font-size: 1.9rem; font-weight: 800; color: var(--c-heading); font-family: var(--font-heading); }
+  .reviews-agg .sub { color: var(--c-body); opacity: .8; font-size: .95rem; }
+  .reviews { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); }
+  .review { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); padding: 1.6rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .8rem; }
+  .review p { color: var(--c-body); flex: 1; font-size: .98rem; line-height: 1.6; }
+  .review .who { display: flex; align-items: center; gap: .7rem; }
+  .review .av { width: 38px; height: 38px; border-radius: 999px; background: var(--c-accent-soft); color: var(--c-btn-fill); display: grid; place-items: center; font-weight: 700; font-size: .85rem; }
+  .review .nm { color: var(--c-heading); font-weight: 600; font-size: .92rem; }
+  .review .vf { color: var(--c-body); opacity: .75; font-size: .78rem; display: flex; align-items: center; gap: 4px; }
+  .review .vf svg { width: 12px; height: 12px; color: var(--c-btn-fill); }
+
+  /* press */
+  .press { padding: 2.6rem 0; background: var(--c-surface); }
+  .press .plabel { text-align: center; color: var(--c-body); opacity: .7; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 1.1rem; }
+  .press-logos { display: flex; flex-wrap: wrap; gap: 1.1rem 2.6rem; align-items: center; justify-content: center; }
+  .press .logo { font-family: var(--font-heading); font-weight: 700; font-size: 1.4rem; color: var(--c-heading); opacity: .5; letter-spacing: .03em; }
+
+  /* UGC */
+  .ugc { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .ugc-tile { position: relative; aspect-ratio: 1; border-radius: calc(var(--radius) * .6); overflow: hidden; cursor: pointer; }
+  .ugc-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s; }
+  .ugc-tile:hover img { transform: scale(1.08); }
+
+  /* journal */
+  .journal { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gutter); }
+  .post { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+  .post img { aspect-ratio: 16/10; object-fit: cover; width: 100%; }
+  .post .pbody { padding: 1.3rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+  .post .cat { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--c-btn-fill); }
+  .post h4 { color: var(--c-heading); font-size: 1.15rem; line-height: 1.25; }
+  .post .link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--c-heading); font-weight: 600; font-size: 14px; cursor: pointer; }
+  .post .link svg { width: 15px; height: 15px; }
+
+  /* newsletter */
+  .newsletter { background: var(--c-heading); }
+  .newsletter .container { text-align: center; display: flex; flex-direction: column; align-items: center; gap: .8rem; }
+  .newsletter .eyebrow { color: var(--c-bg); opacity: .75; justify-content: center; }
+  .newsletter h2 { color: var(--c-bg); }
+  .newsletter p { color: var(--c-bg); opacity: .8; max-width: 44ch; font-size: 1.05rem; }
+  .newsletter form { display: flex; gap: 10px; width: 100%; max-width: 460px; margin-top: .6rem; flex-wrap: wrap; }
+  .newsletter input { flex: 1; min-width: 200px; border: none; border-radius: var(--radius); padding: 13px 16px; font: inherit; font-size: 15px; background: var(--c-bg); color: var(--c-heading); outline: none; }
 
   /* footer */
   .store-footer { background: var(--c-surface); border-top: 1px solid var(--c-border); }
-  .store-footer .container { padding-top: 3.5rem; padding-bottom: 3.5rem; }
-  .store-footer .cols { display: flex; flex-wrap: wrap; gap: 3rem; justify-content: space-between; }
-  .store-footer .brandmark { font-family: var(--font-heading); font-weight: 700; font-size: 1.4rem; color: var(--c-heading); margin-bottom: .5rem; }
-  .store-footer a { display: block; color: var(--c-body); opacity: .8; text-decoration: none; font-size: .95rem; margin: 8px 0; }
-  .store-footer h6 { margin-bottom: .5rem; }
+  .store-footer .container { padding-top: 3.5rem; padding-bottom: 2rem; }
+  .store-footer .cols { display: flex; flex-wrap: wrap; gap: 2.5rem 3rem; }
+  .store-footer .cols > div:first-child { flex: 1 1 220px; }
+  .store-footer .brandmark { font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; letter-spacing: .12em; color: var(--c-heading); margin-bottom: .5rem; }
+  .store-footer a { display: block; color: var(--c-body); opacity: .8; text-decoration: none; font-size: .92rem; margin: 8px 0; }
+  .store-footer a:hover { opacity: 1; }
+  .store-footer h6 { color: var(--c-heading); margin-bottom: .6rem; font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; }
+  .footer-bottom { border-top: 1px solid var(--c-border); margin-top: 2.5rem; padding-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; color: var(--c-body); font-size: .85rem; opacity: .85; }
+  .pay { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pay span { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 5px; padding: 4px 8px; font-size: .68rem; font-weight: 700; color: var(--c-body); letter-spacing: .03em; }
+
+  /* container queries: adapt the store to the PREVIEW width (not the viewport) */
+  @container store (max-width: 920px) {
+    .collections { grid-template-columns: repeat(2, 1fr); }
+    .valueprops { grid-template-columns: repeat(2, 1fr); }
+    .reviews { grid-template-columns: 1fr; }
+    .journal { grid-template-columns: 1fr; }
+    .guarantee .container { grid-template-columns: 1fr; }
+    .ugc { grid-template-columns: repeat(3, 1fr); }
+  }
+  @container store (max-width: 560px) {
+    .nav-links { display: none; }
+    .hero { min-height: 460px; }
+    .section-head { margin-bottom: 2rem; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; }
+  }
 
   /* mobile: preview fills the screen; controls become a draggable bottom sheet */
   @media (max-width: 860px) {
@@ -291,51 +401,133 @@
       <div class="store-frame">
         <div class="store" id="store">
 
+          <!-- ANNOUNCEMENT BAR -->
+          <div class="announce">Free shipping over $75 · 30-day risk-free returns · 2-year warranty</div>
+
+          <!-- NAV -->
+          <nav class="nav"><div class="container">
+            <span class="logo">NOIR</span>
+            <div class="nav-links"><a>New</a><a>Men</a><a>Women</a><a>Sport</a><a>Collections</a><a>Sale</a></div>
+            <div class="nav-actions">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="cart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span class="dot">3</span>
+              </span>
+            </div>
+          </div></nav>
+
           <!-- HERO -->
-          <header class="hero" id="hero" style="background-image:url('https://picsum.photos/seed/atelierstore/1600/1000')">
+          <header class="hero" id="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
             <div class="container">
-              <div class="eyebrow" style="margin-bottom:1rem"><span class="line"></span>New season</div>
-              <h1>Crafted goods for considered living.</h1>
-              <p>A premium storefront skeleton. Tune the global tokens on the left and watch every role-bound element respond instantly.</p>
+              <div class="eyebrow" style="margin-bottom:1rem"><span class="line"></span>New · Summer '26</div>
+              <h1>See the world in style.</h1>
+              <p>Premium polarized sunglasses, handcrafted from Italian acetate. Designed to turn heads — built to last a lifetime.</p>
+              <div class="rating" id="hero-rating"><span><strong>4.8</strong>/5 · 12,000+ five-star reviews</span></div>
               <div class="ctas">
-                <a class="btn btn-primary fill">Shop the collection</a>
-                <a class="btn btn-secondary outline">Our story</a>
+                <a class="btn btn-primary fill">Shop best sellers</a>
+                <a class="btn btn-secondary outline">Explore collections</a>
               </div>
             </div>
           </header>
 
-          <!-- PRODUCT CAROUSEL -->
-          <section class="section">
-            <div class="container">
-              <div class="rowhead">
-                <div class="ey"><div class="eyebrow"><span class="line"></span>Featured</div><h2>This week's edit</h2></div>
-                <a class="btn btn-secondary outline">View all</a>
-              </div>
-              <div class="carousel" id="carousel"></div>
-            </div>
-          </section>
+          <!-- VALUE PROPS / TRUST BAR -->
+          <section class="section"><div class="container">
+            <div class="valueprops" id="valueprops"></div>
+          </div></section>
 
-          <!-- FEATURE SECTION -->
-          <section class="section features-section">
-            <div class="container">
-              <div class="feat-head">
-                <div class="eyebrow"><span class="line"></span>Why choose us</div>
-                <h2>Designed to move at the speed of your ideas</h2>
-                <p>Build, iterate, and ship a storefront that feels handcrafted — without the overhead. A styling system that adapts to whatever you're making.</p>
-              </div>
-              <div class="features" id="features"></div>
+          <!-- SHOP BY COLLECTION -->
+          <section class="section sec-surface"><div class="container">
+            <div class="section-head">
+              <div class="eyebrow"><span class="line"></span>Shop by style</div>
+              <h2>Find your perfect frame</h2>
+              <p>From timeless aviators to bold modern silhouettes — there's a NOIR for every face.</p>
             </div>
-          </section>
+            <div class="collections" id="collections"></div>
+          </div></section>
+
+          <!-- BEST SELLERS -->
+          <section class="section"><div class="container">
+            <div class="rowhead">
+              <div class="ey"><div class="eyebrow"><span class="line"></span>Best sellers</div><h2>Loved by thousands</h2></div>
+              <a class="btn btn-secondary outline">View all</a>
+            </div>
+            <div class="carousel" id="products"></div>
+          </div></section>
+
+          <!-- GUARANTEE / RISK-FREE -->
+          <section class="section guarantee"><div class="container">
+            <div class="gmedia"><img src="https://picsum.photos/seed/noir-tryon/800/600" alt="Home try-on"></div>
+            <div class="gtext">
+              <div class="eyebrow"><span class="line"></span>Risk-free</div>
+              <h2>Try them on at home, on us.</h2>
+              <p>Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.</p>
+              <div class="glist" id="glist"></div>
+              <a class="btn btn-primary fill">Start your home try-on</a>
+            </div>
+          </div></section>
+
+          <!-- SOCIAL PROOF / REVIEWS -->
+          <section class="section"><div class="container">
+            <div class="reviews-agg">
+              <div class="stars" id="agg-stars" style="font-size:22px"></div>
+              <div class="big">4.8 out of 5</div>
+              <div class="sub">Based on 12,400+ verified reviews</div>
+            </div>
+            <div class="reviews" id="reviews"></div>
+          </div></section>
+
+          <!-- PRESS / FEATURED IN -->
+          <section class="press"><div class="container">
+            <div class="plabel">As featured in</div>
+            <div class="press-logos" id="press"></div>
+          </div></section>
+
+          <!-- UGC / INSTAGRAM -->
+          <section class="section"><div class="container">
+            <div class="section-head">
+              <div class="eyebrow"><span class="line"></span>#NoirOnYou</div>
+              <h2>As seen on you</h2>
+              <p>Tag <strong>@noir</strong> for a chance to be featured. Join 200k+ wearers around the world.</p>
+            </div>
+            <div class="ugc" id="ugc"></div>
+          </div></section>
+
+          <!-- BLOG / JOURNAL -->
+          <section class="section sec-surface"><div class="container">
+            <div class="section-head">
+              <div class="eyebrow"><span class="line"></span>The Journal</div>
+              <h2>Style notes &amp; guides</h2>
+            </div>
+            <div class="journal" id="journal"></div>
+          </div></section>
+
+          <!-- NEWSLETTER -->
+          <section class="section newsletter"><div class="container">
+            <div class="eyebrow"><span class="line"></span>Join the club</div>
+            <h2>Get 10% off your first order</h2>
+            <p>Sign up for early access to new drops, styling tips, and members-only offers.</p>
+            <form onsubmit="return false">
+              <input type="email" placeholder="Enter your email" aria-label="Email">
+              <button class="btn btn-primary fill" type="submit">Get my 10% off</button>
+            </form>
+          </div></section>
 
           <!-- FOOTER -->
-          <footer class="store-footer">
-            <div class="container cols">
-              <div style="max-width:30ch"><div class="brandmark">Atelier</div><p style="opacity:.7">A prototype storefront for testing global theme styling.</p></div>
-              <div><h6>Shop</h6><a>New arrivals</a><a>Best sellers</a><a>Collections</a></div>
-              <div><h6>Company</h6><a>About</a><a>Journal</a><a>Contact</a></div>
-              <div><h6>Support</h6><a>Shipping</a><a>Returns</a><a>FAQ</a></div>
+          <footer class="store-footer"><div class="container">
+            <div class="cols">
+              <div><div class="brandmark">NOIR</div><p style="opacity:.7;font-size:.92rem;line-height:1.6">Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.</p></div>
+              <div><h6>Shop</h6><a>New arrivals</a><a>Best sellers</a><a>Men</a><a>Women</a><a>Sale</a></div>
+              <div><h6>Help</h6><a>Track order</a><a>Shipping</a><a>Returns</a><a>Warranty</a><a>FAQ</a></div>
+              <div><h6>Company</h6><a>About</a><a>Sustainability</a><a>Stores</a><a>Careers</a></div>
+              <div><h6>Connect</h6><a>Instagram</a><a>TikTok</a><a>Newsletter</a><a>Contact</a></div>
             </div>
-          </footer>
+            <div class="footer-bottom">
+              <span>© 2026 NOIR Eyewear. All rights reserved.</span>
+              <div class="pay"><span>VISA</span><span>AMEX</span><span>PAYPAL</span><span>APPLE PAY</span><span>KLARNA</span></div>
+            </div>
+          </div></footer>
 
         </div>
       </div>
@@ -422,11 +614,36 @@ const DEFAULTS = {
 };
 let STATE = clone(DEFAULTS);
 
+/* Dummy homepage data for the sunglasses store. */
 const PRODUCTS = [
-  { name:'Linen Throw', price:'$48',  seed:'lin1' },
-  { name:'Ceramic Mug', price:'$22',  seed:'cer2' },
-  { name:'Oak Stool',   price:'$140', seed:'oak3' },
-  { name:'Wool Runner', price:'$95',  seed:'woo4' },
+  { name:'Cardinal',   price:'$145', frame:'#1c1917', rating:5, reviews:412, badge:'Best seller' },
+  { name:'Riviera',    price:'$152', was:'$190', frame:'#5b4636', rating:5, reviews:298, badge:'Sale' },
+  { name:'Meridian',   price:'$155', frame:'#6b7076', rating:4, reviews:531 },
+  { name:'Marlowe',    price:'$135', frame:'#27408b', rating:5, reviews:204, badge:'New' },
+  { name:'Dune',       price:'$150', frame:'#8a5a2b', rating:5, reviews:176 },
+  { name:'Apex Sport', price:'$175', frame:'#1f6f5c', rating:4, reviews:389 },
+];
+const COLLECTIONS = [
+  { name:'Aviators',  seed:'noir-aviator' }, { name:'Wayfarers', seed:'noir-wayfarer' },
+  { name:'Round',     seed:'noir-round' },   { name:'Sport',     seed:'noir-sport' },
+];
+const VALUEPROPS = [
+  { ic:'truck',   h:'Free shipping',     p:'On all orders over $75' },
+  { ic:'shield',  h:'2-year warranty',   p:'Plus free lifetime repairs' },
+  { ic:'refresh', h:'30-day returns',    p:'Risk-free, no questions asked' },
+  { ic:'sun',     h:'Polarized & UV400', p:'100% UV protection, always' },
+];
+const REVIEWS = [
+  { text:'Hands down the best sunglasses I have owned. The polarization is incredible and they feel genuinely premium.', name:'Jordan M.', initials:'JM' },
+  { text:'Did the home try-on and kept two pairs. So easy, and the quality blew me away for the price.', name:'Priya S.', initials:'PS' },
+  { text:'Three compliments on day one. Lightweight, sturdy, and the lenses are crystal clear.', name:'Marcus T.', initials:'MT' },
+];
+const PRESS = ['GQ','VOGUE','Esquire','Forbes','WIRED'];
+const UGC = ['ugc-a','ugc-b','ugc-c','ugc-d','ugc-e','ugc-f'];
+const POSTS = [
+  { cat:'Style guide', title:'How to pick the right frame for your face shape', seed:'jr-1' },
+  { cat:'Lens tech',   title:'Polarized vs. tinted: which lens is right for you?', seed:'jr-2' },
+  { cat:'Care',        title:'5 ways to keep your sunglasses scratch-free', seed:'jr-3' },
 ];
 
 /* ============================================================================
@@ -769,23 +986,67 @@ function renderElevation(body){
 /* ============================================================================
    PREVIEW BUILDERS
    ============================================================================ */
-function buildCarousel(){
-  const c=document.getElementById('carousel'); c.innerHTML='';
-  PRODUCTS.forEach(p=> c.appendChild(el(`<article class="card">
-    <img src="https://picsum.photos/seed/${p.seed}/600/450" alt="${p.name}">
-    <div class="cbody"><h5>${p.name}</h5><span class="price">${p.price}</span>
-      <a class="btn btn-primary fill">Add to cart</a></div></article>`)));
+/* store icons + small render helpers */
+const SI = {
+  truck:'<path d="M14 18V6a1 1 0 0 0-1-1H2v13"/><path d="M14 9h5l3 3v5a1 1 0 0 1-1 1h-2"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="18" r="2.5"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+};
+function stars(n){ let s=''; for(let i=0;i<5;i++) s+=`<span style="opacity:${i<n?1:.28}">★</span>`; return `<span class="stars">${s}</span>`; }
+function starsGold(n){ let s=''; for(let i=0;i<5;i++) s+=`<span style="opacity:${i<n?1:.35}">★</span>`; return s; }
+// Inline sunglasses illustration — product "photo" that stays legible on any theme.
+function sunglasses(frame){
+  const lens = rgba(frame, 0.28);
+  return `<svg class="sg" viewBox="0 0 170 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 27 L4 17" stroke="${frame}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M156 27 L166 17" stroke="${frame}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M74 31 q11 -7 22 0" stroke="${frame}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect x="14" y="27" width="60" height="33" rx="15" fill="${lens}" stroke="${frame}" stroke-width="5"/>
+    <rect x="96" y="27" width="60" height="33" rx="15" fill="${lens}" stroke="${frame}" stroke-width="5"/>
+    <ellipse cx="32" cy="38" rx="8" ry="4" fill="#fff" opacity=".55"/>
+    <ellipse cx="114" cy="38" rx="8" ry="4" fill="#fff" opacity=".55"/>
+  </svg>`;
 }
-function buildFeatures(){
-  const data=[
-    { icon:'click',  h:'Move quickly',    p:'Compose your storefront in minutes. Every component is built to be configured, not customized.' },
-    { icon:'layers', h:'Stay consistent', p:'Global tokens keep the whole theme on-system. Tweak one control and the entire site stays in tune.' },
-    { icon:'box',    h:'Scale with ease', p:'Layered tokens mean brand, content and components evolve together — never against each other.' },
-  ];
-  const f=document.getElementById('features'); f.innerHTML='';
-  data.forEach(d=> f.appendChild(el(`<div class="feature"><div class="ic">${svg(ICONS[d.icon],24)}</div>
-    <h4>${d.h}</h4><p>${d.p}</p>
-    <span class="link">Learn more ${svg('<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',15)}</span></div>`)));
+
+function buildHomepage(){
+  document.getElementById('hero-rating').insertAdjacentHTML('afterbegin', `<span class="stars">${starsGold(5)}</span>`);
+  document.getElementById('agg-stars').innerHTML = '★★★★★';
+
+  document.getElementById('valueprops').innerHTML = VALUEPROPS.map(v=>
+    `<div class="vp"><div class="ic">${svg(SI[v.ic],24)}</div><h5>${v.h}</h5><p>${v.p}</p></div>`).join('');
+
+  document.getElementById('collections').innerHTML = COLLECTIONS.map(c=>
+    `<a class="collection"><img src="https://picsum.photos/seed/${c.seed}/520/720" alt="${c.name}">
+      <div class="clabel"><div class="cname">${c.name}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div></div></a>`).join('');
+
+  document.getElementById('products').innerHTML = PRODUCTS.map(p=>
+    `<article class="product"><div class="thumb">${p.badge?`<span class="badge">${p.badge}</span>`:''}${sunglasses(p.frame)}</div>
+      <div class="pbody"><div class="pname">${p.name}</div>
+        <div class="rrow">${stars(p.rating)}<span class="rev">(${p.reviews})</span></div>
+        <span class="price">${p.was?`<s>${p.was}</s>`:''}${p.price}</span>
+        <a class="btn btn-primary fill">Add to cart</a></div></article>`).join('');
+
+  document.getElementById('glist').innerHTML = [
+    'Free 14-day home try-on', '2-year warranty + lifetime repairs', 'Free returns &amp; exchanges'
+  ].map(t=>`<div class="gitem">${svg(SI.check,20)}${t}</div>`).join('');
+
+  document.getElementById('reviews').innerHTML = REVIEWS.map(r=>
+    `<div class="review">${stars(5)}<p>“${r.text}”</p>
+      <div class="who"><span class="av">${r.initials}</span><div><div class="nm">${r.name}</div>
+        <div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`).join('');
+
+  document.getElementById('press').innerHTML = PRESS.map(p=>`<span class="logo">${p}</span>`).join('');
+
+  document.getElementById('ugc').innerHTML = UGC.map(s=>
+    `<a class="ugc-tile"><img src="https://picsum.photos/seed/${s}/320/320" alt=""></a>`).join('');
+
+  document.getElementById('journal').innerHTML = POSTS.map(b=>
+    `<article class="post"><img src="https://picsum.photos/seed/${b.seed}/600/380" alt="">
+      <div class="pbody"><div class="cat">${b.cat}</div><h4>${b.title}</h4>
+        <span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`).join('');
 }
 
 /* ============================================================================
@@ -807,8 +1068,7 @@ document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refr
 
 refreshNames();   // derive palette names from their hex values
 buildPanel();
-buildCarousel();
-buildFeatures();
+buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
 
 /* ============================================================================
