@@ -19,7 +19,12 @@ One-way flow, the whole point of the prototype:
    `--c-heading`, `--radius`). A **color scheme** is just a mapping of *role →
    palette token* such as `neutral.950` (dropdowns only, never free hex — so a
    scheme can never reference an undefined color). Button colors auto-derive from
-   the palette and contrast with each scheme's background.
+   the palette and contrast with each scheme's background. Editing a scheme in the
+   left panel only edits its tokens — it is **not** applied to the site there.
+   Schemes are applied **per section**: click a section in the preview (blue frame)
+   and pick its scheme from the contextual card (bottom-right on desktop, in the
+   sheet on mobile). Unassigned sections inherit the store's baseline scheme; the
+   override writes the scheme's role vars inline on just that section.
 3. **PREVIEW** — every store element binds to a role var (`var(--c-heading)`),
    never to a raw value. Change one global token and it ripples everywhere.
 
@@ -33,5 +38,10 @@ only those role vars — that's the entire loop.
 ## Editing
 
 Single `index.html`, inline CSS + JS, no build step, no frameworks. Start in the
-`STATE` object (defaults) and the `render*()` functions (controls). This version
-covers global settings only — local per-section overrides come later.
+`STATE` object (defaults) and the `render*()` functions (controls). Typography is
+split into **Heading** and **Body** subgroups — each owns font, weight, line
+height, letter spacing, and case. The type scale is split where it acts: the
+**ratio** (heading steps) sits under Heading; the **base size** (body text, and
+the foundation H1–H6 derive from) sits under Body, so it moves body text directly.
+Per-section color-scheme overrides live in `STATE.sectionSchemes` and are painted
+by `applySectionSchemes()`.

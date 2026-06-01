@@ -56,6 +56,7 @@
     --stone-400:#a8a29e; --stone-500:#78716c; --stone-600:#57534e; --stone-700:#44403c;
     --stone-800:#292524; --stone-900:#1c1917; --stone-950:#0c0a09;
     --peek: 84px;   /* mobile bottom-sheet: visible height at the "peek" snap */
+    --sel:#2563eb;  /* section select/hover frame + marker (blue) */
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
@@ -169,6 +170,35 @@
   .scheme-chev { width: 14px; height: 14px; color: var(--stone-400); transition: transform .15s; flex: 0 0 auto; }
   .scheme-item.expanded .scheme-chev { transform: rotate(180deg); }
   .scheme-tokens { display: flex; flex-direction: column; gap: 10px; padding: 6px 6px 12px; }
+  .subgroup-hint { font-size: 11px; line-height: 1.45; color: var(--stone-400); font-weight: 400; }
+
+  /* ---- mini scheme square (used inside the section scheme dropdown) ---- */
+  .dd-scheme-sq { width: 26px; height: 26px; border-radius: 5px; box-shadow: 0 0 0 1px var(--stone-200); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; flex: 0 0 auto; overflow: hidden; }
+  .dd-scheme-sq span { font-family: "Inter", sans-serif; font-weight: 700; font-size: 11px; line-height: 1; letter-spacing: -0.02em; }
+  .dd-scheme-sq .bar { width: 14px; height: 3px; border-radius: 999px; }
+
+  /* ==========================================================================
+     SECTION SELECTION — blue hover/select frame + contextual floating card.
+     Each selectable preview block carries [data-sec]; selecting it opens a
+     small card (bottom-right on desktop, inside the sheet on mobile) whose
+     scheme picker assigns a color scheme to THAT section only.
+     ========================================================================== */
+  #store [data-sec] { cursor: pointer; }
+  #store [data-sec]:hover { outline: 2px solid var(--sel); outline-offset: -2px; }
+  #store [data-sec].sec-selected { outline: 2px solid var(--sel); outline-offset: -2px; }
+  /* a section with an assigned scheme paints its own background from that scheme */
+  #store .sec-themed { background-color: var(--c-bg) !important; }
+
+  .section-float { position: fixed; bottom: 24px; right: 24px; width: 256px; background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; box-shadow: 0 8px 32px -8px rgba(0,0,0,.18); z-index: 40; }
+  .section-float[hidden] { display: none; }
+  .sf-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
+  .sf-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .sf-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--sel); flex: 0 0 auto; }
+  .sf-name { font-size: 12px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; flex: 0 0 auto; }
+  .sf-close:hover { color: var(--stone-900); }
+  .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .sf-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
 
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
@@ -186,10 +216,13 @@
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
     --section-padding:80px; --container-max:1120px; --gutter:24px;
-    background: var(--c-bg); color: var(--c-body); font-family: var(--font-body); font-size: var(--fs-base); line-height: 1.6;
+    --heading-weight:700; --heading-lh:1.14; --heading-ls:-0.01em; --heading-case:none;
+    --body-weight:400; --body-lh:1.6; --body-ls:0em; --body-case:none;
+    background: var(--c-bg); color: var(--c-body); font-family: var(--font-body); font-size: var(--fs-base);
+    font-weight: var(--body-weight); line-height: var(--body-lh); letter-spacing: var(--body-ls); text-transform: var(--body-case);
   }
   .store h1,.store h2,.store h3,.store h4,.store h5,.store h6 {
-    font-family: var(--font-heading); color: var(--c-heading); font-weight: 700; line-height: 1.14; letter-spacing: -0.01em; margin: 0;
+    font-family: var(--font-heading); color: var(--c-heading); font-weight: var(--heading-weight); line-height: var(--heading-lh); letter-spacing: var(--heading-ls); text-transform: var(--heading-case); margin: 0;
   }
   .store h1 { font-size: var(--fs-h1); } .store h2 { font-size: var(--fs-h2); }
   .store h3 { font-size: var(--fs-h3); } .store h4 { font-size: var(--fs-h4); }
@@ -230,7 +263,7 @@
   /* hero */
   .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 560px; background-size: cover; background-position: center; }
   .hero::after { content:""; position:absolute; inset:0; background: linear-gradient(100deg, rgba(0,0,0,.66) 0%, rgba(0,0,0,.34) 55%, rgba(0,0,0,.12) 100%); }
-  .hero .container { position: relative; z-index: 1; padding-top: var(--section-padding); padding-bottom: var(--section-padding); }
+  .hero .container { position: relative; z-index: 1; width: 100%; padding-top: var(--section-padding); padding-bottom: var(--section-padding); }
   .hero .eyebrow { color: #fff; opacity: .92; }
   .hero h1 { color: #fff; max-width: 16ch; margin-bottom: 1.1rem; }
   .hero p { color: rgba(255,255,255,.92); max-width: 44ch; font-size: 1.12rem; margin-bottom: 1.4rem; }
@@ -322,14 +355,13 @@
   .post .link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--c-heading); font-weight: 600; font-size: 14px; cursor: pointer; }
   .post .link svg { width: 15px; height: 15px; }
 
-  /* newsletter */
-  .newsletter { background: var(--c-heading); }
+  /* newsletter — a normal scheme surface (defaults to the Dark section scheme) */
   .newsletter .container { text-align: center; display: flex; flex-direction: column; align-items: center; gap: .8rem; }
-  .newsletter .eyebrow { color: var(--c-bg); opacity: .75; justify-content: center; }
-  .newsletter h2 { color: var(--c-bg); }
-  .newsletter p { color: var(--c-bg); opacity: .8; max-width: 44ch; font-size: 1.05rem; }
+  .newsletter .eyebrow { color: var(--c-btn-fill); opacity: .9; justify-content: center; }
+  .newsletter h2 { color: var(--c-heading); }
+  .newsletter p { color: var(--c-body); opacity: .85; max-width: 44ch; font-size: 1.05rem; }
   .newsletter form { display: flex; gap: 10px; width: 100%; max-width: 460px; margin-top: .6rem; flex-wrap: wrap; }
-  .newsletter input { flex: 1; min-width: 200px; border: none; border-radius: var(--radius); padding: 13px 16px; font: inherit; font-size: 15px; background: var(--c-bg); color: var(--c-heading); outline: none; }
+  .newsletter input { flex: 1; min-width: 200px; border: 1px solid var(--c-border); border-radius: var(--radius); padding: 13px 16px; font: inherit; font-size: 15px; background: var(--c-surface); color: var(--c-heading); outline: none; }
 
   /* footer */
   .store-footer { background: var(--c-surface); border-top: 1px solid var(--c-border); }
@@ -375,6 +407,11 @@
     .panel.dragging { transition: none; }
     .sheet-handle { display: flex; }
     .features { grid-template-columns: 1fr; }
+
+    /* section selected: the contextual card lives inside the sheet, and the
+       global style-guide groups hide until the card's X deselects the section. */
+    .section-float.in-sheet { position: static; width: 100%; border: none; border-radius: 0; box-shadow: none; border-bottom: 1px solid var(--stone-200); z-index: auto; }
+    body.sec-selected .groups { display: none; }
   }
 </style>
 </head>
@@ -405,7 +442,7 @@
           <div class="announce">Free shipping over $75 · 30-day risk-free returns · 2-year warranty</div>
 
           <!-- NAV -->
-          <nav class="nav"><div class="container">
+          <nav class="nav" data-sec="nav"><div class="container">
             <span class="logo">NOIR</span>
             <div class="nav-links"><a>New</a><a>Men</a><a>Women</a><a>Sport</a><a>Collections</a><a>Sale</a></div>
             <div class="nav-actions">
@@ -419,7 +456,7 @@
           </div></nav>
 
           <!-- HERO -->
-          <header class="hero" id="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
+          <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
             <div class="container">
               <div class="eyebrow" style="margin-bottom:1rem"><span class="line"></span>New · Summer '26</div>
               <h1>See the world in style.</h1>
@@ -433,12 +470,12 @@
           </header>
 
           <!-- VALUE PROPS / TRUST BAR -->
-          <section class="section"><div class="container">
+          <section class="section" data-sec="valueprops"><div class="container">
             <div class="valueprops" id="valueprops"></div>
           </div></section>
 
           <!-- SHOP BY COLLECTION -->
-          <section class="section sec-surface"><div class="container">
+          <section class="section sec-surface" data-sec="collections"><div class="container">
             <div class="section-head">
               <div class="eyebrow"><span class="line"></span>Shop by style</div>
               <h2>Find your perfect frame</h2>
@@ -448,7 +485,7 @@
           </div></section>
 
           <!-- BEST SELLERS -->
-          <section class="section"><div class="container">
+          <section class="section" data-sec="bestsellers"><div class="container">
             <div class="rowhead">
               <div class="ey"><div class="eyebrow"><span class="line"></span>Best sellers</div><h2>Loved by thousands</h2></div>
               <a class="btn btn-secondary outline">View all</a>
@@ -457,7 +494,7 @@
           </div></section>
 
           <!-- GUARANTEE / RISK-FREE -->
-          <section class="section guarantee"><div class="container">
+          <section class="section guarantee" data-sec="guarantee"><div class="container">
             <div class="gmedia"><img src="https://picsum.photos/seed/noir-tryon/800/600" alt="Home try-on"></div>
             <div class="gtext">
               <div class="eyebrow"><span class="line"></span>Risk-free</div>
@@ -469,7 +506,7 @@
           </div></section>
 
           <!-- SOCIAL PROOF / REVIEWS -->
-          <section class="section"><div class="container">
+          <section class="section" data-sec="reviews"><div class="container">
             <div class="reviews-agg">
               <div class="stars" id="agg-stars" style="font-size:22px"></div>
               <div class="big">4.8 out of 5</div>
@@ -479,13 +516,13 @@
           </div></section>
 
           <!-- PRESS / FEATURED IN -->
-          <section class="press"><div class="container">
+          <section class="press" data-sec="press"><div class="container">
             <div class="plabel">As featured in</div>
             <div class="press-logos" id="press"></div>
           </div></section>
 
           <!-- UGC / INSTAGRAM -->
-          <section class="section"><div class="container">
+          <section class="section" data-sec="ugc"><div class="container">
             <div class="section-head">
               <div class="eyebrow"><span class="line"></span>#NoirOnYou</div>
               <h2>As seen on you</h2>
@@ -495,7 +532,7 @@
           </div></section>
 
           <!-- BLOG / JOURNAL -->
-          <section class="section sec-surface"><div class="container">
+          <section class="section sec-surface" data-sec="journal"><div class="container">
             <div class="section-head">
               <div class="eyebrow"><span class="line"></span>The Journal</div>
               <h2>Style notes &amp; guides</h2>
@@ -504,7 +541,7 @@
           </div></section>
 
           <!-- NEWSLETTER -->
-          <section class="section newsletter"><div class="container">
+          <section class="section newsletter" data-sec="newsletter"><div class="container">
             <div class="eyebrow"><span class="line"></span>Join the club</div>
             <h2>Get 10% off your first order</h2>
             <p>Sign up for early access to new drops, styling tips, and members-only offers.</p>
@@ -515,7 +552,7 @@
           </div></section>
 
           <!-- FOOTER -->
-          <footer class="store-footer"><div class="container">
+          <footer class="store-footer" data-sec="footer"><div class="container">
             <div class="cols">
               <div><div class="brandmark">NOIR</div><p style="opacity:.7;font-size:.92rem;line-height:1.6">Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.</p></div>
               <div><h6>Shop</h6><a>New arrivals</a><a>Best sellers</a><a>Men</a><a>Women</a><a>Sale</a></div>
@@ -573,6 +610,16 @@ const FONTS = {
 const SHADOWS = { None:'none', Soft:'0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06)', Hard:'0 18px 40px -12px rgba(0,0,0,.28)' };
 const RADIUS_PRESETS = { Sharp:0, Soft:8, Rounded:16, Pill:999 };
 
+/* Typography levers (named presets -> resolved CSS values). Heading and body each
+   own their own weight / line-height / letter-spacing / case; the type SCALE is split
+   so each knob lands where it actually acts: scale RATIO drives the heading steps,
+   BASE SIZE drives body text (and is the foundation the headings derive from). */
+const TYPE_WEIGHTS = { Light:300, Regular:400, Medium:500, Semibold:600, Bold:700, Extrabold:800 };
+const HEADING_LINE_HEIGHT = { Tight:1.05, Regular:1.14, Relaxed:1.3 };
+const BODY_LINE_HEIGHT    = { Tight:1.4, Regular:1.6, Relaxed:1.85 };
+const LETTER_SPACING = { Tight:-0.025, Normal:0, Wide:0.05 };   // em
+const TEXT_CASE = { 'Default':'none', 'UPPERCASE':'uppercase', 'Title Case':'capitalize', 'lowercase':'lowercase' };
+
 /* ============================================================================
    STATE  —  V1 system (named swatches mapped DIRECTLY to roles), nicer colors.
    ============================================================================ */
@@ -604,9 +651,22 @@ const DEFAULTS = {
     Dark:  { bg:'ink',   surface:'night', heading:'paper', body:'mist',  border:'night', btnFill:'brand', btnText:'paper', btn2Fill:'paper', btn2Text:'ink'   },
     Brand: { bg:'brand', surface:'rust',  heading:'paper', body:'paper', border:'rust',  btnFill:'paper', btnText:'brand', btn2Fill:'paper', btn2Text:'brand' },
   },
+  // The store's BASELINE scheme (what unthemed sections inherit). It is NOT changed by
+  // clicking schemes in the panel — schemes are applied per-section via the preview.
   activeScheme: 'Light',
-  // TYPOGRAPHY: font + base size + ratio (auto-generates H1–H6) + per-level overrides.
-  typography: { headingFont:'Inter', bodyFont:'Inter', baseSize:16, ratio:1.25, overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' } },
+  // Per-section scheme overrides: { sectionId -> schemeName }. A section listed here
+  // paints its own background + role colors from that scheme; others inherit the baseline.
+  // Newsletter ships dark, expressed cleanly as the Dark scheme on that one section.
+  sectionSchemes: { newsletter:'Dark' },
+  // TYPOGRAPHY: split into HEADING + BODY. Each owns font + weight/line-height/letter-
+  // spacing/case. Scale RATIO (heading steps) lives with Heading; BASE SIZE (body text,
+  // and the foundation H1–H6 derive from) lives with Body. overrides kept for the H1–H6 math.
+  typography: {
+    headingFont:'Inter', bodyFont:'Inter', baseSize:16, ratio:1.25,
+    heading: { weight:'Bold',    lineHeight:'Regular', letterSpacing:'Tight',  case:'Default' },
+    body:    { weight:'Regular', lineHeight:'Regular', letterSpacing:'Normal', case:'Default' },
+    overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
+  },
   buttons: { primaryStyle:'fill', secondaryStyle:'outline' },
   radius: 10,                                   // px, one global corner radius
   spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
@@ -674,6 +734,15 @@ function applyRoles(){
   s.setProperty('--fs-base', t.baseSize+'px');
   const h = computeHeadingSizes();
   for(const lvl of ['h1','h2','h3','h4','h5','h6']) s.setProperty('--fs-'+lvl, h[lvl]+'px');
+  // heading + body typographic levers (resolve named presets to CSS values)
+  s.setProperty('--heading-weight', TYPE_WEIGHTS[t.heading.weight] ?? 700);
+  s.setProperty('--heading-lh', HEADING_LINE_HEIGHT[t.heading.lineHeight] ?? 1.14);
+  s.setProperty('--heading-ls', (LETTER_SPACING[t.heading.letterSpacing] ?? 0)+'em');
+  s.setProperty('--heading-case', TEXT_CASE[t.heading.case] || 'none');
+  s.setProperty('--body-weight', TYPE_WEIGHTS[t.body.weight] ?? 400);
+  s.setProperty('--body-lh', BODY_LINE_HEIGHT[t.body.lineHeight] ?? 1.6);
+  s.setProperty('--body-ls', (LETTER_SPACING[t.body.letterSpacing] ?? 0)+'em');
+  s.setProperty('--body-case', TEXT_CASE[t.body.case] || 'none');
 
   // 3) SHAPE / SPACING / ELEVATION roles.
   s.setProperty('--radius', STATE.radius+'px');
@@ -685,6 +754,28 @@ function applyRoles(){
   // 4) BUTTON style (fill vs outline) — swap classes on demo buttons.
   document.querySelectorAll('.btn-primary').forEach(b=>{ b.classList.remove('fill','outline'); b.classList.add(STATE.buttons.primaryStyle); });
   document.querySelectorAll('.btn-secondary').forEach(b=>{ b.classList.remove('fill','outline'); b.classList.add(STATE.buttons.secondaryStyle); });
+
+  // 5) PER-SECTION color schemes — repaint any section with its own assigned scheme.
+  applySectionSchemes();
+}
+
+/* Paint each selectable section from its assigned scheme (STATE.sectionSchemes).
+   A themed section gets the role colors written inline (overriding the inherited
+   baseline) plus a .sec-themed class so its background follows the scheme too. */
+function applySectionSchemes(){
+  document.querySelectorAll('#store [data-sec]').forEach(elm=>{
+    const name = STATE.sectionSchemes[elm.getAttribute('data-sec')];
+    STATE.colorRoles.forEach(r => elm.style.removeProperty(r.cssVar));
+    elm.style.removeProperty('--c-accent-soft');
+    if(name && STATE.schemes[name]){
+      const sc = STATE.schemes[name];
+      STATE.colorRoles.forEach(r => elm.style.setProperty(r.cssVar, swatchHex(sc[r.key])));
+      elm.style.setProperty('--c-accent-soft', rgba(swatchHex(sc.btnFill), 0.12));
+      elm.classList.add('sec-themed');
+    } else {
+      elm.classList.remove('sec-themed');
+    }
+  });
 }
 
 /* ============================================================================
@@ -854,7 +945,9 @@ function renderColor(body){
 
   // ---- Schemes ----
   const sch = subgroup('Color schemes', true);
-  schemesHost = sch.body;
+  sch.body.appendChild(el('<p class="subgroup-hint">Edit a scheme’s tokens here. To use a scheme, select a section in the preview and pick it there.</p>'));
+  schemesHost = el('<div></div>');           // renderSchemes() owns this node (hint stays put)
+  sch.body.appendChild(schemesHost);
   if(!STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
   renderSchemes();
   body.appendChild(sch.wrap);
@@ -881,16 +974,20 @@ function schemePreview(scheme){
 function addScheme(){
   let n = Object.keys(STATE.schemes).length + 1; let name = 'Scheme ' + n;
   while(STATE.schemes[name]){ n++; name = 'Scheme ' + n; }
-  STATE.schemes[name] = clone(STATE.schemes[STATE.activeScheme] || Object.values(STATE.schemes)[0]);
-  expandedScheme = name; STATE.activeScheme = name;
-  renderSchemes(); applyRoles();
+  // seed from whichever scheme is open for editing (a sensible starting point), but do
+  // NOT apply it anywhere — a new scheme is only "used" once assigned to a section.
+  STATE.schemes[name] = clone(STATE.schemes[expandedScheme] || Object.values(STATE.schemes)[0]);
+  expandedScheme = name;
+  renderSchemes();
 }
 function removeScheme(id){
   if(Object.keys(STATE.schemes).length <= 1) return;
   delete STATE.schemes[id];
   if(STATE.activeScheme === id) STATE.activeScheme = Object.keys(STATE.schemes)[0];
-  if(expandedScheme === id) expandedScheme = STATE.activeScheme;
-  renderSchemes(); applyRoles();
+  if(expandedScheme === id) expandedScheme = null;
+  // drop any section overrides that pointed at the removed scheme (back to baseline)
+  Object.keys(STATE.sectionSchemes).forEach(k=>{ if(STATE.sectionSchemes[k]===id) delete STATE.sectionSchemes[k]; });
+  renderSchemes(); applyRoles(); renderSectionControls();
 }
 
 function renderSchemes(){
@@ -900,7 +997,7 @@ function renderSchemes(){
   Object.keys(STATE.schemes).forEach(id=>{
     const scheme = STATE.schemes[id];
     const expanded = expandedScheme === id;
-    const item = el(`<div class="scheme-item ${id===STATE.activeScheme?'active':''} ${expanded?'expanded':''}"></div>`);
+    const item = el(`<div class="scheme-item ${expanded?'expanded':''}"></div>`);
     const head = el('<button type="button" class="scheme-head"></button>');
     const sq = schemePreview(scheme);
     head.appendChild(sq);
@@ -911,13 +1008,15 @@ function renderSchemes(){
       head.appendChild(rm);
     }
     head.appendChild(el('<svg class="scheme-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
-    // expand to edit; expanding also makes this the scheme shown in the preview
-    head.onclick = ()=>{ if(expandedScheme===id){ expandedScheme=null; } else { expandedScheme=id; STATE.activeScheme=id; } renderSchemes(); applyRoles(); };
+    // clicking ONLY expands / collapses the scheme's token editor — it does NOT apply
+    // the scheme to the site. Schemes are applied per-section from the preview.
+    head.onclick = ()=>{ expandedScheme = (expandedScheme===id) ? null : id; renderSchemes(); };
     item.appendChild(head);
     if(expanded){
       const tokens = el('<div class="scheme-tokens"></div>');
       STATE.colorRoles.forEach(r=>{
-        tokens.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; paintSquare(sq, scheme); if(STATE.activeScheme===id) applyRoles(); })));
+        // editing a token repaints any section currently using this scheme, live.
+        tokens.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; paintSquare(sq, scheme); applyRoles(); renderSectionControls(); })));
       });
       item.appendChild(tokens);
     }
@@ -929,32 +1028,41 @@ function renderSchemes(){
   schemesHost.appendChild(add);
 }
 
+// Named-preset dropdowns reused by both typography subcategories.
+function weightDropdown(value, onChange){
+  const opts = Object.keys(TYPE_WEIGHTS).map(k => ({ value:k, label:k }));
+  return customDropdown(value, opts, onChange);
+}
+function caseDropdown(value, onChange){
+  const opts = Object.keys(TEXT_CASE).map(k => ({ value:k, label:k }));
+  return customDropdown(value, opts, onChange);
+}
+
 function renderTypography(body){
   const t = STATE.typography;
-  const fonts = subgroup('Fonts');
-  fonts.body.appendChild(controlRow('Heading font', fontDropdown(t.headingFont, v=>{ t.headingFont=v; applyRoles(); })));
-  fonts.body.appendChild(controlRow('Body font', fontDropdown(t.bodyFont, v=>{ t.bodyFont=v; applyRoles(); })));
-  body.appendChild(fonts.wrap);
 
-  const scale = subgroup('Type scale', true);
-  scale.body.appendChild(slider('Base size', t.baseSize, 13, 20, 1, 'px', v=>{ t.baseSize=v; applyRoles(); drawOverrides(); }));
+  // ---- HEADING: font + weight/line-height/letter-spacing/case, plus the scale RATIO
+  //      (the ratio is what steps H1→H6 apart, so it belongs with headings). ----
+  const head = subgroup('Heading');
+  head.body.appendChild(controlRow('Font', fontDropdown(t.headingFont, v=>{ t.headingFont=v; applyRoles(); })));
+  head.body.appendChild(controlRow('Weight', weightDropdown(t.heading.weight, v=>{ t.heading.weight=v; applyRoles(); })));
+  head.body.appendChild(controlRow('Line height', segmented(t.heading.lineHeight, Object.keys(HEADING_LINE_HEIGHT), v=>{ t.heading.lineHeight=v; applyRoles(); })));
+  head.body.appendChild(controlRow('Letter spacing', segmented(t.heading.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.heading.letterSpacing=v; applyRoles(); })));
+  head.body.appendChild(controlRow('Case', caseDropdown(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
   const ratios = ['1.125','1.2','1.25','1.333','1.414','1.5','1.618'].map(r=>({value:r,label:r}));
-  scale.body.appendChild(controlRow('Scale ratio', customDropdown(String(t.ratio), ratios, v=>{ t.ratio=+v; applyRoles(); drawOverrides(); })));
-  const ovWrap = el('<div class="ctl"><span class="ctl-label">Per-level overrides (blank = auto)</span></div>');
-  const ov = el('<div style="display:flex;flex-direction:column;gap:6px"></div>');
-  function drawOverrides(){
-    const computed = computeHeadingSizes(); ov.innerHTML='';
-    ['h1','h2','h3','h4','h5','h6'].forEach(lvl=>{
-      const r = el(`<div style="display:flex;align-items:center;gap:8px">
-        <span class="ctl-label" style="width:22px;text-transform:uppercase">${lvl}</span>
-        <input type="number" class="txt" placeholder="${computed[lvl]}" value="${t.overrides[lvl]}"></div>`);
-      r.querySelector('input').oninput = e=>{ t.overrides[lvl]=e.target.value===''?'':+e.target.value; applyRoles(); };
-      ov.appendChild(r);
-    });
-  }
-  drawOverrides();
-  ovWrap.appendChild(ov); scale.body.appendChild(ovWrap);
-  body.appendChild(scale.wrap);
+  head.body.appendChild(controlRow('Scale ratio', customDropdown(String(t.ratio), ratios, v=>{ t.ratio=+v; applyRoles(); })));
+  body.appendChild(head.wrap);
+
+  // ---- BODY: font + the same four levers, plus BASE SIZE (the body text size, and the
+  //      foundation H1–H6 derive from — so it lives here and moves body text directly). ----
+  const bod = subgroup('Body', true);
+  bod.body.appendChild(controlRow('Font', fontDropdown(t.bodyFont, v=>{ t.bodyFont=v; applyRoles(); })));
+  bod.body.appendChild(controlRow('Weight', weightDropdown(t.body.weight, v=>{ t.body.weight=v; applyRoles(); })));
+  bod.body.appendChild(controlRow('Line height', segmented(t.body.lineHeight, Object.keys(BODY_LINE_HEIGHT), v=>{ t.body.lineHeight=v; applyRoles(); })));
+  bod.body.appendChild(controlRow('Letter spacing', segmented(t.body.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.body.letterSpacing=v; applyRoles(); })));
+  bod.body.appendChild(controlRow('Case', caseDropdown(t.body.case, v=>{ t.body.case=v; applyRoles(); })));
+  bod.body.appendChild(slider('Base size', t.baseSize, 13, 20, 1, 'px', v=>{ t.baseSize=v; applyRoles(); }));
+  body.appendChild(bod.wrap);
 }
 
 function renderButtons(body){
@@ -1050,6 +1158,140 @@ function buildHomepage(){
 }
 
 /* ============================================================================
+   SECTION SELECTION  —  select a preview section, assign it a color scheme.
+   Desktop: a floating card sits bottom-right of the preview. Mobile: the same
+   card slides into the bottom sheet, with an X that deselects and returns to the
+   global style guide. The blue frame marks the hovered / selected section.
+   ============================================================================ */
+const SECTION_TITLES = {
+  nav:'Navigation', hero:'Hero', valueprops:'Value Props', collections:'Collections',
+  bestsellers:'Best Sellers', guarantee:'Home Try-On', reviews:'Reviews', press:'Press',
+  ugc:'Instagram', journal:'Journal', newsletter:'Newsletter', footer:'Footer',
+};
+let selectedSection = null;
+const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 860px)') : { matches:false, addEventListener(){}, addListener(){} };
+
+// The scheme a section currently resolves to: its own override, else the baseline.
+function baselineSchemeName(){ return STATE.schemes[STATE.activeScheme] ? STATE.activeScheme : Object.keys(STATE.schemes)[0]; }
+
+// Mini scheme square (bg + "Aa" in heading color + accent bar) for the scheme picker.
+function schemeSquareMini(scheme){
+  const sq = el('<div class="dd-scheme-sq"><span>Aa</span><i class="bar"></i></div>');
+  sq.style.background = swatchHex(scheme.bg);
+  sq.querySelector('span').style.color = swatchHex(scheme.heading);
+  sq.querySelector('.bar').style.background = swatchHex(scheme.btnFill);
+  return sq;
+}
+
+// Scheme picker for a section. Lists every scheme with a live preview; the menu opens
+// upward (the card sits low on screen) so it never clips off the bottom.
+function schemeSelect(value, onChange){
+  const wrap = el('<div class="dd" style="position:relative"></div>');
+  const trigger = el('<button type="button" class="field dd-trigger"></button>');
+  wrap.appendChild(trigger);
+  let menu = null;
+  const cur = (v)=> STATE.schemes[v] || Object.values(STATE.schemes)[0];
+  function renderTrigger(){
+    trigger.innerHTML = '';
+    const c = el('<span class="dd-cur"></span>');
+    c.appendChild(schemeSquareMini(cur(value)));
+    const lbl = el('<span class="dd-label" style="font-weight:600"></span>'); lbl.textContent = value;
+    c.appendChild(lbl); trigger.appendChild(c);
+    trigger.appendChild(el('<svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
+  }
+  function close(){ if(menu){ menu.remove(); menu=null; } trigger.classList.remove('open'); document.removeEventListener('mousedown', onDoc, true); }
+  function onDoc(e){ if(!wrap.contains(e.target)) close(); }
+  function open(){
+    if(menu){ close(); return; }
+    menu = el('<div class="dd-menu" style="position:absolute;bottom:calc(100% + 4px);left:0;right:0;max-height:240px"></div>');
+    Object.keys(STATE.schemes).forEach(id=>{
+      const it = el('<button type="button" class="dd-item"></button>');
+      it.appendChild(schemeSquareMini(STATE.schemes[id]));
+      const lbl = el('<span class="dd-label" style="font-weight:600"></span>'); lbl.textContent = id; it.appendChild(lbl);
+      if(id===value) it.appendChild(el('<svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'));
+      it.onclick = ()=>{ value=id; renderTrigger(); close(); onChange(id); };
+      menu.appendChild(it);
+    });
+    wrap.appendChild(menu); trigger.classList.add('open');
+    setTimeout(()=>document.addEventListener('mousedown', onDoc, true), 0);
+  }
+  trigger.onclick = (e)=>{ e.stopPropagation(); open(); };
+  renderTrigger();
+  return wrap;
+}
+
+function selectSection(key){
+  selectedSection = key;
+  document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
+  renderSectionControls();
+  if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
+}
+function deselectSection(){
+  selectedSection = null;
+  document.querySelectorAll('#store [data-sec].sec-selected').forEach(e => e.classList.remove('sec-selected'));
+  renderSectionControls();
+}
+
+// Build the contextual card (or hide it) and place it where it belongs for the viewport.
+function renderSectionControls(){
+  let card = document.getElementById('section-float');
+  if(!card){
+    card = el('<div id="section-float" class="section-float" hidden></div>');
+    card.addEventListener('click', e=>e.stopPropagation());   // clicks inside never deselect
+    document.querySelector('.preview').appendChild(card);
+  }
+  if(!selectedSection){
+    card.hidden = true; card.innerHTML = '';
+    document.body.classList.remove('sec-selected');
+    placeCard(card);
+    return;
+  }
+  card.hidden = false;
+  document.body.classList.add('sec-selected');
+  const title = SECTION_TITLES[selectedSection] || 'Section';
+  const curName = STATE.sectionSchemes[selectedSection] || baselineSchemeName();
+  card.innerHTML = '';
+  const head = el('<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><span class="sf-name"></span></div></div>');
+  head.querySelector('.sf-name').textContent = title;
+  const close = el(`<button class="sf-close" title="Deselect section">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
+  close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
+  head.appendChild(close); card.appendChild(head);
+  const b = el('<div class="sf-body"></div>');
+  b.appendChild(el('<label class="sf-label">Color scheme</label>'));
+  b.appendChild(schemeSelect(curName, id=>{ STATE.sectionSchemes[selectedSection]=id; applySectionSchemes(); renderSectionControls(); }));
+  card.appendChild(b);
+  placeCard(card);
+}
+
+// Desktop: card floats over the preview (bottom-right). Mobile: card lives in the sheet.
+function placeCard(card){
+  if(mqMobile.matches){
+    card.classList.add('in-sheet');
+    const panel = document.querySelector('.panel');
+    const header = panel.querySelector('.panel-header');
+    if(card.parentElement !== panel) panel.insertBefore(card, header.nextSibling);
+  } else {
+    card.classList.remove('in-sheet');
+    const preview = document.querySelector('.preview');
+    if(card.parentElement !== preview) preview.appendChild(card);
+  }
+}
+
+function initSectionSelection(){
+  const store = document.getElementById('store');
+  store.addEventListener('click', e=>{
+    const sec = e.target.closest('[data-sec]');
+    if(sec){ e.stopPropagation(); selectSection(sec.getAttribute('data-sec')); }
+  });
+  // clicking the preview outside any section (or the empty canvas) deselects
+  document.querySelector('.preview').addEventListener('click', ()=>{ if(selectedSection) deselectSection(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && selectedSection) deselectSection(); });
+  // keep the card on the correct side of the layout when crossing the breakpoint
+  const onMq = ()=>renderSectionControls();
+  if(mqMobile.addEventListener) mqMobile.addEventListener('change', onMq); else if(mqMobile.addListener) mqMobile.addListener(onMq);
+}
+
+/* ============================================================================
    BOOT
    ============================================================================ */
 function buildPanel(){
@@ -1064,12 +1306,13 @@ function buildPanel(){
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; buildPanel(); applyRoles(); };
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; deselectSection(); buildPanel(); applyRoles(); };
 
 refreshNames();   // derive palette names from their hex values
 buildPanel();
 buildHomepage();
-applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
+applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
+initSectionSelection();
 
 /* ============================================================================
    MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
@@ -1114,6 +1357,9 @@ applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
   handle.addEventListener('click', e => e.preventDefault());
+
+  // expose a snap hook so selecting a section on mobile can raise the sheet to reveal the card
+  window.__sheetSnap = (name)=>{ if(mq.matches) snapTo(name); };
 
   function apply(){ if(mq.matches){ snapTo(curH != null ? nearest(curH) : 'peek'); } else { panel.style.removeProperty('--sheet-h'); curH = null; } }
   if(mq.addEventListener) mq.addEventListener('change', apply); else if(mq.addListener) mq.addListener(apply);
