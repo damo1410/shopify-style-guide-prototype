@@ -63,6 +63,7 @@
   body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--stone-900); background: var(--stone-50); -webkit-font-smoothing: antialiased;
+    font-size: 16px;   /* pins the editor chrome; the store's rem text scales off <html> (base size) */
     overflow: hidden; overscroll-behavior: none;   /* lock the outer page so inner scrolls can't push it */
   }
   .app { display: flex; height: 100vh; height: 100dvh; width: 100%; }
@@ -73,6 +74,12 @@
   .sheet-handle .grip { width: 36px; height: 4px; border-radius: 999px; background: var(--stone-300); }
   .panel.dragging .sheet-handle { cursor: grabbing; }
   .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--stone-200); }
+  /* two interchangeable header views; min-height matches the logo so swapping never
+     changes the header's height (the section view replaces brand + reset on mobile). */
+  .ph-global, .ph-section { flex: 1; display: flex; align-items: center; justify-content: space-between; min-height: 28px; }
+  .ph-section { display: none; }
+  .ph-section .sf-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--sel); flex: 0 0 auto; }
+  .ph-section .t1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .brand { display: flex; align-items: center; gap: 8px; }
   .brand .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; }
   .brand .t1 { font-size: 13px; font-weight: 600; line-height: 1.2; }
@@ -119,6 +126,8 @@
   .seg button { flex: 1; border: none; background: transparent; border-radius: 4px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500); padding: 0 6px; transition: all .12s; white-space: nowrap; text-transform: capitalize; }
   .seg button:hover { color: var(--stone-900); }
   .seg button.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
+  /* glyph variant (case control): show labels verbatim — no capitalize transform */
+  .seg.seg-glyph button { text-transform: none; letter-spacing: .01em; }
 
   /* ---- single shared slider ---- */
   .slider-track { position: relative; width: 100%; height: 20px; cursor: pointer; display: flex; align-items: center; touch-action: none; }
@@ -172,11 +181,6 @@
   .scheme-tokens { display: flex; flex-direction: column; gap: 10px; padding: 6px 6px 12px; }
   .subgroup-hint { font-size: 11px; line-height: 1.45; color: var(--stone-400); font-weight: 400; }
 
-  /* ---- mini scheme square (used inside the section scheme dropdown) ---- */
-  .dd-scheme-sq { width: 26px; height: 26px; border-radius: 5px; box-shadow: 0 0 0 1px var(--stone-200); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; flex: 0 0 auto; overflow: hidden; }
-  .dd-scheme-sq span { font-family: "Inter", sans-serif; font-weight: 700; font-size: 11px; line-height: 1; letter-spacing: -0.02em; }
-  .dd-scheme-sq .bar { width: 14px; height: 3px; border-radius: 999px; }
-
   /* ==========================================================================
      SECTION SELECTION — blue hover/select frame + contextual floating card.
      Each selectable preview block carries [data-sec]; selecting it opens a
@@ -199,6 +203,11 @@
   .sf-close:hover { color: var(--stone-900); }
   .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
   .sf-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  /* contextual scheme picker — bigger rows that match the left panel's scheme list */
+  .sf-scheme .dd-trigger { min-height: 56px; padding: 8px 10px; gap: 10px; }
+  .sf-scheme .dd-cur { gap: 10px; }
+  .sf-scheme .dd-label { font-size: 13px; font-weight: 600; color: var(--stone-800); }
+  .sf-scheme .dd-menu .dd-item { padding: 6px; gap: 10px; }
 
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
@@ -409,9 +418,13 @@
     .features { grid-template-columns: 1fr; }
 
     /* section selected: the contextual card lives inside the sheet, and the
-       global style-guide groups hide until the card's X deselects the section. */
-    .section-float.in-sheet { position: static; width: 100%; border: none; border-radius: 0; box-shadow: none; border-bottom: 1px solid var(--stone-200); z-index: auto; }
+       global style-guide groups hide until the X (in the header) deselects. */
+    .section-float.in-sheet { position: static; width: 100%; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
+    .section-float.in-sheet .sf-head { display: none; }   /* header now carries the dot + name + X */
     body.sec-selected .groups { display: none; }
+    /* swap the panel header to the section view (blue dot + name + close) */
+    body.sec-selected .panel-header .ph-global { display: none; }
+    body.sec-selected .panel-header .ph-section { display: flex; }
   }
 </style>
 </head>
@@ -423,11 +436,19 @@
   <aside class="panel">
     <div class="sheet-handle" id="sheet-handle"><span class="grip"></span></div>
     <div class="panel-header">
-      <div class="brand">
-        <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
-        <div><div class="t1">Theme Settings</div><div class="t2">Global · v1</div></div>
+      <!-- global header (default) -->
+      <div class="ph-global">
+        <div class="brand">
+          <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
+          <div><div class="t1">Theme Settings</div><div class="t2">Global · v1</div></div>
+        </div>
+        <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
       </div>
-      <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+      <!-- section header (mobile, when a section is selected) -->
+      <div class="ph-section">
+        <div class="brand"><span class="sf-dot"></span><div class="t1" id="ph-section-name">Section</div></div>
+        <button class="reset" id="ph-section-close" title="Deselect section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
     </div>
     <div class="groups" id="groups"><!-- accordion groups injected by JS --></div>
   </aside>
@@ -732,6 +753,10 @@ function applyRoles(){
   s.setProperty('--font-heading', FONTS[t.headingFont]);
   s.setProperty('--font-body', FONTS[t.bodyFont]);
   s.setProperty('--fs-base', t.baseSize+'px');
+  // Base size is GLOBAL: drive the document root so every rem-based body element in the
+  // store scales with it (headings already derive from baseSize via computeHeadingSizes).
+  // The editor chrome is pinned by body{font-size:16px}, so only the store is affected.
+  document.documentElement.style.fontSize = t.baseSize+'px';
   const h = computeHeadingSizes();
   for(const lvl of ['h1','h2','h3','h4','h5','h6']) s.setProperty('--fs-'+lvl, h[lvl]+'px');
   // heading + body typographic levers (resolve named presets to CSS values)
@@ -859,11 +884,15 @@ function customDropdown(value, options, onChange){
 }
 
 // ---- segmented toggle group (kept as buttons, styled like the fields) ----
-function segmented(value, options, onChange){
-  const w = el('<div class="seg"></div>');
+// options: array of strings, OR {value,label} objects when the visible label differs
+// from the stored value (e.g. the case glyphs). extraClass styles a variant (e.g. glyphs).
+function segmented(value, options, onChange, extraClass){
+  const w = el(`<div class="seg ${extraClass||''}"></div>`);
   options.forEach(o=>{
-    const b = el(`<button type="button">${o}</button>`); if(o===value) b.classList.add('active');
-    b.onclick = ()=>{ w.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); onChange(o); };
+    const val = (o && typeof o==='object') ? o.value : o;
+    const lbl = (o && typeof o==='object') ? o.label : o;
+    const b = el(`<button type="button">${lbl}</button>`); if(val===value) b.classList.add('active');
+    b.onclick = ()=>{ w.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); onChange(val); };
     w.appendChild(b);
   });
   return w;
@@ -1028,40 +1057,50 @@ function renderSchemes(){
   schemesHost.appendChild(add);
 }
 
-// Named-preset dropdowns reused by both typography subcategories.
+// Weight dropdown reused by both typography subcategories.
 function weightDropdown(value, onChange){
   const opts = Object.keys(TYPE_WEIGHTS).map(k => ({ value:k, label:k }));
   return customDropdown(value, opts, onChange);
 }
-function caseDropdown(value, onChange){
-  const opts = Object.keys(TEXT_CASE).map(k => ({ value:k, label:k }));
-  return customDropdown(value, opts, onChange);
-}
+
+// Case control as a glyph toggle group (value = TEXT_CASE key, label = sample glyphs).
+const CASE_GLYPHS = [
+  { value:'Default',    label:'—' },
+  { value:'UPPERCASE',  label:'KAG' },
+  { value:'Title Case', label:'Ag' },
+  { value:'lowercase',  label:'ag' },
+];
+function caseToggle(value, onChange){ return segmented(value, CASE_GLYPHS, onChange, 'seg-glyph'); }
 
 function renderTypography(body){
   const t = STATE.typography;
 
+  // ---- GLOBAL: base text size sits above everything — it's a higher-level lever that
+  //      moves BOTH body text (rem, via the document root) and the headings (derived). ----
+  const gbl = subgroup('Text size');
+  gbl.body.appendChild(slider('Base size', t.baseSize, 13, 20, 1, 'px', v=>{ t.baseSize=v; applyRoles(); }));
+  gbl.body.appendChild(el('<p class="subgroup-hint">Global — scales body text and the heading scale together.</p>'));
+  body.appendChild(gbl.wrap);
+
   // ---- HEADING: font + weight/line-height/letter-spacing/case, plus the scale RATIO
   //      (the ratio is what steps H1→H6 apart, so it belongs with headings). ----
-  const head = subgroup('Heading');
+  const head = subgroup('Heading', true);
   head.body.appendChild(controlRow('Font', fontDropdown(t.headingFont, v=>{ t.headingFont=v; applyRoles(); })));
   head.body.appendChild(controlRow('Weight', weightDropdown(t.heading.weight, v=>{ t.heading.weight=v; applyRoles(); })));
   head.body.appendChild(controlRow('Line height', segmented(t.heading.lineHeight, Object.keys(HEADING_LINE_HEIGHT), v=>{ t.heading.lineHeight=v; applyRoles(); })));
   head.body.appendChild(controlRow('Letter spacing', segmented(t.heading.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.heading.letterSpacing=v; applyRoles(); })));
-  head.body.appendChild(controlRow('Case', caseDropdown(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
+  head.body.appendChild(controlRow('Case', caseToggle(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
   const ratios = ['1.125','1.2','1.25','1.333','1.414','1.5','1.618'].map(r=>({value:r,label:r}));
   head.body.appendChild(controlRow('Scale ratio', customDropdown(String(t.ratio), ratios, v=>{ t.ratio=+v; applyRoles(); })));
   body.appendChild(head.wrap);
 
-  // ---- BODY: font + the same four levers, plus BASE SIZE (the body text size, and the
-  //      foundation H1–H6 derive from — so it lives here and moves body text directly). ----
+  // ---- BODY: font + the same four levers (base size now lives in the global section). ----
   const bod = subgroup('Body', true);
   bod.body.appendChild(controlRow('Font', fontDropdown(t.bodyFont, v=>{ t.bodyFont=v; applyRoles(); })));
   bod.body.appendChild(controlRow('Weight', weightDropdown(t.body.weight, v=>{ t.body.weight=v; applyRoles(); })));
   bod.body.appendChild(controlRow('Line height', segmented(t.body.lineHeight, Object.keys(BODY_LINE_HEIGHT), v=>{ t.body.lineHeight=v; applyRoles(); })));
   bod.body.appendChild(controlRow('Letter spacing', segmented(t.body.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.body.letterSpacing=v; applyRoles(); })));
-  bod.body.appendChild(controlRow('Case', caseDropdown(t.body.case, v=>{ t.body.case=v; applyRoles(); })));
-  bod.body.appendChild(slider('Base size', t.baseSize, 13, 20, 1, 'px', v=>{ t.baseSize=v; applyRoles(); }));
+  bod.body.appendChild(controlRow('Case', caseToggle(t.body.case, v=>{ t.body.case=v; applyRoles(); })));
   body.appendChild(bod.wrap);
 }
 
@@ -1174,19 +1213,10 @@ const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 860px)') : {
 // The scheme a section currently resolves to: its own override, else the baseline.
 function baselineSchemeName(){ return STATE.schemes[STATE.activeScheme] ? STATE.activeScheme : Object.keys(STATE.schemes)[0]; }
 
-// Mini scheme square (bg + "Aa" in heading color + accent bar) for the scheme picker.
-function schemeSquareMini(scheme){
-  const sq = el('<div class="dd-scheme-sq"><span>Aa</span><i class="bar"></i></div>');
-  sq.style.background = swatchHex(scheme.bg);
-  sq.querySelector('span').style.color = swatchHex(scheme.heading);
-  sq.querySelector('.bar').style.background = swatchHex(scheme.btnFill);
-  return sq;
-}
-
-// Scheme picker for a section. Lists every scheme with a live preview; the menu opens
-// upward (the card sits low on screen) so it never clips off the bottom.
+// Scheme picker for a section. Uses the same big scheme rows as the left panel (40px
+// preview square + scheme name). The menu opens upward (the card sits low on screen).
 function schemeSelect(value, onChange){
-  const wrap = el('<div class="dd" style="position:relative"></div>');
+  const wrap = el('<div class="dd sf-scheme" style="position:relative"></div>');
   const trigger = el('<button type="button" class="field dd-trigger"></button>');
   wrap.appendChild(trigger);
   let menu = null;
@@ -1194,8 +1224,8 @@ function schemeSelect(value, onChange){
   function renderTrigger(){
     trigger.innerHTML = '';
     const c = el('<span class="dd-cur"></span>');
-    c.appendChild(schemeSquareMini(cur(value)));
-    const lbl = el('<span class="dd-label" style="font-weight:600"></span>'); lbl.textContent = value;
+    c.appendChild(schemePreview(cur(value)));
+    const lbl = el('<span class="dd-label"></span>'); lbl.textContent = value;
     c.appendChild(lbl); trigger.appendChild(c);
     trigger.appendChild(el('<svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
   }
@@ -1203,11 +1233,11 @@ function schemeSelect(value, onChange){
   function onDoc(e){ if(!wrap.contains(e.target)) close(); }
   function open(){
     if(menu){ close(); return; }
-    menu = el('<div class="dd-menu" style="position:absolute;bottom:calc(100% + 4px);left:0;right:0;max-height:240px"></div>');
+    menu = el('<div class="dd-menu" style="position:absolute;bottom:calc(100% + 4px);left:0;right:0;max-height:280px"></div>');
     Object.keys(STATE.schemes).forEach(id=>{
       const it = el('<button type="button" class="dd-item"></button>');
-      it.appendChild(schemeSquareMini(STATE.schemes[id]));
-      const lbl = el('<span class="dd-label" style="font-weight:600"></span>'); lbl.textContent = id; it.appendChild(lbl);
+      it.appendChild(schemePreview(STATE.schemes[id]));
+      const lbl = el('<span class="dd-label"></span>'); lbl.textContent = id; it.appendChild(lbl);
       if(id===value) it.appendChild(el('<svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'));
       it.onclick = ()=>{ value=id; renderTrigger(); close(); onChange(id); };
       menu.appendChild(it);
@@ -1249,6 +1279,8 @@ function renderSectionControls(){
   card.hidden = false;
   document.body.classList.add('sec-selected');
   const title = SECTION_TITLES[selectedSection] || 'Section';
+  const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
+  if(phName) phName.textContent = title;
   const curName = STATE.sectionSchemes[selectedSection] || baselineSchemeName();
   card.innerHTML = '';
   const head = el('<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><span class="sf-name"></span></div></div>');
@@ -1286,6 +1318,8 @@ function initSectionSelection(){
   // clicking the preview outside any section (or the empty canvas) deselects
   document.querySelector('.preview').addEventListener('click', ()=>{ if(selectedSection) deselectSection(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && selectedSection) deselectSection(); });
+  // mobile sheet header close button → deselect, back to the global header
+  document.getElementById('ph-section-close').addEventListener('click', ()=>deselectSection());
   // keep the card on the correct side of the layout when crossing the breakpoint
   const onMq = ()=>renderSectionControls();
   if(mqMobile.addEventListener) mqMobile.addEventListener('change', onMq); else if(mqMobile.addListener) mqMobile.addListener(onMq);
@@ -1324,12 +1358,19 @@ initSectionSelection();
                                : { matches:false, addEventListener(){}, addListener(){} };
   const panel = document.querySelector('.panel');
   const handle = document.getElementById('sheet-handle');
-  const PEEK = 84;
+  const header = panel.querySelector('.panel-header');
   let curH = null, dragging = false, moved = false, startPointer = 0, startH = 0;
+
+  // PEEK = the collapsed height: just the drag handle + the header row, so the header's
+  // bottom divider lands at the very bottom of the viewport and you see only that row
+  // (which shows the selected section's name when a section is selected). Measured live
+  // so it tracks the real header height instead of a hard-coded guess.
+  function peekH(){ return Math.round((handle.offsetHeight || 0) + (header.offsetHeight || 0)); }
+  function syncPeekVar(){ document.documentElement.style.setProperty('--peek', peekH() + 'px'); }
 
   // Snap points are the panel's VISIBLE HEIGHT — so the scroll area always
   // matches what's on screen and every control is reachable at each snap.
-  function snaps(){ const vh = window.innerHeight; return { peek: PEEK, half: Math.round(vh * 0.5), full: Math.round(vh * 0.92) }; }
+  function snaps(){ const vh = window.innerHeight; return { peek: peekH(), half: Math.round(vh * 0.5), full: Math.round(vh * 0.92) }; }
   function setH(h){ curH = h; panel.style.setProperty('--sheet-h', h + 'px'); }
   function snapTo(name){ setH(snaps()[name]); }
   function nearest(h){ const s = snaps(); let best = 'peek', bd = Infinity; for(const k of ['peek','half','full']){ const d = Math.abs(s[k] - h); if(d < bd){ bd = d; best = k; } } return best; }
@@ -1337,7 +1378,7 @@ initSectionSelection();
   function onDown(e){
     if(!mq.matches) return;
     dragging = true; moved = false; panel.classList.add('dragging');
-    startPointer = e.clientY; startH = curH != null ? curH : PEEK;
+    startPointer = e.clientY; startH = curH != null ? curH : peekH();
     try { handle.setPointerCapture(e.pointerId); } catch(_) {}
     e.preventDefault();
   }
@@ -1361,9 +1402,9 @@ initSectionSelection();
   // expose a snap hook so selecting a section on mobile can raise the sheet to reveal the card
   window.__sheetSnap = (name)=>{ if(mq.matches) snapTo(name); };
 
-  function apply(){ if(mq.matches){ snapTo(curH != null ? nearest(curH) : 'peek'); } else { panel.style.removeProperty('--sheet-h'); curH = null; } }
+  function apply(){ if(mq.matches){ syncPeekVar(); snapTo(curH != null ? nearest(curH) : 'peek'); } else { panel.style.removeProperty('--sheet-h'); curH = null; } }
   if(mq.addEventListener) mq.addEventListener('change', apply); else if(mq.addListener) mq.addListener(apply);
-  window.addEventListener('resize', () => { if(mq.matches && curH != null) snapTo(nearest(curH)); });
+  window.addEventListener('resize', () => { if(mq.matches){ syncPeekVar(); if(curH != null) snapTo(nearest(curH)); } });
   apply();
 })();
 </script>
