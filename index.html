@@ -206,7 +206,7 @@
   /* contextual scheme picker — bigger rows that match the left panel's scheme list */
   .sf-scheme .dd-trigger { min-height: 56px; padding: 8px 10px; gap: 10px; }
   .sf-scheme .dd-cur { gap: 10px; }
-  .sf-scheme .dd-label { font-size: 13px; font-weight: 600; color: var(--stone-800); }
+  .sf-scheme .dd-label { font-size: 12px; font-weight: 600; color: var(--stone-800); }
   .sf-scheme .dd-menu .dd-item { padding: 6px; gap: 10px; }
 
   /* ==========================================================================
@@ -242,7 +242,6 @@
 
   /* shared bits */
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-btn-fill); }
-  .eyebrow .line { width: 20px; height: 2px; background: currentColor; border-radius: 1px; }
   .sec-surface { background: var(--c-surface); }
   .section-head { text-align: center; max-width: 46rem; margin: 0 auto 3rem; display: flex; flex-direction: column; gap: .9rem; align-items: center; }
   .section-head .eyebrow { justify-content: center; }
@@ -415,6 +414,9 @@
     }
     .panel.dragging { transition: none; }
     .sheet-handle { display: flex; }
+    /* the whole header is the drag surface on mobile (the tiny grip alone was fiddly) */
+    .panel-header { cursor: grab; touch-action: none; }
+    .panel.dragging .panel-header { cursor: grabbing; }
     .features { grid-template-columns: 1fr; }
 
     /* section selected: the contextual card lives inside the sheet, and the
@@ -479,7 +481,7 @@
           <!-- HERO -->
           <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
             <div class="container">
-              <div class="eyebrow" style="margin-bottom:1rem"><span class="line"></span>New · Summer '26</div>
+              <div class="eyebrow" style="margin-bottom:1rem">New · Summer '26</div>
               <h1>See the world in style.</h1>
               <p>Premium polarized sunglasses, handcrafted from Italian acetate. Designed to turn heads — built to last a lifetime.</p>
               <div class="rating" id="hero-rating"><span><strong>4.8</strong>/5 · 12,000+ five-star reviews</span></div>
@@ -498,7 +500,7 @@
           <!-- SHOP BY COLLECTION -->
           <section class="section sec-surface" data-sec="collections"><div class="container">
             <div class="section-head">
-              <div class="eyebrow"><span class="line"></span>Shop by style</div>
+              <div class="eyebrow">Shop by style</div>
               <h2>Find your perfect frame</h2>
               <p>From timeless aviators to bold modern silhouettes — there's a NOIR for every face.</p>
             </div>
@@ -508,7 +510,7 @@
           <!-- BEST SELLERS -->
           <section class="section" data-sec="bestsellers"><div class="container">
             <div class="rowhead">
-              <div class="ey"><div class="eyebrow"><span class="line"></span>Best sellers</div><h2>Loved by thousands</h2></div>
+              <div class="ey"><div class="eyebrow">Best sellers</div><h2>Loved by thousands</h2></div>
               <a class="btn btn-secondary outline">View all</a>
             </div>
             <div class="carousel" id="products"></div>
@@ -518,7 +520,7 @@
           <section class="section guarantee" data-sec="guarantee"><div class="container">
             <div class="gmedia"><img src="https://picsum.photos/seed/noir-tryon/800/600" alt="Home try-on"></div>
             <div class="gtext">
-              <div class="eyebrow"><span class="line"></span>Risk-free</div>
+              <div class="eyebrow">Risk-free</div>
               <h2>Try them on at home, on us.</h2>
               <p>Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.</p>
               <div class="glist" id="glist"></div>
@@ -545,7 +547,7 @@
           <!-- UGC / INSTAGRAM -->
           <section class="section" data-sec="ugc"><div class="container">
             <div class="section-head">
-              <div class="eyebrow"><span class="line"></span>#NoirOnYou</div>
+              <div class="eyebrow">#NoirOnYou</div>
               <h2>As seen on you</h2>
               <p>Tag <strong>@noir</strong> for a chance to be featured. Join 200k+ wearers around the world.</p>
             </div>
@@ -555,7 +557,7 @@
           <!-- BLOG / JOURNAL -->
           <section class="section sec-surface" data-sec="journal"><div class="container">
             <div class="section-head">
-              <div class="eyebrow"><span class="line"></span>The Journal</div>
+              <div class="eyebrow">The Journal</div>
               <h2>Style notes &amp; guides</h2>
             </div>
             <div class="journal" id="journal"></div>
@@ -563,7 +565,7 @@
 
           <!-- NEWSLETTER -->
           <section class="section newsletter" data-sec="newsletter"><div class="container">
-            <div class="eyebrow"><span class="line"></span>Join the club</div>
+            <div class="eyebrow">Join the club</div>
             <h2>Get 10% off your first order</h2>
             <p>Sign up for early access to new drops, styling tips, and members-only offers.</p>
             <form onsubmit="return false">
@@ -691,7 +693,7 @@ const DEFAULTS = {
   buttons: { primaryStyle:'fill', secondaryStyle:'outline' },
   radius: 10,                                   // px, one global corner radius
   spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
-  elevation: 'Soft',
+  elevation: 'None',
 };
 let STATE = clone(DEFAULTS);
 
@@ -906,7 +908,7 @@ function slider(label, value, min, max, step, suffix, onChange){
   </div>`);
   const track=wrap.querySelector('.slider-track'), fill=wrap.querySelector('.slider-fill'), thumb=wrap.querySelector('.slider-thumb'), valEl=wrap.querySelector('.val');
   let cur = value;
-  const clamp = (v)=> Math.max(min, Math.min(max, Math.round(v/step)*step));
+  const clamp = (v)=> Math.round(Math.max(min, Math.min(max, Math.round(v/step)*step)) * 1e4) / 1e4;
   function paint(){ const pct=(cur-min)/(max-min); fill.style.width=pct*100+'%'; thumb.style.left=pct*100+'%'; thumb.style.transform='translate(-50%,-50%)'; valEl.textContent=cur+suffix; }
   function setFromX(x){ const r=track.getBoundingClientRect(); const p=Math.max(0,Math.min(1,(x-r.left)/r.width)); const v=clamp(min+p*(max-min)); if(v!==cur){ cur=v; paint(); onChange(cur); } }
   let dragging=false;
@@ -1066,7 +1068,7 @@ function weightDropdown(value, onChange){
 // Case control as a glyph toggle group (value = TEXT_CASE key, label = sample glyphs).
 const CASE_GLYPHS = [
   { value:'Default',    label:'—' },
-  { value:'UPPERCASE',  label:'KAG' },
+  { value:'UPPERCASE',  label:'AG' },
   { value:'Title Case', label:'Ag' },
   { value:'lowercase',  label:'ag' },
 ];
@@ -1090,8 +1092,7 @@ function renderTypography(body){
   head.body.appendChild(controlRow('Line height', segmented(t.heading.lineHeight, Object.keys(HEADING_LINE_HEIGHT), v=>{ t.heading.lineHeight=v; applyRoles(); })));
   head.body.appendChild(controlRow('Letter spacing', segmented(t.heading.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.heading.letterSpacing=v; applyRoles(); })));
   head.body.appendChild(controlRow('Case', caseToggle(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
-  const ratios = ['1.125','1.2','1.25','1.333','1.414','1.5','1.618'].map(r=>({value:r,label:r}));
-  head.body.appendChild(controlRow('Scale ratio', customDropdown(String(t.ratio), ratios, v=>{ t.ratio=+v; applyRoles(); })));
+  head.body.appendChild(slider('Scale ratio', t.ratio, 1.125, 1.618, 0.001, '', v=>{ t.ratio=+v; applyRoles(); }));
   body.appendChild(head.wrap);
 
   // ---- BODY: font + the same four levers (base size now lives in the global section). ----
@@ -1377,9 +1378,12 @@ initSectionSelection();
 
   function onDown(e){
     if(!mq.matches) return;
+    // the whole header is a drag surface — but let real controls (reset, the
+    // section close X, scheme picker) still receive their taps.
+    if(e.currentTarget === header && e.target.closest('button, a, input, select, textarea, .dd-trigger')) return;
     dragging = true; moved = false; panel.classList.add('dragging');
     startPointer = e.clientY; startH = curH != null ? curH : peekH();
-    try { handle.setPointerCapture(e.pointerId); } catch(_) {}
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch(_) {}
     e.preventDefault();
   }
   function onMove(e){
@@ -1395,6 +1399,7 @@ initSectionSelection();
   }
 
   handle.addEventListener('pointerdown', onDown);
+  header.addEventListener('pointerdown', onDown);
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
   handle.addEventListener('click', e => e.preventDefault());
