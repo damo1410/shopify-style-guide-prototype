@@ -1092,7 +1092,7 @@ function renderTypography(body){
   head.body.appendChild(controlRow('Line height', segmented(t.heading.lineHeight, Object.keys(HEADING_LINE_HEIGHT), v=>{ t.heading.lineHeight=v; applyRoles(); })));
   head.body.appendChild(controlRow('Letter spacing', segmented(t.heading.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.heading.letterSpacing=v; applyRoles(); })));
   head.body.appendChild(controlRow('Case', caseToggle(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
-  head.body.appendChild(slider('Scale ratio', t.ratio, 1.125, 1.618, 0.001, '', v=>{ t.ratio=+v; applyRoles(); }));
+  head.body.appendChild(slider('Scale ratio', t.ratio, 1.1, 1.6, 0.1, '', v=>{ t.ratio=+v; applyRoles(); }));
   body.appendChild(head.wrap);
 
   // ---- BODY: font + the same four levers (base size now lives in the global section). ----
@@ -1394,8 +1394,19 @@ initSectionSelection();
   function onUp(){
     if(!dragging) return;
     dragging = false; panel.classList.remove('dragging');
-    if(!moved){ const c = nearest(curH); snapTo(c === 'peek' ? 'half' : 'peek'); }
-    else { snapTo(nearest(curH)); }
+    if(!moved){ const c = nearest(curH); snapTo(c === 'peek' ? 'half' : 'peek'); return; }
+    // Direction-biased snapping: a small committed drag continues in the direction
+    // you pushed (advance one snap) instead of needing to cross the halfway point.
+    // A larger drag still jumps straight to whatever snap you've landed nearest to.
+    const order = ['peek','half','full'];
+    const startIdx = order.indexOf(nearest(startH));
+    const nearestIdx = order.indexOf(nearest(curH));
+    const delta = curH - startH;          // + = dragged taller (up), − = shorter (down)
+    const THRESH = 24;                     // px: how far before the gesture "commits"
+    let target = startIdx;
+    if(delta > THRESH) target = Math.max(startIdx + 1, nearestIdx);
+    else if(delta < -THRESH) target = Math.min(startIdx - 1, nearestIdx);
+    snapTo(order[Math.max(0, Math.min(order.length - 1, target))]);
   }
 
   handle.addEventListener('pointerdown', onDown);
