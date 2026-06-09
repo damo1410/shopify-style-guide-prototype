@@ -226,6 +226,9 @@
     --c-btn2-bg:#1c1917; --c-btn2-border:#1c1917; --c-btn2-text:#1c1917;
     --c-btn2-bg-hover:#1c1917; --c-btn2-text-hover:#ffffff; --c-btn2-border-hover:#1c1917; --c-btn2-bg-eff:transparent;
     --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12);
+    /* per-button-type geometry/type (set globally by applyRoles from STATE.buttons) */
+    --btn1-border-w:2px; --btn1-radius:10px; --btn1-font:var(--font-body); --btn1-case:none;
+    --btn2-border-w:2px; --btn2-radius:10px; --btn2-font:var(--font-body); --btn2-case:none;
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
@@ -258,9 +261,9 @@
   /* Primary / secondary buttons read every color from per-scheme tokens. The fill/outline
      style only decides whether the resting background is shown (--c-btn-bg-eff) or transparent;
      hover always fills in with the hover tokens. */
-  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); border-color: var(--c-btn-border); }
+  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); border-color: var(--c-btn-border); border-width: var(--btn1-border-w); border-radius: var(--btn1-radius); font-family: var(--btn1-font); text-transform: var(--btn1-case); }
   .btn-primary:hover   { background: var(--c-btn-bg-hover); color: var(--c-btn-text-hover); border-color: var(--c-btn-border-hover); }
-  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); border-color: var(--c-btn2-border); }
+  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); border-color: var(--c-btn2-border); border-width: var(--btn2-border-w); border-radius: var(--btn2-radius); font-family: var(--btn2-font); text-transform: var(--btn2-case); }
   .btn-secondary:hover { background: var(--c-btn2-bg-hover); color: var(--c-btn2-text-hover); border-color: var(--c-btn2-border-hover); }
 
   /* announcement + nav */
@@ -731,6 +734,12 @@ const DEFAULTS = {
     body:    { weight:'Regular', lineHeight:1.6,  letterSpacing:0,      case:'Default' },
     overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
   },
+  // BUTTONS: per-type geometry + type. Color is owned per-scheme (see colorRoles); these
+  // levers are global — border thickness, corner radius, font (body vs accent), and text case.
+  buttons: {
+    primary:   { borderWidth:2, radius:10, font:'body', case:'default' },
+    secondary: { borderWidth:2, radius:10, font:'body', case:'default' },
+  },
   radius: 10,                                   // px, one global corner radius
   spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
   elevation: 'None',
@@ -811,14 +820,27 @@ function applyRoles(){
   s.setProperty('--body-ls', (t.body.letterSpacing ?? 0)+'em');
   s.setProperty('--body-case', TEXT_CASE[t.body.case] || 'none');
 
-  // 3) SHAPE / SPACING / ELEVATION roles.
+  // 3) BUTTON geometry/type roles (global, per button type).
+  const btnFont = (f)=> f==='accent' ? 'var(--font-heading)' : 'var(--font-body)';
+  const btnCase = (c)=> c==='uppercase' ? 'uppercase' : 'none';
+  const bp = STATE.buttons.primary, bs = STATE.buttons.secondary;
+  s.setProperty('--btn1-border-w', bp.borderWidth+'px');
+  s.setProperty('--btn1-radius', bp.radius+'px');
+  s.setProperty('--btn1-font', btnFont(bp.font));
+  s.setProperty('--btn1-case', btnCase(bp.case));
+  s.setProperty('--btn2-border-w', bs.borderWidth+'px');
+  s.setProperty('--btn2-radius', bs.radius+'px');
+  s.setProperty('--btn2-font', btnFont(bs.font));
+  s.setProperty('--btn2-case', btnCase(bs.case));
+
+  // 4) SHAPE / SPACING / ELEVATION roles.
   s.setProperty('--radius', STATE.radius+'px');
   s.setProperty('--shadow', SHADOWS[STATE.elevation]);
   s.setProperty('--section-padding', STATE.spacing.sectionPadding+'px');
   s.setProperty('--container-max', STATE.spacing.containerMax+'px');
   s.setProperty('--gutter', STATE.spacing.gutter+'px');
 
-  // 4) PER-SECTION color schemes — repaint any section with its own assigned scheme.
+  // 5) PER-SECTION color schemes — repaint any section with its own assigned scheme.
   applySectionSchemes();
 }
 
@@ -1175,6 +1197,24 @@ function renderTypography(body){
   body.appendChild(bod.wrap);
 }
 
+// ---- Buttons: a subgroup per button type (Primary / Secondary), each with the same
+//      four levers — border thickness, corner radius, font (body vs accent), text case. ----
+function renderButtonType(body, key, label, divider){
+  const b = STATE.buttons[key];
+  const sub = subgroup(label, divider);
+  sub.body.appendChild(slider('Border thickness', b.borderWidth, 0, 4, 1, 'px', v=>{ b.borderWidth=v; applyRoles(); }));
+  sub.body.appendChild(slider('Corner radius', b.radius, 0, 40, 1, 'px', v=>{ b.radius=v; applyRoles(); }));
+  sub.body.appendChild(controlRow('Font', segmented(b.font,
+    [{value:'body',label:'Body'},{value:'accent',label:'Accent'}], v=>{ b.font=v; applyRoles(); })));
+  sub.body.appendChild(controlRow('Case', segmented(b.case,
+    [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
+  body.appendChild(sub.wrap);
+}
+function renderButtons(body){
+  renderButtonType(body, 'primary',   'Primary button',   false);
+  renderButtonType(body, 'secondary', 'Secondary button', true);
+}
+
 function renderShape(body){
   const radiusSlider = slider('Corner radius', STATE.radius, 0, 40, 1, 'px', v=>{ STATE.radius=v; applyRoles(); });
   body.appendChild(controlRow('Preset', segmented(
@@ -1398,6 +1438,7 @@ function buildPanel(){
   [
     ['Color','palette',true,renderColor],
     ['Typography','type',false,renderTypography],
+    ['Buttons','click',false,renderButtons],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
     ['Elevation','layers',false,renderElevation],
