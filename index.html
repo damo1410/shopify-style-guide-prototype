@@ -1152,8 +1152,6 @@ function weightDropdown(value, onChange){
 const CASE_GLYPHS = [
   { value:'Default',    label:'—' },
   { value:'UPPERCASE',  label:'AG' },
-  { value:'Title Case', label:'Ag' },
-  { value:'lowercase',  label:'ag' },
 ];
 function caseToggle(value, onChange){ return segmented(value, CASE_GLYPHS, onChange, 'seg-glyph'); }
 
@@ -1172,7 +1170,6 @@ function renderTypography(body){
   const head = subgroup('Heading', true);
   head.body.appendChild(controlRow('Font', fontDropdown(t.headingFont, v=>{ t.headingFont=v; applyRoles(); })));
   head.body.appendChild(controlRow('Weight', weightDropdown(t.heading.weight, v=>{ t.heading.weight=v; applyRoles(); })));
-  head.body.appendChild(slider('Line height', t.heading.lineHeight, 0.8, 1.2, 0.01, '', v=>{ t.heading.lineHeight=+v; applyRoles(); }));
   head.body.appendChild(slider('Letter spacing', t.heading.letterSpacing, -0.05, 0.05, 0.005, 'em', v=>{ t.heading.letterSpacing=+v; applyRoles(); }));
   head.body.appendChild(controlRow('Case', caseToggle(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
   head.body.appendChild(slider('Scale ratio', t.ratio, 1.1, 1.6, 0.1, '', v=>{ t.ratio=+v; applyRoles(); }));
@@ -1182,9 +1179,7 @@ function renderTypography(body){
   const bod = subgroup('Body', true);
   bod.body.appendChild(controlRow('Font', fontDropdown(t.bodyFont, v=>{ t.bodyFont=v; applyRoles(); })));
   bod.body.appendChild(controlRow('Weight', weightDropdown(t.body.weight, v=>{ t.body.weight=v; applyRoles(); })));
-  bod.body.appendChild(slider('Line height', t.body.lineHeight, 1.2, 2, 0.01, '', v=>{ t.body.lineHeight=+v; applyRoles(); }));
   bod.body.appendChild(slider('Letter spacing', t.body.letterSpacing, -0.05, 0.05, 0.005, 'em', v=>{ t.body.letterSpacing=+v; applyRoles(); }));
-  bod.body.appendChild(controlRow('Case', caseToggle(t.body.case, v=>{ t.body.case=v; applyRoles(); })));
   body.appendChild(bod.wrap);
 }
 
