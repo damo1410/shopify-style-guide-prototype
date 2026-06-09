@@ -1412,10 +1412,10 @@ function buildPanel(){
   [
     ['Color','palette',true,renderColor],
     ['Typography','type',false,renderTypography],
-    ['Buttons','click',false,renderButtons],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
     ['Elevation','layers',false,renderElevation],
+    ['Buttons','click',false,renderButtons],
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
