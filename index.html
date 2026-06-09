@@ -258,9 +258,9 @@
   /* buttons */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, background-color .15s, color .15s, border-color .15s; white-space: nowrap; }
   .btn:active { transform: translateY(1px); }
-  /* Primary / secondary buttons read every color from per-scheme tokens. The fill/outline
-     style only decides whether the resting background is shown (--c-btn-bg-eff) or transparent;
-     hover always fills in with the hover tokens. */
+  /* Primary / secondary buttons read every color from per-scheme tokens; the resting
+     background is the Fill token (--c-btn-bg-eff) and hover fills in with the hover tokens.
+     Geometry/type (border width, radius, font, case) come from the Buttons category. */
   .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); border-color: var(--c-btn-border); border-width: var(--btn1-border-w); border-radius: var(--btn1-radius); font-family: var(--btn1-font); text-transform: var(--btn1-case); }
   .btn-primary:hover   { background: var(--c-btn-bg-hover); color: var(--c-btn-text-hover); border-color: var(--c-btn-border-hover); }
   .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); border-color: var(--c-btn2-border); border-width: var(--btn2-border-w); border-radius: var(--btn2-radius); font-family: var(--btn2-font); text-transform: var(--btn2-case); }
@@ -692,29 +692,20 @@ const DEFAULTS = {
     { key:'btn2TextHover',   label:'Text hover',       cssVar:'--c-btn2-text-hover',   group:'Secondary button' },
     { key:'btn2BorderHover', label:'Border hover',     cssVar:'--c-btn2-border-hover', group:'Secondary button' },
   ],
-  // Per-scheme button STYLE (fill vs outline). Lives outside colorRoles because it is not a
-  // color; it only controls whether the resting button background is shown or transparent.
-  buttonStyleKeys: { primary:'primaryStyle', secondary:'secondaryStyle' },
   schemes: {
     Light: {
       bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist',
-      primaryStyle:'fill',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
-      secondaryStyle:'outline',
       btn2Bg:'ink', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'ink', btn2TextHover:'paper', btn2BorderHover:'ink',
     },
     Dark: {
       bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night',
-      primaryStyle:'fill',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
-      secondaryStyle:'outline',
       btn2Bg:'paper', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'paper', btn2TextHover:'ink', btn2BorderHover:'paper',
     },
     Brand: {
       bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust',
-      primaryStyle:'fill',
       btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
-      secondaryStyle:'outline',
       btn2Bg:'paper', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'paper', btn2TextHover:'brand', btn2BorderHover:'paper',
     },
   },
@@ -847,13 +838,14 @@ function applyRoles(){
 /* Derive the non-token button vars for a scheme onto a CSSStyleDeclaration:
    - --c-accent / --c-accent-soft: the brand accent (eyebrows, stars, icons, badges),
      taken from the primary button background.
-   - --c-btn-bg-eff / --c-btn2-bg-eff: the EFFECTIVE resting background. Outline style
-     resolves to transparent; fill style shows the button-background token. */
+   - --c-btn-bg-eff / --c-btn2-bg-eff: the resting background — simply the Fill token. */
 function setSchemeButtonVars(style, scheme){
   style.setProperty('--c-accent', swatchHex(scheme.btnBg));
   style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.btnBg), 0.12));
-  style.setProperty('--c-btn-bg-eff',  scheme.primaryStyle==='outline'   ? 'transparent' : swatchHex(scheme.btnBg));
-  style.setProperty('--c-btn2-bg-eff', scheme.secondaryStyle==='outline' ? 'transparent' : swatchHex(scheme.btn2Bg));
+  // Resting background is always the chosen Fill color. To get an "outline" look, pick a
+  // Fill that matches the section background (and/or set the button border width to 0px).
+  style.setProperty('--c-btn-bg-eff',  swatchHex(scheme.btnBg));
+  style.setProperty('--c-btn2-bg-eff', swatchHex(scheme.btn2Bg));
 }
 
 /* Paint each selectable section from its assigned scheme (STATE.sectionSchemes).
@@ -1126,14 +1118,10 @@ function renderSchemes(){
         if(!b){ b = { name:g, roles:[] }; buckets.push(b); }
         b.roles.push(r);
       });
-      const styleKeyFor = { 'Primary button':'primaryStyle', 'Secondary button':'secondaryStyle' };
       buckets.forEach(b=>{
         let host = tokens;
         if(b.name){
           const sub = el(`<div class="scheme-subgroup"><div class="subgroup-label">${b.name}</div></div>`);
-          // fill vs outline style toggle sits at the top of each button subgroup.
-          const sk = styleKeyFor[b.name];
-          if(sk) sub.appendChild(controlRow('Style', segmented(scheme[sk] || 'fill', ['fill','outline'], v=>{ scheme[sk]=v; onChange(); })));
           tokens.appendChild(sub);
           host = sub;
         }
