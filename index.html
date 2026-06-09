@@ -226,6 +226,9 @@
     --c-btn2-bg:#1c1917; --c-btn2-border:#1c1917; --c-btn2-text:#1c1917;
     --c-btn2-bg-hover:#1c1917; --c-btn2-text-hover:#ffffff; --c-btn2-border-hover:#1c1917; --c-btn2-bg-eff:transparent;
     --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12);
+    /* per-button-type geometry/type (set globally by applyRoles from STATE.buttons) */
+    --btn1-border-w:2px; --btn1-radius:10px; --btn1-font:var(--font-body); --btn1-case:none;
+    --btn2-border-w:2px; --btn2-radius:10px; --btn2-font:var(--font-body); --btn2-case:none;
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
@@ -255,12 +258,12 @@
   /* buttons */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, background-color .15s, color .15s, border-color .15s; white-space: nowrap; }
   .btn:active { transform: translateY(1px); }
-  /* Primary / secondary buttons read every color from per-scheme tokens. The fill/outline
-     style only decides whether the resting background is shown (--c-btn-bg-eff) or transparent;
-     hover always fills in with the hover tokens. */
-  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); border-color: var(--c-btn-border); }
+  /* Primary / secondary buttons read every color from per-scheme tokens; the resting
+     background is the Fill token (--c-btn-bg-eff) and hover fills in with the hover tokens.
+     Geometry/type (border width, radius, font, case) come from the Buttons category. */
+  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); border-color: var(--c-btn-border); border-width: var(--btn1-border-w); border-radius: var(--btn1-radius); font-family: var(--btn1-font); text-transform: var(--btn1-case); }
   .btn-primary:hover   { background: var(--c-btn-bg-hover); color: var(--c-btn-text-hover); border-color: var(--c-btn-border-hover); }
-  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); border-color: var(--c-btn2-border); }
+  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); border-color: var(--c-btn2-border); border-width: var(--btn2-border-w); border-radius: var(--btn2-radius); font-family: var(--btn2-font); text-transform: var(--btn2-case); }
   .btn-secondary:hover { background: var(--c-btn2-bg-hover); color: var(--c-btn2-text-hover); border-color: var(--c-btn2-border-hover); }
 
   /* announcement + nav */
@@ -689,30 +692,21 @@ const DEFAULTS = {
     { key:'btn2TextHover',   label:'Text hover',       cssVar:'--c-btn2-text-hover',   group:'Secondary button' },
     { key:'btn2BorderHover', label:'Border hover',     cssVar:'--c-btn2-border-hover', group:'Secondary button' },
   ],
-  // Per-scheme button STYLE (fill vs outline). Lives outside colorRoles because it is not a
-  // color; it only controls whether the resting button background is shown or transparent.
-  buttonStyleKeys: { primary:'primaryStyle', secondary:'secondaryStyle' },
   schemes: {
     Light: {
       bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist',
-      primaryStyle:'fill',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
-      secondaryStyle:'outline',
-      btn2Bg:'ink', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'ink', btn2TextHover:'paper', btn2BorderHover:'ink',
+      btn2Bg:'transparent', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'transparent', btn2TextHover:'paper', btn2BorderHover:'ink',
     },
     Dark: {
       bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night',
-      primaryStyle:'fill',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
-      secondaryStyle:'outline',
-      btn2Bg:'paper', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'paper', btn2TextHover:'ink', btn2BorderHover:'paper',
+      btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'ink', btn2BorderHover:'paper',
     },
     Brand: {
       bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust',
-      primaryStyle:'fill',
       btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
-      secondaryStyle:'outline',
-      btn2Bg:'paper', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'paper', btn2TextHover:'brand', btn2BorderHover:'paper',
+      btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'brand', btn2BorderHover:'paper',
     },
   },
   // The store's BASELINE scheme (what unthemed sections inherit). It is NOT changed by
@@ -730,6 +724,12 @@ const DEFAULTS = {
     heading: { weight:'Bold',    lineHeight:1.14, letterSpacing:-0.025, case:'Default' },
     body:    { weight:'Regular', lineHeight:1.6,  letterSpacing:0,      case:'Default' },
     overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
+  },
+  // BUTTONS: per-type geometry + type. Color is owned per-scheme (see colorRoles); these
+  // levers are global — border thickness, corner radius, font (body vs accent), and text case.
+  buttons: {
+    primary:   { borderWidth:2, radius:10, font:'body', case:'default' },
+    secondary: { borderWidth:2, radius:10, font:'body', case:'default' },
   },
   radius: 10,                                   // px, one global corner radius
   spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
@@ -772,7 +772,9 @@ const POSTS = [
 /* ============================================================================
    RESOLVERS + applyRoles()  — THE HEART OF THE WIRING.
    ============================================================================ */
-function swatchHex(id){ const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+function swatchHex(id){ if(id==='transparent') return 'transparent'; const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+// CSS checkerboard used to preview the Transparent swatch option in dropdowns.
+const TRANSPARENT_SWATCH = 'repeating-conic-gradient(#cbcbcb 0% 25%, #fff 0% 50%) 50% / 8px 8px';
 function computeHeadingSizes(){
   const exp = { h1:5, h2:4, h3:3, h4:2, h5:1, h6:0 };  // h6 = base; each step up *= ratio
   const t = STATE.typography; const out = {};
@@ -811,27 +813,41 @@ function applyRoles(){
   s.setProperty('--body-ls', (t.body.letterSpacing ?? 0)+'em');
   s.setProperty('--body-case', TEXT_CASE[t.body.case] || 'none');
 
-  // 3) SHAPE / SPACING / ELEVATION roles.
+  // 3) BUTTON geometry/type roles (global, per button type).
+  const btnFont = (f)=> f==='accent' ? 'var(--font-heading)' : 'var(--font-body)';
+  const btnCase = (c)=> c==='uppercase' ? 'uppercase' : 'none';
+  const bp = STATE.buttons.primary, bs = STATE.buttons.secondary;
+  s.setProperty('--btn1-border-w', bp.borderWidth+'px');
+  s.setProperty('--btn1-radius', bp.radius+'px');
+  s.setProperty('--btn1-font', btnFont(bp.font));
+  s.setProperty('--btn1-case', btnCase(bp.case));
+  s.setProperty('--btn2-border-w', bs.borderWidth+'px');
+  s.setProperty('--btn2-radius', bs.radius+'px');
+  s.setProperty('--btn2-font', btnFont(bs.font));
+  s.setProperty('--btn2-case', btnCase(bs.case));
+
+  // 4) SHAPE / SPACING / ELEVATION roles.
   s.setProperty('--radius', STATE.radius+'px');
   s.setProperty('--shadow', SHADOWS[STATE.elevation]);
   s.setProperty('--section-padding', STATE.spacing.sectionPadding+'px');
   s.setProperty('--container-max', STATE.spacing.containerMax+'px');
   s.setProperty('--gutter', STATE.spacing.gutter+'px');
 
-  // 4) PER-SECTION color schemes — repaint any section with its own assigned scheme.
+  // 5) PER-SECTION color schemes — repaint any section with its own assigned scheme.
   applySectionSchemes();
 }
 
 /* Derive the non-token button vars for a scheme onto a CSSStyleDeclaration:
    - --c-accent / --c-accent-soft: the brand accent (eyebrows, stars, icons, badges),
      taken from the primary button background.
-   - --c-btn-bg-eff / --c-btn2-bg-eff: the EFFECTIVE resting background. Outline style
-     resolves to transparent; fill style shows the button-background token. */
+   - --c-btn-bg-eff / --c-btn2-bg-eff: the resting background — simply the Fill token. */
 function setSchemeButtonVars(style, scheme){
   style.setProperty('--c-accent', swatchHex(scheme.btnBg));
   style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.btnBg), 0.12));
-  style.setProperty('--c-btn-bg-eff',  scheme.primaryStyle==='outline'   ? 'transparent' : swatchHex(scheme.btnBg));
-  style.setProperty('--c-btn2-bg-eff', scheme.secondaryStyle==='outline' ? 'transparent' : swatchHex(scheme.btn2Bg));
+  // Resting background is always the chosen Fill color. To get an "outline" look, pick a
+  // Fill that matches the section background (and/or set the button border width to 0px).
+  style.setProperty('--c-btn-bg-eff',  swatchHex(scheme.btnBg));
+  style.setProperty('--c-btn2-bg-eff', swatchHex(scheme.btn2Bg));
 }
 
 /* Paint each selectable section from its assigned scheme (STATE.sectionSchemes).
@@ -982,6 +998,7 @@ function colorInput(value, onChange){
 // swatch-token dropdown for scheme roles: lists every palette swatch.
 function swatchDropdown(value, onChange){
   const opts = STATE.palette.map(c => ({ value:c.id, label:c.name, color:c.hex }));
+  opts.push({ value:'transparent', label:'Transparent', color:TRANSPARENT_SWATCH });
   return customDropdown(value, opts, onChange);
 }
 function fontDropdown(value, onChange){
@@ -1034,7 +1051,7 @@ function renderColor(body){
 
 // If a swatch is deleted, repoint any scheme role that referenced it.
 function reconcileSchemes(){
-  const valid = new Set(STATE.palette.map(c=>c.id));
+  const valid = new Set([...STATE.palette.map(c=>c.id), 'transparent']);
   const fallback = STATE.palette[0].id;
   Object.values(STATE.schemes).forEach(sc => { STATE.colorRoles.forEach(r=>{ if(!valid.has(sc[r.key])) sc[r.key]=fallback; }); });
 }
@@ -1104,14 +1121,10 @@ function renderSchemes(){
         if(!b){ b = { name:g, roles:[] }; buckets.push(b); }
         b.roles.push(r);
       });
-      const styleKeyFor = { 'Primary button':'primaryStyle', 'Secondary button':'secondaryStyle' };
       buckets.forEach(b=>{
         let host = tokens;
         if(b.name){
           const sub = el(`<div class="scheme-subgroup"><div class="subgroup-label">${b.name}</div></div>`);
-          // fill vs outline style toggle sits at the top of each button subgroup.
-          const sk = styleKeyFor[b.name];
-          if(sk) sub.appendChild(controlRow('Style', segmented(scheme[sk] || 'fill', ['fill','outline'], v=>{ scheme[sk]=v; onChange(); })));
           tokens.appendChild(sub);
           host = sub;
         }
@@ -1173,6 +1186,24 @@ function renderTypography(body){
   bod.body.appendChild(slider('Letter spacing', t.body.letterSpacing, -0.05, 0.05, 0.005, 'em', v=>{ t.body.letterSpacing=+v; applyRoles(); }));
   bod.body.appendChild(controlRow('Case', caseToggle(t.body.case, v=>{ t.body.case=v; applyRoles(); })));
   body.appendChild(bod.wrap);
+}
+
+// ---- Buttons: a subgroup per button type (Primary / Secondary), each with the same
+//      four levers — border thickness, corner radius, font (body vs accent), text case. ----
+function renderButtonType(body, key, label, divider){
+  const b = STATE.buttons[key];
+  const sub = subgroup(label, divider);
+  sub.body.appendChild(slider('Border thickness', b.borderWidth, 0, 4, 1, 'px', v=>{ b.borderWidth=v; applyRoles(); }));
+  sub.body.appendChild(slider('Corner radius', b.radius, 0, 40, 1, 'px', v=>{ b.radius=v; applyRoles(); }));
+  sub.body.appendChild(controlRow('Font', segmented(b.font,
+    [{value:'body',label:'Body'},{value:'accent',label:'Accent'}], v=>{ b.font=v; applyRoles(); })));
+  sub.body.appendChild(controlRow('Case', segmented(b.case,
+    [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
+  body.appendChild(sub.wrap);
+}
+function renderButtons(body){
+  renderButtonType(body, 'primary',   'Primary button',   false);
+  renderButtonType(body, 'secondary', 'Secondary button', true);
 }
 
 function renderShape(body){
@@ -1398,6 +1429,7 @@ function buildPanel(){
   [
     ['Color','palette',true,renderColor],
     ['Typography','type',false,renderTypography],
+    ['Buttons','click',false,renderButtons],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
     ['Elevation','layers',false,renderElevation],
