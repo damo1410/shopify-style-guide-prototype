@@ -696,17 +696,17 @@ const DEFAULTS = {
     Light: {
       bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
-      btn2Bg:'ink', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'ink', btn2TextHover:'paper', btn2BorderHover:'ink',
+      btn2Bg:'transparent', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'transparent', btn2TextHover:'paper', btn2BorderHover:'ink',
     },
     Dark: {
       bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
-      btn2Bg:'paper', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'paper', btn2TextHover:'ink', btn2BorderHover:'paper',
+      btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'ink', btn2BorderHover:'paper',
     },
     Brand: {
       bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust',
       btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
-      btn2Bg:'paper', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'paper', btn2TextHover:'brand', btn2BorderHover:'paper',
+      btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'brand', btn2BorderHover:'paper',
     },
   },
   // The store's BASELINE scheme (what unthemed sections inherit). It is NOT changed by
@@ -772,7 +772,9 @@ const POSTS = [
 /* ============================================================================
    RESOLVERS + applyRoles()  — THE HEART OF THE WIRING.
    ============================================================================ */
-function swatchHex(id){ const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+function swatchHex(id){ if(id==='transparent') return 'transparent'; const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+// CSS checkerboard used to preview the Transparent swatch option in dropdowns.
+const TRANSPARENT_SWATCH = 'repeating-conic-gradient(#cbcbcb 0% 25%, #fff 0% 50%) 50% / 8px 8px';
 function computeHeadingSizes(){
   const exp = { h1:5, h2:4, h3:3, h4:2, h5:1, h6:0 };  // h6 = base; each step up *= ratio
   const t = STATE.typography; const out = {};
@@ -996,6 +998,7 @@ function colorInput(value, onChange){
 // swatch-token dropdown for scheme roles: lists every palette swatch.
 function swatchDropdown(value, onChange){
   const opts = STATE.palette.map(c => ({ value:c.id, label:c.name, color:c.hex }));
+  opts.push({ value:'transparent', label:'Transparent', color:TRANSPARENT_SWATCH });
   return customDropdown(value, opts, onChange);
 }
 function fontDropdown(value, onChange){
@@ -1048,7 +1051,7 @@ function renderColor(body){
 
 // If a swatch is deleted, repoint any scheme role that referenced it.
 function reconcileSchemes(){
-  const valid = new Set(STATE.palette.map(c=>c.id));
+  const valid = new Set([...STATE.palette.map(c=>c.id), 'transparent']);
   const fallback = STATE.palette[0].id;
   Object.values(STATE.schemes).forEach(sc => { STATE.colorRoles.forEach(r=>{ if(!valid.has(sc[r.key])) sc[r.key]=fallback; }); });
 }
