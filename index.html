@@ -226,9 +226,9 @@
     --c-btn2-bg:#1c1917; --c-btn2-border:#1c1917; --c-btn2-text:#1c1917;
     --c-btn2-bg-hover:#1c1917; --c-btn2-text-hover:#ffffff; --c-btn2-border-hover:#1c1917; --c-btn2-bg-eff:transparent;
     --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12);
-    /* per-button-type geometry/type (set globally by applyRoles from STATE.buttons) */
-    --btn1-border-w:2px; --btn1-radius:10px; --btn1-font:var(--font-body); --btn1-case:none;
-    --btn2-border-w:2px; --btn2-radius:10px; --btn2-font:var(--font-body); --btn2-case:none;
+    /* button geometry/type — one shared set for both buttons (set by applyRoles from STATE.buttons).
+       border thickness is drawn as an INSET box-shadow so changing it never shifts layout. */
+    --btn-border-w:2px; --btn-radius:10px; --btn-font:var(--font-body); --btn-case:none;
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
@@ -256,15 +256,17 @@
   .section-head p { color: var(--c-body); font-size: 1.05rem; line-height: 1.6; }
 
   /* buttons */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, background-color .15s, color .15s, border-color .15s; white-space: nowrap; }
+  /* No real border — the outline is an INSET box-shadow (--btn-border-w thick) so toggling
+     thickness never changes the box size / shifts layout. Geometry/type come from the shared
+     Buttons controls; each button's outline colour is its own per-scheme Border token. */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--btn-font); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--btn-radius); border: none; text-transform: var(--btn-case); text-decoration: none; transition: transform .08s, background-color .15s, color .15s, box-shadow .15s; white-space: nowrap; }
   .btn:active { transform: translateY(1px); }
   /* Primary / secondary buttons read every color from per-scheme tokens; the resting
-     background is the Fill token (--c-btn-bg-eff) and hover fills in with the hover tokens.
-     Geometry/type (border width, radius, font, case) come from the Buttons category. */
-  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); border-color: var(--c-btn-border); border-width: var(--btn1-border-w); border-radius: var(--btn1-radius); font-family: var(--btn1-font); text-transform: var(--btn1-case); }
-  .btn-primary:hover   { background: var(--c-btn-bg-hover); color: var(--c-btn-text-hover); border-color: var(--c-btn-border-hover); }
-  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); border-color: var(--c-btn2-border); border-width: var(--btn2-border-w); border-radius: var(--btn2-radius); font-family: var(--btn2-font); text-transform: var(--btn2-case); }
-  .btn-secondary:hover { background: var(--c-btn2-bg-hover); color: var(--c-btn2-text-hover); border-color: var(--c-btn2-border-hover); }
+     background is the Fill token (--c-btn-bg-eff) and hover fills in with the hover tokens. */
+  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn-border); }
+  .btn-primary:hover   { background: var(--c-btn-bg-hover); color: var(--c-btn-text-hover); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn-border-hover); }
+  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn2-border); }
+  .btn-secondary:hover { background: var(--c-btn2-bg-hover); color: var(--c-btn2-text-hover); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn2-border-hover); }
 
   /* announcement + nav */
   .announce { background: var(--c-heading); color: var(--c-bg); text-align: center; font-size: .82rem; font-weight: 500; letter-spacing: .02em; padding: 9px 16px; }
@@ -725,12 +727,10 @@ const DEFAULTS = {
     body:    { weight:'Regular', lineHeight:1.6,  letterSpacing:0,      case:'Default' },
     overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
   },
-  // BUTTONS: per-type geometry + type. Color is owned per-scheme (see colorRoles); these
-  // levers are global — border thickness, corner radius, font (body vs accent), and text case.
-  buttons: {
-    primary:   { borderWidth:2, radius:10, font:'body', case:'default' },
-    secondary: { borderWidth:2, radius:10, font:'body', case:'default' },
-  },
+  // BUTTONS: one shared set of geometry/type levers applied to BOTH buttons. Color is owned
+  // per-scheme (see colorRoles); these are global — border thickness, corner radius, font
+  // (heading vs body), and text case.
+  buttons: { borderWidth:2, radius:10, font:'body', case:'default' },
   radius: 10,                                   // px, one global corner radius
   spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
   elevation: 'None',
@@ -814,17 +814,11 @@ function applyRoles(){
   s.setProperty('--body-case', TEXT_CASE[t.body.case] || 'none');
 
   // 3) BUTTON geometry/type roles (global, per button type).
-  const btnFont = (f)=> f==='accent' ? 'var(--font-heading)' : 'var(--font-body)';
-  const btnCase = (c)=> c==='uppercase' ? 'uppercase' : 'none';
-  const bp = STATE.buttons.primary, bs = STATE.buttons.secondary;
-  s.setProperty('--btn1-border-w', bp.borderWidth+'px');
-  s.setProperty('--btn1-radius', bp.radius+'px');
-  s.setProperty('--btn1-font', btnFont(bp.font));
-  s.setProperty('--btn1-case', btnCase(bp.case));
-  s.setProperty('--btn2-border-w', bs.borderWidth+'px');
-  s.setProperty('--btn2-radius', bs.radius+'px');
-  s.setProperty('--btn2-font', btnFont(bs.font));
-  s.setProperty('--btn2-case', btnCase(bs.case));
+  const b = STATE.buttons;
+  s.setProperty('--btn-border-w', b.borderWidth+'px');
+  s.setProperty('--btn-radius', b.radius+'px');
+  s.setProperty('--btn-font', b.font==='heading' ? 'var(--font-heading)' : 'var(--font-body)');
+  s.setProperty('--btn-case', b.case==='uppercase' ? 'uppercase' : 'none');
 
   // 4) SHAPE / SPACING / ELEVATION roles.
   s.setProperty('--radius', STATE.radius+'px');
@@ -1188,22 +1182,16 @@ function renderTypography(body){
   body.appendChild(bod.wrap);
 }
 
-// ---- Buttons: a subgroup per button type (Primary / Secondary), each with the same
-//      four levers — border thickness, corner radius, font (body vs accent), text case. ----
-function renderButtonType(body, key, label, divider){
-  const b = STATE.buttons[key];
-  const sub = subgroup(label, divider);
-  sub.body.appendChild(slider('Border thickness', b.borderWidth, 0, 4, 1, 'px', v=>{ b.borderWidth=v; applyRoles(); }));
-  sub.body.appendChild(slider('Corner radius', b.radius, 0, 40, 1, 'px', v=>{ b.radius=v; applyRoles(); }));
-  sub.body.appendChild(controlRow('Font', segmented(b.font,
-    [{value:'body',label:'Body'},{value:'accent',label:'Accent'}], v=>{ b.font=v; applyRoles(); })));
-  sub.body.appendChild(controlRow('Case', segmented(b.case,
-    [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
-  body.appendChild(sub.wrap);
-}
+// ---- Buttons: one shared set of levers applied to BOTH buttons — border thickness,
+//      corner radius, font (heading vs body), text case. ----
 function renderButtons(body){
-  renderButtonType(body, 'primary',   'Primary button',   false);
-  renderButtonType(body, 'secondary', 'Secondary button', true);
+  const b = STATE.buttons;
+  body.appendChild(slider('Border thickness', b.borderWidth, 0, 4, 1, 'px', v=>{ b.borderWidth=v; applyRoles(); }));
+  body.appendChild(slider('Corner radius', b.radius, 0, 40, 1, 'px', v=>{ b.radius=v; applyRoles(); }));
+  body.appendChild(controlRow('Font', segmented(b.font,
+    [{value:'body',label:'Body'},{value:'heading',label:'Heading'}], v=>{ b.font=v; applyRoles(); })));
+  body.appendChild(controlRow('Case', segmented(b.case,
+    [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
 }
 
 function renderShape(body){
