@@ -1004,7 +1004,7 @@ function fontDropdown(value, onChange){
    PANEL GROUPS  (each control: change -> mutate STATE -> applyRoles())
    ============================================================================ */
 let schemesHost;
-let expandedScheme = 'Light';   // which scheme is expanded for editing (and previewed)
+let expandedScheme = null;   // which scheme is expanded for editing (and previewed); null = all collapsed
 
 function renderColor(body){
   // ---- Palette: derived name label above, color input + delete beside ----
@@ -1038,7 +1038,8 @@ function renderColor(body){
   sch.body.appendChild(el('<p class="subgroup-hint">Edit a scheme’s tokens here. To use a scheme, select a section in the preview and pick it there.</p>'));
   schemesHost = el('<div></div>');           // renderSchemes() owns this node (hint stays put)
   sch.body.appendChild(schemesHost);
-  if(!STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
+  // null = intentionally all collapsed; only repoint if it points at a now-missing scheme
+  if(expandedScheme !== null && !STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
   renderSchemes();
   body.appendChild(sch.wrap);
 }
@@ -1410,7 +1411,7 @@ function initSectionSelection(){
 function buildPanel(){
   const host=document.getElementById('groups'); host.innerHTML='';
   [
-    ['Color','palette',true,renderColor],
+    ['Color','palette',false,renderColor],
     ['Typography','type',false,renderTypography],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
