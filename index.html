@@ -108,13 +108,19 @@
 
   /* ---- control row: LABEL on the left, CONTROL on the right (skimmable, Shopify-like) -- */
   .ctl { display: flex; align-items: center; gap: 12px; }
-  .ctl > label, .ctl > .ctl-label { flex: 0 0 92px; width: 92px; font-size: 11px; color: var(--stone-600); font-weight: 500; line-height: 1.3; }
+  .ctl > label, .ctl > .ctl-label { flex: 0 0 76px; width: 76px; font-size: 11px; color: var(--stone-600); font-weight: 500; line-height: 1.3; }
   .ctl > *:not(label):not(.ctl-label) { flex: 1 1 auto; min-width: 0; }   /* the control fills the rest of the row */
   .ctl-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
-  /* slider: rail on the right, value pinned to the end of the row */
-  .slider-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .slider-wrap .field { flex: 1 1 auto; min-width: 0; }
-  .val { flex: 0 0 auto; font-size: 11px; color: var(--stone-400); font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; min-width: 30px; }
+  /* slider: rail on the right, with a fixed-width EDITABLE value box at the end (Shopify range).
+     slider-wrap is the row's single flex child, so it lines up to the same width as a dropdown /
+     colour field; the value box is a FIXED width, so the rail width — and therefore the column
+     alignment — stays identical across every slider row regardless of the value's length. */
+  .slider-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .slider-wrap .slider-field { flex: 1 1 auto; min-width: 0; }
+  .val-field { flex: 0 0 80px; width: 80px; gap: 2px; padding: 0 8px; }
+  .val-field:focus-within { background: var(--stone-200); }
+  .val-input { flex: 1 1 auto; width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-700); text-align: right; font-variant-numeric: tabular-nums; padding: 0; }
+  .val-unit { flex: 0 0 auto; font-size: 11px; color: var(--stone-400); font-weight: 500; }
 
   /* ---- shared 32px field surface ---- */
   .field { min-height: 32px; border-radius: 6px; background: var(--stone-100); display: flex; align-items: center; padding: 0 12px; transition: background .12s; }
@@ -160,7 +166,7 @@
 
   /* ---- palette rows: derived name on the left, color input + delete on the right ---- */
   .palette-row { display: flex; align-items: center; gap: 12px; }
-  .palette-row > .ctl-label { flex: 0 0 92px; width: 92px; }
+  .palette-row > .ctl-label { flex: 0 0 76px; width: 76px; }
   .palette-input-row { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; }
   .palette-input-row .field { flex: 1; }
   .icon-btn { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; }
@@ -1058,19 +1064,29 @@ function slider(label, value, min, max, step, suffix, onChange){
   const wrap = el(`<div class="ctl">
     <span class="ctl-label">${label}</span>
     <div class="slider-wrap">
-      <div class="field"><div class="slider-track"><div class="slider-rail"></div><div class="slider-fill"></div><div class="slider-thumb"></div></div></div>
-      <span class="val"></span>
+      <div class="field slider-field"><div class="slider-track"><div class="slider-rail"></div><div class="slider-fill"></div><div class="slider-thumb"></div></div></div>
+      <div class="field val-field"><input type="text" class="val-input" inputmode="decimal" aria-label="${label}">${suffix?`<span class="val-unit">${suffix}</span>`:''}</div>
     </div>
   </div>`);
-  const track=wrap.querySelector('.slider-track'), fill=wrap.querySelector('.slider-fill'), thumb=wrap.querySelector('.slider-thumb'), valEl=wrap.querySelector('.val');
+  const track=wrap.querySelector('.slider-track'), fill=wrap.querySelector('.slider-fill'), thumb=wrap.querySelector('.slider-thumb'), input=wrap.querySelector('.val-input');
   let cur = value;
   const clamp = (v)=> Math.round(Math.max(min, Math.min(max, Math.round(v/step)*step)) * 1e4) / 1e4;
-  function paint(){ const pct=(cur-min)/(max-min); fill.style.width=pct*100+'%'; thumb.style.left=pct*100+'%'; thumb.style.transform='translate(-50%,-50%)'; valEl.textContent=cur+suffix; }
+  function paint(){ const pct=(cur-min)/(max-min); fill.style.width=pct*100+'%'; thumb.style.left=pct*100+'%'; thumb.style.transform='translate(-50%,-50%)'; input.value=cur; }
   function setFromX(x){ const r=track.getBoundingClientRect(); const p=Math.max(0,Math.min(1,(x-r.left)/r.width)); const v=clamp(min+p*(max-min)); if(v!==cur){ cur=v; paint(); onChange(cur); } }
   let dragging=false;
   track.addEventListener('pointerdown', e=>{ e.preventDefault(); dragging=true; track.setPointerCapture(e.pointerId); thumb.style.transform='translate(-50%,-50%) scale(1.1)'; setFromX(e.clientX); });
   track.addEventListener('pointermove', e=>{ if(dragging) setFromX(e.clientX); });
   track.addEventListener('pointerup', ()=>{ dragging=false; paint(); });
+  // Typed value: commit on blur / Enter (clamped + snapped to step); arrow keys nudge by one step.
+  function commit(){ const v=parseFloat(input.value); if(isNaN(v)){ paint(); return; } const c=clamp(v); if(c!==cur){ cur=c; onChange(cur); } paint(); }
+  function nudge(d){ const c=clamp(cur+d*step); if(c!==cur){ cur=c; onChange(cur); paint(); } }
+  input.addEventListener('change', commit);
+  input.addEventListener('focus', ()=>input.select());
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commit(); input.blur(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); nudge(1); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); nudge(-1); }
+  });
   wrap.setValue = (v)=>{ cur=clamp(v); paint(); };
   paint();
   return wrap;
