@@ -238,8 +238,8 @@
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
     --section-padding:80px; --container-max:1120px; --gutter:24px; --product-gutter:24px; --collection-gutter:24px;
     /* product + collection card geometry (set by applyCards from STATE) */
-    --pcard-ratio:4/3; --pcard-items:flex-start; --pcard-text:left; --pcard-pad:0px;
-    --ccard-ratio:3/4; --ccard-v:flex-end; --ccard-h:flex-start; --ccard-text:left;
+    --pcard-ratio:4/3; --pcard-radius:10px; --pcard-items:flex-start; --pcard-text:left; --pcard-pad:0px;
+    --ccard-ratio:3/4; --ccard-radius:10px; --ccard-v:flex-end; --ccard-h:flex-start; --ccard-text:left;
     --ccard-overlay-color:#000000; --ccard-overlay-opacity:.35;
     --heading-weight:700; --heading-lh:1.14; --heading-ls:-0.01em; --heading-case:none;
     --body-weight:400; --body-lh:1.6; --body-ls:0em; --body-case:none;
@@ -314,7 +314,7 @@
        .ccard-below             — label sits in a box beneath the image
      SIZE/ALIGN/OVERLAY/HOVER come from store custom properties + hover classes. */
   .collections { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--collection-gutter); }
-  .collection { position: relative; display: flex; flex-direction: column; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: transform .25s, box-shadow .25s; }
+  .collection { position: relative; display: flex; flex-direction: column; border-radius: var(--ccard-radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: transform .25s, box-shadow .25s; }
   .collection .cmedia { position: relative; aspect-ratio: var(--ccard-ratio); overflow: hidden; flex: 0 0 auto; }
   .collection .cimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .35s, opacity .35s; }
   .collection .cimg-2 { opacity: 0; }
@@ -343,7 +343,7 @@
   .rowhead .ey { display: flex; flex-direction: column; gap: .75rem; }
   .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--product-gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
   .product { display: flex; flex-direction: column; scroll-snap-align: start; transition: transform .25s; }
-  .product .thumb { position: relative; aspect-ratio: var(--pcard-ratio); background: linear-gradient(140deg, #eef1f4, #dfe4ea); border-radius: var(--radius); overflow: hidden; }
+  .product .thumb { position: relative; aspect-ratio: var(--pcard-ratio); background: linear-gradient(140deg, #eef1f4, #dfe4ea); border-radius: var(--pcard-radius); overflow: hidden; }
   /* layered product images so a secondary can crossfade in on hover */
   .product .thumb .sg-layer { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .35s, opacity .35s; }
   .product .thumb .sg-2 { opacity: 0; }
@@ -783,10 +783,10 @@ const DEFAULTS = {
   // collectionGutter — gap between collection cards in the collections grid
   spacing: { sectionPadding:80, containerMax:1120, gutter:24, productGutter:24, collectionGutter:24 },  // px
   elevation: 'None',
-  // PRODUCT CARDS: image aspect ratio, info alignment, info side padding, hover effect.
-  productCard: { ratio:'Landscape', align:'left', padding:0, hover:'zoom' },
-  // COLLECTION CARDS: layout style, image ratio, label position, scrim color/opacity, hover.
-  collectionCard: { style:'overlay', ratio:'Portrait', textPos:'bottom-left', overlayColor:'#000000', overlayOpacity:35, hover:'zoom' },
+  // PRODUCT CARDS: image aspect ratio, corner radius, info alignment, info side padding, hover effect.
+  productCard: { ratio:'Landscape', radius:10, align:'left', padding:0, hover:'zoom' },
+  // COLLECTION CARDS: layout style, image ratio, corner radius, label position, scrim color/opacity, hover.
+  collectionCard: { style:'overlay', ratio:'Portrait', radius:10, textPos:'bottom-left', overlayColor:'#000000', overlayOpacity:35, hover:'zoom' },
 };
 let STATE = clone(DEFAULTS);
 
@@ -900,6 +900,7 @@ function applyCards(){
   // Product cards
   const pc = STATE.productCard;
   s.setProperty('--pcard-ratio', (CARD_RATIOS[pc.ratio] || pc.ratio).replace('/', ' / '));
+  s.setProperty('--pcard-radius', pc.radius+'px');
   s.setProperty('--pcard-items', pc.align==='center' ? 'center' : 'flex-start');
   s.setProperty('--pcard-text',  pc.align==='center' ? 'center' : 'left');
   s.setProperty('--pcard-pad',   pc.padding+'px');
@@ -907,6 +908,7 @@ function applyCards(){
   // Collection cards
   const cc = STATE.collectionCard;
   s.setProperty('--ccard-ratio', (CARD_RATIOS[cc.ratio] || cc.ratio).replace('/', ' / '));
+  s.setProperty('--ccard-radius', cc.radius+'px');
   const pos = COLL_TEXT_POS[cc.textPos] || COLL_TEXT_POS['bottom-left'];
   s.setProperty('--ccard-v', pos.v);
   s.setProperty('--ccard-h', pos.h);
@@ -1352,6 +1354,8 @@ function renderCollectionCards(body){
 
 function renderShape(body){
   body.appendChild(slider('Corner radius', STATE.radius, 0, 40, 1, 'px', v=>{ STATE.radius=v; applyRoles(); }));
+  body.appendChild(slider('Product card radius', STATE.productCard.radius, 0, 40, 1, 'px', v=>{ STATE.productCard.radius=v; applyCards(); }));
+  body.appendChild(slider('Collection card radius', STATE.collectionCard.radius, 0, 40, 1, 'px', v=>{ STATE.collectionCard.radius=v; applyCards(); }));
 }
 
 function renderSpacing(body){
