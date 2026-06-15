@@ -243,7 +243,7 @@
        STATE.inputs). Border thickness is an INSET box-shadow (like the buttons) so changing
        it never shifts layout; colours (border / fill) resolve from the section's scheme. */
     --input-border-w:1px; --input-radius:10px; --input-font:var(--font-body); --input-case:none;
-    --input-bg:var(--c-surface); --input-pad:13px 16px; --input-fs:15px;
+    --input-pad:13px 16px; --input-fs:15px;
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
@@ -445,12 +445,16 @@
      swaps the outline to the accent. Targets text-like fields so future forms inherit. */
   .store input[type=text], .store input[type=email], .store input[type=search],
   .store input[type=tel], .store input[type=number], .store input[type=password], .store textarea {
-    border: none; border-radius: var(--input-radius); background: var(--input-bg);
+    border: none; border-radius: var(--input-radius); background: var(--c-surface);
     box-shadow: inset 0 0 0 var(--input-border-w) var(--c-border);
     padding: var(--input-pad); font: inherit; font-family: var(--input-font); font-size: var(--input-fs);
     text-transform: var(--input-case); color: var(--c-heading); outline: none;
     transition: box-shadow .15s, background-color .15s;
   }
+  /* Outline fill = transparent field (the section background shows through). Driven by a
+     class on .store, NOT a var, so the surface/border colours still resolve in each section's
+     own scheme rather than collapsing to the baseline at the root. */
+  .store.input-outline input, .store.input-outline textarea { background: transparent; }
   .store input::placeholder, .store textarea::placeholder { color: var(--c-body); opacity: .6; }
   .store input:focus, .store textarea:focus { box-shadow: inset 0 0 0 var(--input-border-w) var(--c-accent); }
 
@@ -955,13 +959,15 @@ function applyRoles(){
    (--c-border / --c-surface), so a themed section restyles its fields automatically. */
 const INPUT_SIZES = { small:{ pad:'9px 13px', fs:14 }, medium:{ pad:'13px 16px', fs:15 }, large:{ pad:'16px 20px', fs:16 } };
 function applyInputs(){
-  const s = document.getElementById('store').style;
+  const store = document.getElementById('store');
+  const s = store.style;
   const inp = STATE.inputs;
   s.setProperty('--input-border-w', inp.borderWidth+'px');
   s.setProperty('--input-radius', inp.radius+'px');
   s.setProperty('--input-font', inp.font==='heading' ? 'var(--font-heading)' : 'var(--font-body)');
   s.setProperty('--input-case', inp.case==='uppercase' ? 'uppercase' : 'none');
-  s.setProperty('--input-bg', inp.fill==='outline' ? 'transparent' : 'var(--c-surface)');
+  // Fill is a class (not a var) so the surface colour resolves per-section — see the CSS note.
+  store.classList.toggle('input-outline', inp.fill==='outline');
   const sz = INPUT_SIZES[inp.size] || INPUT_SIZES.medium;
   s.setProperty('--input-pad', sz.pad);
   s.setProperty('--input-fs', sz.fs+'px');
