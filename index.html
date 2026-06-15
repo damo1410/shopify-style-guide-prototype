@@ -241,9 +241,12 @@
     --btn-border-w:2px; --btn-radius:10px; --btn-font:var(--font-body); --btn-case:none;
     /* input geometry/type — one shared set for every form field (set by applyInputs from
        STATE.inputs). Border thickness is an INSET box-shadow (like the buttons) so changing
-       it never shifts layout; colours (border / fill) resolve from the section's scheme. */
+       it never shifts layout. Input COLOURS are their own scheme tokens (--c-input-*), never
+       borrowed from heading/surface, so the source of every colour is explicit + editable. */
     --input-border-w:1px; --input-radius:10px; --input-font:var(--font-body); --input-case:none;
     --input-pad:13px 16px; --input-fs:15px;
+    --c-input-bg:#f0efed; --c-input-border:#f0efed; --c-input-text:#1c1917; --c-input-placeholder:#57534e;
+    --c-input-bg-focus:#ffffff; --c-input-border-focus:#dc4a2a; --c-input-text-focus:#1c1917;
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
@@ -470,24 +473,24 @@
   .post .link:hover { color: var(--c-link-hover); }
   .post .link svg { width: 15px; height: 15px; }
 
-  /* form inputs — one shared look driven by the global Inputs controls. No real border:
-     the outline is an INSET box-shadow (--input-border-w thick) so toggling thickness never
-     resizes the field. Border + fill colours come from the section's scheme tokens; focus
-     swaps the outline to the accent. Targets text-like fields so future forms inherit. */
+  /* form inputs — one shared look. No real border: the outline is an INSET box-shadow
+     (--input-border-w thick) so toggling thickness never resizes the field. Every COLOUR is
+     its own scheme token (--c-input-*) so the user always knows where it comes from and can
+     edit it directly — set Fill to Transparent for an outline style (like the buttons). Focus
+     swaps to the focus token set. Targets text-like fields so future forms inherit. */
   .store input[type=text], .store input[type=email], .store input[type=search],
   .store input[type=tel], .store input[type=number], .store input[type=password], .store textarea {
-    border: none; border-radius: var(--input-radius); background: var(--c-surface);
-    box-shadow: inset 0 0 0 var(--input-border-w) var(--c-border);
+    border: none; border-radius: var(--input-radius); background: var(--c-input-bg);
+    box-shadow: inset 0 0 0 var(--input-border-w) var(--c-input-border);
     padding: var(--input-pad); font: inherit; font-family: var(--input-font); font-size: var(--input-fs);
-    text-transform: var(--input-case); color: var(--c-heading); outline: none;
-    transition: box-shadow .15s, background-color .15s;
+    text-transform: var(--input-case); color: var(--c-input-text); outline: none;
+    transition: box-shadow .15s, background-color .15s, color .15s;
   }
-  /* Outline fill = transparent field (the section background shows through). Driven by a
-     class on .store, NOT a var, so the surface/border colours still resolve in each section's
-     own scheme rather than collapsing to the baseline at the root. */
-  .store.input-outline input, .store.input-outline textarea { background: transparent; }
-  .store input::placeholder, .store textarea::placeholder { color: var(--c-body); opacity: .6; }
-  .store input:focus, .store textarea:focus { box-shadow: inset 0 0 0 var(--input-border-w) var(--c-accent); }
+  .store input::placeholder, .store textarea::placeholder { color: var(--c-input-placeholder); }
+  .store input:focus, .store textarea:focus {
+    background: var(--c-input-bg-focus); color: var(--c-input-text-focus);
+    box-shadow: inset 0 0 0 var(--input-border-w) var(--c-input-border-focus);
+  }
 
   /* newsletter — a normal scheme surface (defaults to the Dark section scheme) */
   .newsletter .container { text-align: center; display: flex; flex-direction: column; align-items: center; gap: .8rem; }
@@ -815,22 +818,34 @@ const DEFAULTS = {
     { key:'btn2BgHover',     label:'Fill hover',       cssVar:'--c-btn2-bg-hover',     group:'Secondary button' },
     { key:'btn2TextHover',   label:'Text hover',       cssVar:'--c-btn2-text-hover',   group:'Secondary button' },
     { key:'btn2BorderHover', label:'Border hover',     cssVar:'--c-btn2-border-hover', group:'Secondary button' },
+    // Inputs — dedicated form-field colours (never borrowed from heading/surface, so changing
+    // a heading colour can't silently move the input text). Resting set + a focus ("off") set.
+    { key:'inputBg',          label:'Fill',          cssVar:'--c-input-bg',           group:'Inputs' },
+    { key:'inputBorder',      label:'Border',        cssVar:'--c-input-border',       group:'Inputs' },
+    { key:'inputText',        label:'Text',          cssVar:'--c-input-text',         group:'Inputs' },
+    { key:'inputPlaceholder', label:'Placeholder',   cssVar:'--c-input-placeholder',  group:'Inputs' },
+    { key:'inputBgFocus',     label:'Fill focus',    cssVar:'--c-input-bg-focus',     group:'Inputs' },
+    { key:'inputBorderFocus', label:'Border focus',  cssVar:'--c-input-border-focus', group:'Inputs' },
+    { key:'inputTextFocus',   label:'Text focus',    cssVar:'--c-input-text-focus',   group:'Inputs' },
   ],
   schemes: {
     Light: {
       bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist', accent:'brand',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
       btn2Bg:'transparent', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'transparent', btn2TextHover:'paper', btn2BorderHover:'ink',
+      inputBg:'mist', inputBorder:'mist', inputText:'ink', inputPlaceholder:'stone', inputBgFocus:'paper', inputBorderFocus:'brand', inputTextFocus:'ink',
     },
     Dark: {
       bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night', accent:'brand',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
       btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'ink', btn2BorderHover:'paper',
+      inputBg:'night', inputBorder:'night', inputText:'paper', inputPlaceholder:'stone', inputBgFocus:'night', inputBorderFocus:'brand', inputTextFocus:'paper',
     },
     Brand: {
       bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust', accent:'paper',
       btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
       btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'brand', btn2BorderHover:'paper',
+      inputBg:'rust', inputBorder:'rust', inputText:'paper', inputPlaceholder:'mist', inputBgFocus:'rust', inputBorderFocus:'paper', inputTextFocus:'paper',
     },
   },
   // The store's BASELINE scheme (what unthemed sections inherit). It is NOT changed by
@@ -854,10 +869,10 @@ const DEFAULTS = {
   // (heading vs body), and text case.
   buttons: { borderWidth:2, radius:10, font:'body', case:'default' },
   // INPUTS: one shared set of geometry/type levers applied to EVERY form field — mirrors the
-  // button levers (border thickness, corner radius, font, case) plus two input-specific ones:
-  // FILL (solid = filled with the scheme surface; outline = transparent) and SIZE (field
-  // height/text). Colours (border + fill) are owned per-scheme, not stored here.
-  inputs: { borderWidth:1, radius:10, font:'body', case:'default', fill:'solid', size:'medium' },
+  // button levers (border thickness, corner radius, font, case) plus SIZE (field height/text).
+  // Colours are owned per-scheme via the --c-input-* tokens (set Fill to Transparent there for
+  // an outline style), so nothing colour-related is stored here.
+  inputs: { borderWidth:1, radius:10, font:'body', case:'default', size:'medium' },
   // ICONS: global line-icon weight + the feature-icon container. `container` folds the
   // on/off choice into the fill STYLE (off = no container), so there's no separate boolean
   // dependency — radius/padding simply have no effect (and dim in the panel) when off.
@@ -991,21 +1006,18 @@ function applyRoles(){
   applyInputs();
 }
 
-/* Map the global Inputs controls onto the store. Geometry/type are global custom props;
-   the FILL choice swaps the field background (scheme surface vs transparent) and SIZE picks
-   the vertical padding + text size. Border + fill colours resolve from the scheme tokens
-   (--c-border / --c-surface), so a themed section restyles its fields automatically. */
+/* Map the global Inputs controls onto the store. These are GEOMETRY/TYPE only — every input
+   COLOUR lives in the per-scheme --c-input-* tokens (written by the colorRoles loop in
+   applyRoles + per section in applySectionSchemes), so a themed section restyles its fields
+   automatically and the user owns every colour. SIZE picks the vertical padding + text size. */
 const INPUT_SIZES = { small:{ pad:'9px 13px', fs:14 }, medium:{ pad:'13px 16px', fs:15 }, large:{ pad:'16px 20px', fs:16 } };
 function applyInputs(){
-  const store = document.getElementById('store');
-  const s = store.style;
+  const s = document.getElementById('store').style;
   const inp = STATE.inputs;
   s.setProperty('--input-border-w', inp.borderWidth+'px');
   s.setProperty('--input-radius', inp.radius+'px');
   s.setProperty('--input-font', inp.font==='heading' ? 'var(--font-heading)' : 'var(--font-body)');
   s.setProperty('--input-case', inp.case==='uppercase' ? 'uppercase' : 'none');
-  // Fill is a class (not a var) so the surface colour resolves per-section — see the CSS note.
-  store.classList.toggle('input-outline', inp.fill==='outline');
   const sz = INPUT_SIZES[inp.size] || INPUT_SIZES.medium;
   s.setProperty('--input-pad', sz.pad);
   s.setProperty('--input-fs', sz.fs+'px');
@@ -1450,9 +1462,9 @@ function renderButtons(body){
     [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
 }
 
-// ---- Inputs: one shared set of levers applied to EVERY form field. Mirrors the Buttons
-//      controls (border thickness, corner radius, font, case) and adds two input-specific
-//      ones — Fill (solid vs outline) and Size (field height + text). ----
+// ---- Inputs: one shared set of geometry/type levers applied to EVERY form field. Mirrors the
+//      Buttons controls (border thickness, corner radius, font, case) plus Size. Colours live in
+//      the scheme's Inputs tokens — to get an outline style, set Fill to Transparent there. ----
 function renderInputs(body){
   const inp = STATE.inputs;
   body.appendChild(slider('Border thickness', inp.borderWidth, 0, 4, 1, 'px', v=>{ inp.borderWidth=v; applyInputs(); }));
@@ -1461,10 +1473,9 @@ function renderInputs(body){
     [{value:'body',label:'Body'},{value:'heading',label:'Heading'}], v=>{ inp.font=v; applyInputs(); })));
   body.appendChild(controlRow('Case', segmented(inp.case,
     [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ inp.case=v; applyInputs(); })));
-  body.appendChild(controlRow('Fill', segmented(inp.fill,
-    [{value:'solid',label:'Solid'},{value:'outline',label:'Outline'}], v=>{ inp.fill=v; applyInputs(); })));
   body.appendChild(controlRow('Size', segmented(inp.size,
     [{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}], v=>{ inp.size=v; applyInputs(); })));
+  body.appendChild(el('<p class="subgroup-hint" style="margin-top:4px">Input colours (fill, border, text, placeholder &amp; focus) live in each color scheme. Set Fill to Transparent for an outline style.</p>'));
 }
 
 // ---- Icons: global line-icon weight + the feature-icon container. The container picker
