@@ -236,7 +236,7 @@
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
-    --section-padding:80px; --container-max:1120px; --gutter:24px;
+    --section-padding:80px; --container-max:1120px; --gutter:24px; --product-gutter:24px; --collection-gutter:24px;
     /* product + collection card geometry (set by applyCards from STATE) */
     --pcard-ratio:4/3; --pcard-items:flex-start; --pcard-text:left; --pcard-pad:0px;
     --ccard-ratio:3/4; --ccard-v:flex-end; --ccard-h:flex-start; --ccard-text:left;
@@ -313,7 +313,7 @@
        .ccard-overlay (default) — label sits over the image
        .ccard-below             — label sits in a box beneath the image
      SIZE/ALIGN/OVERLAY/HOVER come from store custom properties + hover classes. */
-  .collections { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); }
+  .collections { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--collection-gutter); }
   .collection { position: relative; display: flex; flex-direction: column; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: transform .25s, box-shadow .25s; }
   .collection .cmedia { position: relative; aspect-ratio: var(--ccard-ratio); overflow: hidden; flex: 0 0 auto; }
   .collection .cimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .35s, opacity .35s; }
@@ -341,7 +341,7 @@
   /* products carousel */
   .rowhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
   .rowhead .ey { display: flex; flex-direction: column; gap: .75rem; }
-  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--product-gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
   .product { display: flex; flex-direction: column; scroll-snap-align: start; transition: transform .25s; }
   .product .thumb { position: relative; aspect-ratio: var(--pcard-ratio); background: linear-gradient(140deg, #eef1f4, #dfe4ea); border-radius: var(--radius); overflow: hidden; }
   /* layered product images so a secondary can crossfade in on hover */
@@ -778,7 +778,10 @@ const DEFAULTS = {
   // (heading vs body), and text case.
   buttons: { borderWidth:2, radius:10, font:'body', case:'default' },
   radius: 10,                                   // px, one global corner radius
-  spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
+  // gutter        — generic grid gap (value props, reviews, journal)
+  // productGutter  — gap between product cards in the products carousel
+  // collectionGutter — gap between collection cards in the collections grid
+  spacing: { sectionPadding:80, containerMax:1120, gutter:24, productGutter:24, collectionGutter:24 },  // px
   elevation: 'None',
   // PRODUCT CARDS: image aspect ratio, info alignment, info side padding, hover effect.
   productCard: { ratio:'Landscape', align:'left', padding:0, hover:'zoom' },
@@ -878,6 +881,8 @@ function applyRoles(){
   s.setProperty('--section-padding', STATE.spacing.sectionPadding+'px');
   s.setProperty('--container-max', STATE.spacing.containerMax+'px');
   s.setProperty('--gutter', STATE.spacing.gutter+'px');
+  s.setProperty('--product-gutter', STATE.spacing.productGutter+'px');
+  s.setProperty('--collection-gutter', STATE.spacing.collectionGutter+'px');
 
   // 5) PER-SECTION color schemes — repaint any section with its own assigned scheme.
   applySectionSchemes();
@@ -1352,7 +1357,9 @@ function renderShape(body){
 function renderSpacing(body){
   body.appendChild(slider('Section padding', STATE.spacing.sectionPadding, 24, 140, 4, 'px', v=>{ STATE.spacing.sectionPadding=v; applyRoles(); }));
   body.appendChild(slider('Container max-width', STATE.spacing.containerMax, 720, 1400, 20, 'px', v=>{ STATE.spacing.containerMax=v; applyRoles(); }));
-  body.appendChild(slider('Gutter', STATE.spacing.gutter, 8, 48, 2, 'px', v=>{ STATE.spacing.gutter=v; applyRoles(); }));
+  body.appendChild(slider('Gutter', STATE.spacing.gutter, 0, 48, 2, 'px', v=>{ STATE.spacing.gutter=v; applyRoles(); }));
+  body.appendChild(slider('Product list gutter', STATE.spacing.productGutter, 0, 48, 2, 'px', v=>{ STATE.spacing.productGutter=v; applyRoles(); }));
+  body.appendChild(slider('Collection list gutter', STATE.spacing.collectionGutter, 0, 48, 2, 'px', v=>{ STATE.spacing.collectionGutter=v; applyRoles(); }));
 }
 
 /* Elevation/shadow controls intentionally removed for now (most stores ship flat).
