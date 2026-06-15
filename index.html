@@ -235,7 +235,7 @@
     --c-btn-bg-hover:#a83716; --c-btn-text-hover:#ffffff; --c-btn-border-hover:#a83716; --c-btn-bg-eff:#dc4a2a;
     --c-btn2-bg:#1c1917; --c-btn2-border:#1c1917; --c-btn2-text:#1c1917;
     --c-btn2-bg-hover:#1c1917; --c-btn2-text-hover:#ffffff; --c-btn2-border-hover:#1c1917; --c-btn2-bg-eff:transparent;
-    --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12);
+    --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12); --c-icon-bg:#f0efed;
     /* button geometry/type — one shared set for both buttons (set by applyRoles from STATE.buttons).
        border thickness is drawn as an INSET box-shadow so changing it never shifts layout. */
     --btn-border-w:2px; --btn-radius:10px; --btn-font:var(--font-body); --btn-case:none;
@@ -251,7 +251,7 @@
     --body-weight:400; --body-lh:1.6; --body-ls:0em; --body-case:none;
     /* icon levers (set by applyIcons from STATE.icons; colours resolve per active scheme) */
     --icon-size:24px; --icon-stroke:2; --icon-pad:14px; --icon-radius:40px;
-    --icon-bg:var(--c-accent-soft); --icon-fg:var(--c-accent); --icon-bd-w:0px; --icon-bd:transparent;
+    --icon-bg:var(--c-icon-bg); --icon-fg:var(--c-accent); --icon-bd-w:0px; --icon-bd:transparent;
     background: var(--c-bg); color: var(--c-body); font-family: var(--font-body); font-size: var(--fs-base);
     font-weight: var(--body-weight); line-height: var(--body-lh); letter-spacing: var(--body-ls); text-transform: var(--body-case);
   }
@@ -312,9 +312,9 @@
   /* value props */
   .valueprops { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); }
   .vp { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .6rem; }
-  /* feature-icon container — geometry + colours come from the global Icon controls
-     (applyIcons) and the section's own scheme accent tokens. "Off" collapses to a bare
-     icon (transparent bg, no padding, no border). */
+  /* feature-icon background — geometry comes from the global Icon controls (applyIcons);
+     the glyph uses the scheme's Icon token and the background its Icon background token.
+     "Off" collapses to a bare glyph (transparent bg, no padding, no border). */
   .vp .ic {
     display: inline-flex;
     padding: var(--icon-pad);
@@ -747,7 +747,8 @@ const DEFAULTS = {
     { key:'link',      label:'Links',                cssVar:'--c-link' },
     { key:'linkHover', label:'Links hover',          cssVar:'--c-link-hover' },
     { key:'border',    label:'Borders',              cssVar:'--c-border' },
-    { key:'accent',    label:'Accent',               cssVar:'--c-accent' },
+    { key:'icon',     label:'Icon',                 cssVar:'--c-accent' },
+    { key:'iconBg',   label:'Icon background',      cssVar:'--c-icon-bg' },
     // Primary button
     { key:'btnBg',          label:'Fill',             cssVar:'--c-btn-bg',           group:'Primary button' },
     { key:'btnBorder',      label:'Border',           cssVar:'--c-btn-border',       group:'Primary button' },
@@ -765,17 +766,17 @@ const DEFAULTS = {
   ],
   schemes: {
     Light: {
-      bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist', accent:'brand',
+      bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist', icon:'brand', iconBg:'mist',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
       btn2Bg:'transparent', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'transparent', btn2TextHover:'paper', btn2BorderHover:'ink',
     },
     Dark: {
-      bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night', accent:'brand',
+      bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night', icon:'brand', iconBg:'night',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
       btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'ink', btn2BorderHover:'paper',
     },
     Brand: {
-      bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust', accent:'paper',
+      bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust', icon:'paper', iconBg:'rust',
       btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
       btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'brand', btn2BorderHover:'paper',
     },
@@ -800,13 +801,14 @@ const DEFAULTS = {
   // per-scheme (see colorRoles); these are global — border thickness, corner radius, font
   // (heading vs body), and text case.
   buttons: { borderWidth:2, radius:10, font:'body', case:'default' },
-  // ICONS: global line-icon weight + the feature-icon container. `container` folds the
-  // on/off choice into the fill STYLE (off = no container), so there's no separate boolean
-  // dependency — radius/padding simply have no effect (and dim in the panel) when off.
-  // Colours are NOT stored here: they resolve from the active scheme's accent tokens.
+  // ICONS: global line-icon weight + the feature-icon background. `container` is the background
+  // STYLE (off = none / filled / outline); off folds the on/off choice into the style so there's
+  // no separate boolean — radius/padding have no effect (and dim in the panel) when off.
+  // Colours are NOT stored here: the glyph reads the scheme's Icon token and the background reads
+  // its Icon background token, so legibility is fully under the merchant's control (no auto fill).
   // size — global default for feature icons (overridable per-section later, like base font size).
-  // borderWidth — only bites for the Outline container style.
-  icons: { size:24, weight:'regular', container:'soft', radius:40, padding:14, borderWidth:2 },  // weight: light|regular|heavy
+  // borderWidth — only bites for the Outline style.
+  icons: { size:24, weight:'regular', container:'filled', radius:40, padding:14, borderWidth:2 },  // weight: light|regular|heavy; container(style): off|filled|outline
   radius: 10,                                   // px, one global corner radius
   // gutter        — generic grid gap (value props, reviews, journal)
   // productGutter  — gap between product cards in the products carousel
@@ -920,14 +922,14 @@ function applyRoles(){
   // 6) PRODUCT + COLLECTION card geometry / hover behaviour.
   applyCards();
 
-  // 7) ICON weight + feature-icon container.
+  // 7) ICON size / weight + feature-icon background.
   applyIcons();
 }
 
-/* Map the icon controls onto the store. Stroke = global line-icon weight. The container
-   FILL STYLE picks the bg / icon colour / border from the scheme's accent tokens (written
-   as var() expressions so each section re-resolves them through its own scheme); "off"
-   collapses to a bare icon. Radius + padding only bite when a container is set. */
+/* Map the icon controls onto the store. Stroke = global line-icon weight; size = global
+   glyph size. The background STYLE picks fill / border from the scheme's Icon background
+   token and the glyph always uses the Icon token (--c-accent) — written as var() expressions
+   so each section re-resolves them through its own scheme; "off" collapses to a bare glyph. */
 const ICON_STROKE = { light:1.5, regular:2, heavy:2.5 };
 function applyIcons(){
   const s = document.getElementById('store').style;
@@ -937,14 +939,13 @@ function applyIcons(){
   const off = ic.container === 'off';
   s.setProperty('--icon-pad', off ? '0px' : ic.padding+'px');
   s.setProperty('--icon-radius', ic.radius+'px');
-  // fill style -> background / icon colour / border, all from the active scheme accent.
-  // Border weight only applies to the Outline style (the one place an icon shows a border).
-  let bg='transparent', fg='var(--c-accent)', bdw='0px', bd='transparent';
-  if(ic.container==='soft')         { bg='var(--c-accent-soft)'; }
-  else if(ic.container==='solid')   { bg='var(--c-accent)'; fg='var(--c-btn-text)'; }
-  else if(ic.container==='outline') { bdw=ic.borderWidth+'px'; bd='var(--c-accent)'; }
+  // background style -> fill / border, both from the scheme's Icon background token. The glyph
+  // is always the scheme's Icon token (--c-accent). Border weight only bites for Outline.
+  let bg='transparent', bdw='0px', bd='transparent';
+  if(ic.container==='filled')       { bg='var(--c-icon-bg)'; }
+  else if(ic.container==='outline') { bdw=ic.borderWidth+'px'; bd='var(--c-icon-bg)'; }
   s.setProperty('--icon-bg', bg);
-  s.setProperty('--icon-fg', fg);
+  s.setProperty('--icon-fg', 'var(--c-accent)');
   s.setProperty('--icon-bd-w', bdw);
   s.setProperty('--icon-bd', bd);
 }
@@ -987,7 +988,7 @@ function applyCards(){
      containers, badges all read --c-accent, which the colorRoles loop writes directly).
    - --c-btn-bg-eff / --c-btn2-bg-eff: the resting background — simply the Fill token. */
 function setSchemeButtonVars(style, scheme){
-  style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.accent), 0.12));
+  style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.icon), 0.12));
   // Resting background is always the chosen Fill color. To get an "outline" look, pick a
   // Fill that matches the section background (and/or set the button border width to 0px).
   style.setProperty('--c-btn-bg-eff',  swatchHex(scheme.btnBg));
@@ -1221,7 +1222,7 @@ function reconcileSchemes(){
 function paintSquare(sq, scheme){
   sq.style.background = swatchHex(scheme.bg);
   sq.querySelector('span').style.color = swatchHex(scheme.heading);
-  sq.querySelector('.bar').style.background = swatchHex(scheme.accent);
+  sq.querySelector('.bar').style.background = swatchHex(scheme.icon);
 }
 function schemePreview(scheme){
   const sq = el('<div class="scheme-sq"><span>Aa</span><div class="bar"></div></div>');
@@ -1356,45 +1357,44 @@ function renderButtons(body){
     [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
 }
 
-// ---- Icons: global line-icon weight + the feature-icon container. The container picker
-//      folds on/off into the fill style; radius + padding dim when the container is off
-//      (mirroring how a real theme would `visible_if`-hide them). ----
+// ---- Icons: global glyph size + weight, plus the feature-icon background. The Style picker
+//      folds on/off into the background style (off = none); radius + padding dim when it's off
+//      and border weight is Outline-only (mirroring how a real theme would `visible_if` them).
+//      Glyph + background COLOURS are scheme tokens (Icon / Icon background), not set here. ----
 function renderIcons(body){
   const ic = STATE.icons;
 
-  const sty = subgroup('Style');
-  sty.body.appendChild(slider('Size', ic.size, 16, 48, 2, 'px', v=>{ ic.size=v; applyIcons(); }));
-  sty.body.appendChild(el('<p class="subgroup-hint">Global default — override per section locally (coming later).</p>'));
-  sty.body.appendChild(controlRow('Weight', segmented(ic.weight,
+  // glyph size + weight live at the top of the group (no subgroup header).
+  body.appendChild(slider('Size', ic.size, 16, 48, 2, 'px', v=>{ ic.size=v; applyIcons(); }));
+  body.appendChild(el('<p class="subgroup-hint">Global default — override per section locally (coming later).</p>'));
+  body.appendChild(controlRow('Weight', segmented(ic.weight,
     [{value:'light',label:'Light'},{value:'regular',label:'Regular'},{value:'heavy',label:'Heavy'}],
     v=>{ ic.weight=v; applyIcons(); })));
-  body.appendChild(sty.wrap);
 
-  const con = subgroup('Container', true);
-  con.body.appendChild(el('<p class="subgroup-hint">Shown on feature icons (value props). Fill, border &amp; icon colour come from the section’s color scheme.</p>'));
-  con.body.appendChild(controlRow('Container', segmented(ic.container,
-    [{value:'off',label:'Off'},{value:'soft',label:'Soft'},{value:'solid',label:'Solid'},{value:'outline',label:'Outline'}],
+  const bgs = subgroup('Background', true);
+  bgs.body.appendChild(el('<p class="subgroup-hint">Shown on feature icons (value props). The glyph &amp; background colours come from the section’s color scheme (Icon &amp; Icon background tokens).</p>'));
+  bgs.body.appendChild(controlRow('Style', segmented(ic.container,
+    [{value:'off',label:'Off'},{value:'filled',label:'Filled'},{value:'outline',label:'Outline'}],
     v=>{ ic.container=v; applyIcons(); drawOpts(); })));
   const opts = el('<div class="subgroup-items"></div>');
-  con.body.appendChild(opts);
-  // radius + padding apply to any container (dim when off); border weight is Outline-only.
-  // This mirrors how a real theme would `visible_if`-gate each control on the container style.
+  bgs.body.appendChild(opts);
+  // radius + padding apply to any background (dim when off); border weight is Outline-only.
   function drawOpts(){
     opts.innerHTML='';
-    const c = ic.container, hasC = c!=='off';
+    const c = ic.container, hasBg = c!=='off';
     const dim = (on)=> el(`<div class="subgroup-items"${on?'':' style="opacity:.4;pointer-events:none"'}></div>`);
-    const geo = dim(hasC);
+    const geo = dim(hasBg);
     geo.appendChild(slider('Radius', ic.radius, 0, 40, 1, 'px', v=>{ ic.radius=v; applyIcons(); }));
     geo.appendChild(slider('Padding', ic.padding, 0, 28, 1, 'px', v=>{ ic.padding=v; applyIcons(); }));
     opts.appendChild(geo);
     const bw = dim(c==='outline');
     bw.appendChild(slider('Border', ic.borderWidth, 0, 4, 1, 'px', v=>{ ic.borderWidth=v; applyIcons(); }));
     opts.appendChild(bw);
-    if(!hasC) opts.appendChild(el('<p class="subgroup-hint">Radius, padding &amp; border apply once a container is set.</p>'));
+    if(!hasBg) opts.appendChild(el('<p class="subgroup-hint">Radius, padding &amp; border apply once a background is set.</p>'));
     else if(c!=='outline') opts.appendChild(el('<p class="subgroup-hint">Border weight applies to the Outline style.</p>'));
   }
   drawOpts();
-  body.appendChild(con.wrap);
+  body.appendChild(bgs.wrap);
 }
 
 // Reusable ratio dropdown (Portrait / Square / Landscape / Wide).
