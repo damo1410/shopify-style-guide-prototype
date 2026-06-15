@@ -1320,12 +1320,14 @@ function hoverDropdown(value, onChange){
   return customDropdown(value, opts, onChange);
 }
 
-// ---- Product cards: image ratio, info alignment, info side padding, hover effect. ----
+// ---- Product cards: layout (ratio/radius/gutter), info alignment, side padding, hover. ----
 function renderProductCards(body){
   const pc = STATE.productCard;
-  const img = subgroup('Image');
-  img.body.appendChild(controlRow('Aspect ratio', ratioDropdown(pc.ratio, v=>{ pc.ratio=v; applyCards(); })));
-  body.appendChild(img.wrap);
+  const lay = subgroup('Layout');
+  lay.body.appendChild(controlRow('Aspect ratio', ratioDropdown(pc.ratio, v=>{ pc.ratio=v; applyCards(); })));
+  lay.body.appendChild(slider('Corner radius', pc.radius, 0, 40, 1, 'px', v=>{ pc.radius=v; applyCards(); }));
+  lay.body.appendChild(slider('Gutter', STATE.spacing.productGutter, 0, 48, 2, 'px', v=>{ STATE.spacing.productGutter=v; applyRoles(); }));
+  body.appendChild(lay.wrap);
 
   const info = subgroup('Product info', true);
   info.body.appendChild(controlRow('Alignment', segmented(pc.align,
@@ -1345,6 +1347,8 @@ function renderCollectionCards(body){
   lay.body.appendChild(controlRow('Style', segmented(cc.style,
     [{value:'overlay',label:'Overlay'},{value:'below',label:'Below (box)'}], v=>{ cc.style=v; applyCards(); })));
   lay.body.appendChild(controlRow('Aspect ratio', ratioDropdown(cc.ratio, v=>{ cc.ratio=v; applyCards(); })));
+  lay.body.appendChild(slider('Corner radius', cc.radius, 0, 40, 1, 'px', v=>{ cc.radius=v; applyCards(); }));
+  lay.body.appendChild(slider('Gutter', STATE.spacing.collectionGutter, 0, 48, 2, 'px', v=>{ STATE.spacing.collectionGutter=v; applyRoles(); }));
   body.appendChild(lay.wrap);
 
   const txt = subgroup('Text', true);
@@ -1370,16 +1374,12 @@ function renderCollectionCards(body){
 
 function renderShape(body){
   body.appendChild(slider('Corner radius', STATE.radius, 0, 40, 1, 'px', v=>{ STATE.radius=v; applyRoles(); }));
-  body.appendChild(slider('Product card radius', STATE.productCard.radius, 0, 40, 1, 'px', v=>{ STATE.productCard.radius=v; applyCards(); }));
-  body.appendChild(slider('Collection card radius', STATE.collectionCard.radius, 0, 40, 1, 'px', v=>{ STATE.collectionCard.radius=v; applyCards(); }));
 }
 
 function renderSpacing(body){
   body.appendChild(slider('Section padding', STATE.spacing.sectionPadding, 24, 140, 4, 'px', v=>{ STATE.spacing.sectionPadding=v; applyRoles(); }));
   body.appendChild(slider('Container max-width', STATE.spacing.containerMax, 720, 1400, 20, 'px', v=>{ STATE.spacing.containerMax=v; applyRoles(); }));
   body.appendChild(slider('Gutter', STATE.spacing.gutter, 0, 48, 2, 'px', v=>{ STATE.spacing.gutter=v; applyRoles(); }));
-  body.appendChild(slider('Product list gutter', STATE.spacing.productGutter, 0, 48, 2, 'px', v=>{ STATE.spacing.productGutter=v; applyRoles(); }));
-  body.appendChild(slider('Collection list gutter', STATE.spacing.collectionGutter, 0, 48, 2, 'px', v=>{ STATE.spacing.collectionGutter=v; applyRoles(); }));
 }
 
 /* Elevation/shadow controls intentionally removed for now (most stores ship flat).
