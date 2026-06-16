@@ -762,10 +762,20 @@ const SHADOWS = { None:'none', Soft:'0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0
 const CARD_RATIOS = { Portrait:'3/4', Square:'1/1', Landscape:'4/3', Wide:'16/9' };
 /* Card alignment helpers (shared by product + collection cards).
    ALIGN is horizontal: left | center -> flex placement + text-align.
-   OVERLAY POSITION is vertical (overlay style only): top | middle | bottom -> justify. */
+   OVERLAY POSITION is vertical (overlay style only): top | middle | bottom -> justify.
+   For the Overlay style the panel shows ONE 6-way picker that sets both at once
+   (value = `${overlayPos}-${align}`); Standard/Card show just the Left/Center toggle. */
 const CARD_ALIGN_ITEMS = a => a === 'center' ? 'center' : 'flex-start';
 const CARD_ALIGN_TEXT  = a => a === 'center' ? 'center' : 'left';
 const CARD_OVERLAY_V   = { top:'flex-start', middle:'center', bottom:'flex-end' };
+const CARD_POS_OPTS = [
+  { value:'top-left',      label:'Top left' },
+  { value:'top-center',    label:'Top center' },
+  { value:'middle-left',   label:'Middle left' },
+  { value:'middle-center', label:'Middle center' },
+  { value:'bottom-left',   label:'Bottom left' },
+  { value:'bottom-center', label:'Bottom center' },
+];
 
 /* Typography levers (named presets -> resolved CSS values). Heading and body each
    own their own weight / line-height / letter-spacing / case; the type SCALE is split
@@ -1529,27 +1539,36 @@ function hoverDropdown(value, onChange){
 //   spacing gutter the card type uses. Three layout styles (Standard / Card / Overlay);
 //   alignment is horizontal and the Overlay subgroup carries the vertical position + scrim. ----
 function renderCardControls(body, cfg, gutterKey){
+  body.innerHTML = '';                       // re-rendered in place when Style changes
+  const isOverlay = cfg.style === 'overlay';
+
   const lay = subgroup('Layout');
   lay.body.appendChild(controlRow('Style', segmented(cfg.style, [
     { value:'standard', label:'Standard' },
     { value:'card',     label:'Card' },
     { value:'overlay',  label:'Overlay' },
-  ], v=>{ cfg.style=v; applyCards(); })));
+    // Style drives which Alignment control shows, so re-render the group on change.
+  ], v=>{ cfg.style=v; applyCards(); renderCardControls(body, cfg, gutterKey); })));
   lay.body.appendChild(controlRow('Aspect ratio', ratioDropdown(cfg.ratio, v=>{ cfg.ratio=v; applyCards(); })));
   lay.body.appendChild(slider('Corner radius', cfg.radius, 0, 40, 1, 'px', v=>{ cfg.radius=v; applyCards(); }));
   lay.body.appendChild(slider('Gutter', STATE.spacing[gutterKey], 0, 48, 2, 'px', v=>{ STATE.spacing[gutterKey]=v; applyRoles(); }));
   body.appendChild(lay.wrap);
 
   const info = subgroup('Info', true);
-  info.body.appendChild(controlRow('Alignment', segmented(cfg.align,
-    [{value:'left',label:'Left'},{value:'center',label:'Center'}], v=>{ cfg.align=v; applyCards(); })));
+  if(isOverlay){
+    // Overlay: one 6-way picker that sets vertical position + horizontal alignment together.
+    info.body.appendChild(controlRow('Alignment', customDropdown(`${cfg.overlayPos}-${cfg.align}`, CARD_POS_OPTS,
+      v=>{ const [vert,horiz]=v.split('-'); cfg.overlayPos=vert; cfg.align=horiz; applyCards(); })));
+  } else {
+    // Standard / Card: info sits below the image, so only horizontal alignment applies.
+    info.body.appendChild(controlRow('Alignment', segmented(cfg.align,
+      [{value:'left',label:'Left'},{value:'center',label:'Center'}], v=>{ cfg.align=v; applyCards(); })));
+  }
   info.body.appendChild(slider('Side padding', cfg.padding, 0, 40, 1, 'px', v=>{ cfg.padding=v; applyCards(); }));
   body.appendChild(info.wrap);
 
   const ov = subgroup('Overlay', true);
-  ov.body.appendChild(el('<p class="subgroup-hint">Used by the Overlay style — where the info sits over the image.</p>'));
-  ov.body.appendChild(controlRow('Position', segmented(cfg.overlayPos,
-    [{value:'top',label:'Top'},{value:'middle',label:'Middle'},{value:'bottom',label:'Bottom'}], v=>{ cfg.overlayPos=v; applyCards(); })));
+  ov.body.appendChild(el('<p class="subgroup-hint">Tints the image behind the info (Overlay style only).</p>'));
   ov.body.appendChild(controlRow('Color', colorInput(cfg.overlayColor, v=>{ cfg.overlayColor=v; applyCards(); })));
   ov.body.appendChild(slider('Opacity', cfg.overlayOpacity, 0, 100, 1, '%', v=>{ cfg.overlayOpacity=v; applyCards(); }));
   body.appendChild(ov.wrap);
