@@ -118,6 +118,13 @@
   .lyr-block { width: auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 0 34px; padding: 6px 8px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 6px; }
   .lyr-block:hover { background: var(--stone-50); }
   .lyr-block .lyr-name { font-size: 11px; }
+  /* drag-to-reorder: grip handle (on hover) + drop indicator lines */
+  .lyr-grip { margin-left: auto; display: none; align-items: center; color: var(--stone-300); cursor: grab; padding: 0 2px; flex: 0 0 auto; }
+  .lyr-grip:active { cursor: grabbing; }
+  .lyr-row:hover .lyr-grip, .lyr-block:hover .lyr-grip { display: inline-flex; }
+  .lyr-row.dragging, .lyr-block.dragging { opacity: .45; }
+  .lyr-row.drop-before, .lyr-block.drop-before { box-shadow: inset 0 2px 0 0 var(--sel); }
+  .lyr-row.drop-after, .lyr-block.drop-after { box-shadow: inset 0 -2px 0 0 var(--sel); }
   /* breadcrumb in the block settings card */
   .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
   .sf-crumb:hover { text-decoration: underline; }
@@ -2149,6 +2156,52 @@ function removeBlock(section, index){
   renderSectionContent(section);
   selectSection(section);
 }
+
+/* ----------------------------------------------------------------------------
+   REORDER  —  drag blocks within a section, and sections within the Template,
+   mirroring Shopify's drag-to-reorder in the layers panel. Header/Footer groups
+   are fixed; only Template sections and a section's own blocks reorder. Each
+   move updates the model, re-renders the affected canvas, and rebuilds the tree.
+   ---------------------------------------------------------------------------- */
+function templateIndex(key){ return SECTION_GROUPS.template.sections.indexOf(key); }
+function moveBlock(section, from, to){
+  const arr = STATE.sectionBlocks[section]; if(!arr) return;
+  to = Math.max(0, Math.min(arr.length-1, to)); if(from<0 || from===to) return;
+  const [it] = arr.splice(from,1); arr.splice(to,0,it);
+  renderSectionContent(section);
+  if(selectedBlock && selectedBlock.section===section) selectedBlock.index = to;
+  buildLayers();
+  if(selectedBlock && selectedBlock.section===section) highlightBlockEl(section, to);
+}
+function moveSection(from, to){
+  const arr = SECTION_GROUPS.template.sections;
+  to = Math.max(0, Math.min(arr.length-1, to)); if(from<0 || from===to) return;
+  const [key] = arr.splice(from,1); arr.splice(to,0,key);
+  reorderSectionDom(); buildLayers();
+}
+// Re-order the template [data-sec] elements in the DOM to match the model (header
+// stays on top, footer at the bottom — we only shuffle the template sections).
+function reorderSectionDom(){
+  const store=document.getElementById('store'); if(!store) return;
+  const footer=store.querySelector('[data-sec="footer"]'); if(!footer) return;
+  SECTION_GROUPS.template.sections.forEach(key=>{ const e=store.querySelector(`[data-sec="${key}"]`); if(e) store.insertBefore(e, footer); });
+}
+
+// --- drag-and-drop plumbing (HTML5 DnD initiated from a grip handle) ---
+let dragState=null;
+function makeGrip(){ return el(`<span class="lyr-grip" draggable="true" title="Drag to reorder">${svg('<line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/>',12)}</span>`); }
+function gripStart(grip, payload, ghost){
+  grip.addEventListener('click', e=>e.stopPropagation());
+  grip.addEventListener('dragstart', e=>{ dragState=payload; try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain','x'); if(ghost && e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(ghost, 12, 12); }catch(_){}; if(ghost) ghost.classList.add('dragging'); });
+  grip.addEventListener('dragend', ()=>{ if(ghost) ghost.classList.remove('dragging'); clearDropMarks(); dragState=null; });
+}
+function clearDropMarks(){ document.querySelectorAll('#layers .drop-before, #layers .drop-after').forEach(x=>x.classList.remove('drop-before','drop-after')); }
+function rowHalf(e, row){ const r=row.getBoundingClientRect(); return (e.clientY - r.top) < r.height/2 ? 'before' : 'after'; }
+function dropTarget(row, accepts, onDrop){
+  row.addEventListener('dragover', e=>{ if(!accepts()) return; e.preventDefault(); clearDropMarks(); row.classList.add(rowHalf(e,row)==='before' ? 'drop-before' : 'drop-after'); });
+  row.addEventListener('drop', e=>{ if(!accepts()) return; e.preventDefault(); onDrop(rowHalf(e,row)); clearDropMarks(); });
+}
+
 // Open the Add-block picker for a section: accepted types → preset entries, grouped by category.
 function openBlockPicker(section){
   if((sectionBlocks(section).length) >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
@@ -2208,7 +2261,7 @@ function buildLayers(){
   const host = document.getElementById('layers'); if(!host) return;
   const sc = host.scrollTop;
   host.innerHTML = '';
-  Object.values(SECTION_GROUPS).forEach(g=>{
+  Object.entries(SECTION_GROUPS).forEach(([gid,g])=>{
     const grp = el('<div class="lyr-group"></div>');
     grp.appendChild(el(`<div class="lyr-grouphd">${g.name}</div>`));
     g.sections.forEach(key=>{
@@ -2227,12 +2280,24 @@ function buildLayers(){
       if(hasBlocks) main.querySelector('.lyr-count').textContent = blocks.length;
       main.onclick = ()=>{ selectSection(key); };
       row.appendChild(main);
+      // Template sections drag to reorder (Header/Footer groups stay fixed).
+      if(gid==='template'){
+        const grip = makeGrip(); gripStart(grip, {kind:'section', key}, row); row.appendChild(grip);
+        dropTarget(row, ()=>dragState && dragState.kind==='section', half=>{
+          const ti = templateIndex(key); let to = half==='before' ? ti : ti+1;
+          const from = templateIndex(dragState.key); if(from < to) to--; moveSection(from, to);
+        });
+      }
       grp.appendChild(row);
       if(expanded){
         blocks.forEach((b,i)=>{
           const brow = el(`<button type="button" class="lyr-row lyr-block" data-lyr="${key}" data-blk="${i}"><span class="lyr-ic">${svg(ICONS.box,12)}</span><span class="lyr-name"></span></button>`);
           brow.querySelector('.lyr-name').textContent = blockName(b,i);
           brow.onclick = ()=>{ selectBlock(key, i); };
+          const grip = makeGrip(); gripStart(grip, {kind:'block', section:key, index:i}, brow); brow.appendChild(grip);
+          dropTarget(brow, ()=>dragState && dragState.kind==='block' && dragState.section===key, half=>{
+            let to = half==='before' ? i : i+1; if(dragState.index < to) to--; moveBlock(key, dragState.index, to);
+          });
           grp.appendChild(brow);
         });
         if(acceptedBlockTypes(key).length){
