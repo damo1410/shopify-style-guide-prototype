@@ -100,13 +100,27 @@
   .layers { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
   .lyr-group { padding: 2px 0; }
   .lyr-grouphd { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone-400); padding: 10px 20px 4px; }
-  .lyr-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 20px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; }
-  .lyr-row:hover { background: var(--stone-50); }
-  .lyr-row.active { background: var(--stone-100); }
+  /* a section row = [twisty][main]; a block row is a single indented button */
+  .lyr-row { width: 100%; display: flex; align-items: center; padding: 0 12px 0 8px; }
+  .lyr-tw { flex: 0 0 18px; width: 18px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; }
+  .lyr-tw svg { transition: transform .12s; }
+  .lyr-tw.open svg { transform: rotate(90deg); }
+  .lyr-tw-spacer { flex: 0 0 18px; width: 18px; }
+  .lyr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 8px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 6px; }
+  .lyr-main:hover { background: var(--stone-50); }
+  .lyr-row.active .lyr-main, .lyr-block.active { background: var(--stone-100); }
   .lyr-ic { color: var(--stone-400); display: inline-flex; flex: 0 0 auto; }
-  .lyr-row.active .lyr-ic { color: var(--sel); }
-  .lyr-name { font-size: 12px; font-weight: 500; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lyr-row.active .lyr-name { color: var(--stone-900); font-weight: 600; }
+  .lyr-row.active .lyr-ic, .lyr-block.active .lyr-ic { color: var(--sel); }
+  .lyr-name { flex: 1 1 auto; font-size: 12px; font-weight: 500; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lyr-row.active .lyr-name, .lyr-block.active .lyr-name { color: var(--stone-900); font-weight: 600; }
+  .lyr-count { flex: 0 0 auto; font-size: 10px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; }
+  /* block row: indented under its section, smaller */
+  .lyr-block { width: auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 0 34px; padding: 6px 8px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 6px; }
+  .lyr-block:hover { background: var(--stone-50); }
+  .lyr-block .lyr-name { font-size: 11px; }
+  /* breadcrumb in the block settings card */
+  .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
+  .sf-crumb:hover { text-decoration: underline; }
 
   /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
@@ -221,6 +235,8 @@
   #store [data-sec] { cursor: pointer; }
   #store [data-sec]:hover { outline: 2px solid var(--sel); outline-offset: -2px; }
   #store [data-sec].sec-selected { outline: 2px solid var(--sel); outline-offset: -2px; }
+  /* a selected BLOCK gets its own ring inside the (also-outlined) section */
+  #store .block-selected { outline: 2px solid var(--sel); outline-offset: 1px; border-radius: 3px; }
   /* a section with an assigned scheme paints its own background from that scheme */
   #store .sec-themed { background-color: var(--c-bg) !important; }
 
@@ -923,6 +939,10 @@ const DEFAULTS = {
   // filled as you edit; color scheme is NOT stored here (it lives in sectionSchemes, which
   // already drives the scheme wiring). Survives Reset because it's part of DEFAULTS.
   sectionSettings: {},
+  // Per-section BLOCK instances (Shopify: section.blocks → [{type,name,settings}]). Seeded
+  // from the demo content by seedBlocks() at boot / after Reset (kept out of DEFAULTS so the
+  // big literal stays readable).
+  sectionBlocks: {},
   // TYPOGRAPHY: split into HEADING + BODY. Each owns font + weight/line-height/letter-
   // spacing/case. Scale RATIO (heading steps) lives with Heading; BASE SIZE (body text,
   // and the foundation H1–H6 derive from) lives with Body. overrides kept for the H1–H6 math.
@@ -2004,9 +2024,87 @@ function applyAllSectionSettings(){
 }
 
 /* ============================================================================
+   BLOCKS  —  reusable theme blocks (Shopify /blocks). Each has its own settings
+   schema; sections declare which block types they accept (+ max_blocks ≤ 50).
+   Block INSTANCES live per-section in STATE.sectionBlocks, seeded from the demo
+   content so the tree shows real blocks. Editing persists; preview re-render from
+   blocks is a later increment (today a block's settings persist + it highlights).
+   ============================================================================ */
+const BLOCK_SCHEMAS = {
+  icon_column:    { name:'Icon column', settings:[
+    {type:'select', id:'icon', label:'Icon', default:'truck', options:[
+      {value:'truck',label:'Truck'},{value:'shield',label:'Shield'},{value:'refresh',label:'Returns'},{value:'sun',label:'Sun'},{value:'star',label:'Star'},{value:'check',label:'Check'}]},
+    {type:'text', id:'heading', label:'Heading', default:'Heading'},
+    {type:'text', id:'text', label:'Text'} ]},
+  collection_card:{ name:'Collection', settings:[
+    {type:'collection', id:'collection', label:'Collection'},
+    {type:'text', id:'title', label:'Title'} ]},
+  product_card:   { name:'Product', settings:[
+    {type:'product', id:'product', label:'Product'},
+    {type:'checkbox', id:'show_badge', label:'Show badge', default:true} ]},
+  testimonial:    { name:'Testimonial', settings:[
+    {type:'textarea', id:'quote', label:'Quote'},
+    {type:'text', id:'author', label:'Author'},
+    {type:'range', id:'rating', label:'Rating', min:1, max:5, step:1, default:5} ]},
+  logo:           { name:'Logo', settings:[
+    {type:'image_picker', id:'image', label:'Logo'},
+    {type:'text', id:'name', label:'Name'} ]},
+  gallery_image:  { name:'Image', settings:[
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'url', id:'link', label:'Link'} ]},
+  post_card:      { name:'Post', settings:[
+    {type:'blog', id:'blog', label:'Blog'},
+    {type:'text', id:'title', label:'Title'} ]},
+  checklist_item: { name:'List item', settings:[
+    {type:'text', id:'text', label:'Text'} ]},
+};
+// Which block types each section accepts (Shopify: section.blocks). Attach to the
+// schemas + give a max_blocks so the registry stays the single source of truth.
+const SECTION_BLOCK_TYPES = {
+  valueprops:['icon_column'], collections:['collection_card'], bestsellers:['product_card'],
+  reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'], guarantee:['checklist_item'],
+};
+Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
+  if(!SECTION_SCHEMAS[k]) return;
+  SECTION_SCHEMAS[k].blocks = types.map(t=>({type:t}));
+  if(!SECTION_SCHEMAS[k].max_blocks) SECTION_SCHEMAS[k].max_blocks = 50;
+});
+
+// Seed block instances from the demo content so the tree shows real, named blocks.
+function buildDefaultBlocks(){
+  const guarantee = ['Free 14-day home try-on','2-year warranty + lifetime repairs','Free returns & exchanges'];
+  return {
+    valueprops:  VALUEPROPS.map(v => ({ type:'icon_column',    name:v.h,     settings:{ icon:v.ic, heading:v.h, text:v.p } })),
+    collections: COLLECTIONS.map(c => ({ type:'collection_card', name:c.name,  settings:{ title:c.name } })),
+    bestsellers: PRODUCTS.map(p => ({ type:'product_card',     name:p.name,  settings:{ show_badge:!!p.badge } })),
+    reviews:     REVIEWS.map(r => ({ type:'testimonial',       name:r.name,  settings:{ quote:r.text, author:r.name, rating:5 } })),
+    press:       PRESS.map(n => ({ type:'logo',                name:n,       settings:{ name:n } })),
+    ugc:         UGC.map((s,i) => ({ type:'gallery_image',     name:'Image '+(i+1), settings:{} })),
+    journal:     POSTS.map(p => ({ type:'post_card',           name:p.title, settings:{ title:p.title } })),
+    guarantee:   guarantee.map(t => ({ type:'checklist_item',  name:t,       settings:{ text:t } })),
+  };
+}
+function seedBlocks(){ if(!STATE.sectionBlocks || !Object.keys(STATE.sectionBlocks).length) STATE.sectionBlocks = buildDefaultBlocks(); }
+function sectionBlocks(key){ return (STATE.sectionBlocks && STATE.sectionBlocks[key]) || []; }
+function blockName(b, i){ return b.name || (BLOCK_SCHEMAS[b.type] && BLOCK_SCHEMAS[b.type].name) || ('Block '+(i+1)); }
+
+// Map a block instance → its preview element (for the selection outline).
+const BLOCK_CONTAINERS = {
+  valueprops:['#valueprops','.vp'], collections:['#collections','.collection'], bestsellers:['#products','.product'],
+  reviews:['#reviews','.review'], press:['#press','.logo'], ugc:['#ugc','.ugc-tile'], journal:['#journal','.post'], guarantee:['#glist','.gitem'],
+};
+function blockEl(section, index){
+  const m = BLOCK_CONTAINERS[section]; if(!m) return null;
+  const c = document.querySelector(m[0]); if(!c) return null;
+  return c.querySelectorAll(m[1])[index] || null;
+}
+function clearBlockHighlight(){ document.querySelectorAll('#store .block-selected').forEach(e => e.classList.remove('block-selected')); }
+function highlightBlockEl(section, index){ clearBlockHighlight(); const e = blockEl(section, index); if(e){ e.classList.add('block-selected'); e.scrollIntoView({block:'nearest'}); } }
+
+/* ============================================================================
    LAYERS PANEL  —  the Shopify left-rail tree. Header / Template / Footer groups
-   → sections (in DOM order). Selecting a row selects the section and opens its
-   settings; preview and tree stay in sync. (Blocks land in the next pass.)
+   → sections (in DOM order) → blocks (expandable). Selecting a row selects the
+   section or block, opens its settings, and highlights it in the preview.
    ============================================================================ */
 const SECTION_GROUPS = {
   header:   { name:'Header',   sections:['nav'] },
@@ -2015,26 +2113,56 @@ const SECTION_GROUPS = {
 };
 const CATEGORY_ICON = { Header:'layout', Image:'box', Collections:'tag', Layout:'grid', Reviews:'star', Footer:'layout' };
 function layerIcon(schema){ return ICONS[CATEGORY_ICON[schema && schema.category]] || ICONS.box; }
+let expandedLayers = new Set();
+let selectedBlock = null;   // { section, index } when a block is selected
 
 function buildLayers(){
   const host = document.getElementById('layers'); if(!host) return;
+  const sc = host.scrollTop;
   host.innerHTML = '';
   Object.values(SECTION_GROUPS).forEach(g=>{
     const grp = el('<div class="lyr-group"></div>');
     grp.appendChild(el(`<div class="lyr-grouphd">${g.name}</div>`));
     g.sections.forEach(key=>{
       const schema = SECTION_SCHEMAS[key] || { name: SECTION_TITLES[key] || key };
-      const row = el(`<button type="button" class="lyr-row" data-lyr="${key}"><span class="lyr-ic">${svg(layerIcon(schema),14)}</span><span class="lyr-name"></span></button>`);
-      row.querySelector('.lyr-name').textContent = schema.name;
-      row.onclick = ()=>{ selectSection(key); row.scrollIntoView({block:'nearest'}); };
+      const blocks = sectionBlocks(key);
+      const hasBlocks = blocks.length > 0;
+      const expanded = expandedLayers.has(key);
+      const row = el(`<div class="lyr-row" data-lyr="${key}"></div>`);
+      if(hasBlocks){
+        const tw = el(`<button type="button" class="lyr-tw ${expanded?'open':''}" title="Expand">${svg('<polyline points="9 18 15 12 9 6"/>',12)}</button>`);
+        tw.onclick = (e)=>{ e.stopPropagation(); if(expandedLayers.has(key)) expandedLayers.delete(key); else expandedLayers.add(key); buildLayers(); };
+        row.appendChild(tw);
+      } else { row.appendChild(el('<span class="lyr-tw-spacer"></span>')); }
+      const main = el(`<button type="button" class="lyr-main"><span class="lyr-ic">${svg(layerIcon(schema),14)}</span><span class="lyr-name"></span><span class="lyr-count"></span></button>`);
+      main.querySelector('.lyr-name').textContent = schema.name;
+      if(hasBlocks) main.querySelector('.lyr-count').textContent = blocks.length;
+      main.onclick = ()=>{ selectSection(key); };
+      row.appendChild(main);
       grp.appendChild(row);
+      if(expanded){
+        blocks.forEach((b,i)=>{
+          const brow = el(`<button type="button" class="lyr-row lyr-block" data-lyr="${key}" data-blk="${i}"><span class="lyr-ic">${svg(ICONS.box,12)}</span><span class="lyr-name"></span></button>`);
+          brow.querySelector('.lyr-name').textContent = blockName(b,i);
+          brow.onclick = ()=>{ selectBlock(key, i); };
+          grp.appendChild(brow);
+        });
+      }
     });
     host.appendChild(grp);
   });
-  highlightLayer(selectedSection);
+  refreshLayerHighlight();
+  host.scrollTop = sc;
 }
-function highlightLayer(key){
-  document.querySelectorAll('#layers .lyr-row').forEach(r => r.classList.toggle('active', r.getAttribute('data-lyr')===key));
+function refreshLayerHighlight(){
+  document.querySelectorAll('#layers .lyr-row').forEach(r=>{
+    const k = r.getAttribute('data-lyr'), blk = r.getAttribute('data-blk');
+    const isBlock = r.classList.contains('lyr-block');
+    const active = isBlock
+      ? (selectedBlock && selectedBlock.section===k && String(selectedBlock.index)===blk)
+      : (k===selectedSection && !selectedBlock);
+    r.classList.toggle('active', !!active);
+  });
 }
 function setPanelMode(m){
   const panel = document.querySelector('.panel'); if(panel) panel.setAttribute('data-mode', m);
@@ -2042,16 +2170,28 @@ function setPanelMode(m){
 }
 
 function selectSection(key){
-  selectedSection = key;
+  selectedSection = key; selectedBlock = null;
+  if(sectionBlocks(key).length) expandedLayers.add(key);
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
-  highlightLayer(key);
+  clearBlockHighlight();
+  buildLayers();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
 }
+function selectBlock(section, index){
+  selectedSection = section; selectedBlock = { section, index };
+  expandedLayers.add(section);
+  document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===section));
+  highlightBlockEl(section, index);
+  buildLayers();
+  renderSectionControls();
+  if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');
+}
 function deselectSection(){
-  selectedSection = null;
+  selectedSection = null; selectedBlock = null;
   document.querySelectorAll('#store [data-sec].sec-selected').forEach(e => e.classList.remove('sec-selected'));
-  highlightLayer(null);
+  clearBlockHighlight();
+  buildLayers();
   renderSectionControls();
 }
 
@@ -2071,6 +2211,34 @@ function renderSectionControls(){
   }
   card.hidden = false;
   document.body.classList.add('sec-selected');
+
+  // ---- BLOCK selected: render the block's schema with a Section ▸ Block breadcrumb ----
+  if(selectedBlock){
+    const blocks = sectionBlocks(selectedBlock.section);
+    const inst = blocks[selectedBlock.index];
+    if(inst){
+      const bSchema = BLOCK_SCHEMAS[inst.type] || { name: inst.type, settings:[] };
+      const secName = (SECTION_SCHEMAS[selectedBlock.section]||{}).name || SECTION_TITLES[selectedBlock.section] || 'Section';
+      const phName = document.getElementById('ph-section-name'); if(phName) phName.textContent = blockName(inst, selectedBlock.index);
+      card.innerHTML = '';
+      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div><div class="sf-sub"><button type="button" class="sf-crumb"></button> ▸ ${bSchema.name}</div></div></div></div>`);
+      head.querySelector('.sf-name').textContent = blockName(inst, selectedBlock.index);
+      head.querySelector('.sf-crumb').textContent = secName;
+      head.querySelector('.sf-crumb').onclick = (e)=>{ e.stopPropagation(); selectSection(selectedBlock.section); };
+      const close = el(`<button class="sf-close" title="Deselect">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
+      close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
+      head.appendChild(close); card.appendChild(head);
+      const bb = el('<div class="sf-body"></div>');
+      const bvals = inst.settings || (inst.settings = {});
+      renderSettingsList(bb, bSchema.settings,
+        s => (s.id in bvals) ? bvals[s.id] : s.default,
+        (s,v) => { bvals[s.id] = v; });
+      card.appendChild(bb);
+      placeCard(card);
+      return;
+    }
+  }
+
   const schema = SECTION_SCHEMAS[selectedSection] || { name: SECTION_TITLES[selectedSection]||'Section', settings:[SCHEME_SETTING] };
   const title = schema.name;
   const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
@@ -2146,7 +2314,7 @@ function buildPanel(){
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
 
 refreshNames();   // derive palette names from their hex values
 buildPanel();
@@ -2154,6 +2322,7 @@ buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
 applyAllSectionSettings();   // re-apply any persisted per-section settings to the preview
 initSectionSelection();
+seedBlocks();    // seed per-section block instances from the demo content
 buildLayers();   // populate the left-rail layers tree
 document.querySelectorAll('.ptab').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
 
