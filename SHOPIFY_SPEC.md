@@ -78,5 +78,3 @@ map), `color_palette` (theme-only), `font_picker` (**requires** `default` font h
 - `blocks/*.liquid` + `{% schema %}` — reusable theme block; may nest child `blocks`.
 </content>
 </invoke>
-
-<!-- build: redeploy nudge 20260616T144833Z -->
