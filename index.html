@@ -88,6 +88,26 @@
   .reset:hover { color: var(--stone-900); }
   .groups { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 
+  /* ---- left-rail mode tabs (Layers ⇄ Theme settings) ---- */
+  .panel-tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--stone-200); flex: 0 0 auto; }
+  .ptab { flex: 1; border: none; background: var(--stone-100); border-radius: 6px; padding: 7px 0; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-500); cursor: pointer; transition: all .12s; }
+  .ptab:hover { color: var(--stone-900); }
+  .ptab.active { background: var(--stone-900); color: #fff; }
+  .panel[data-mode=layers] #groups { display: none; }
+  .panel[data-mode=theme] #layers { display: none; }
+
+  /* ---- layers tree (the Shopify section/block hierarchy) ---- */
+  .layers { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
+  .lyr-group { padding: 2px 0; }
+  .lyr-grouphd { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone-400); padding: 10px 20px 4px; }
+  .lyr-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 20px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; }
+  .lyr-row:hover { background: var(--stone-50); }
+  .lyr-row.active { background: var(--stone-100); }
+  .lyr-ic { color: var(--stone-400); display: inline-flex; flex: 0 0 auto; }
+  .lyr-row.active .lyr-ic { color: var(--sel); }
+  .lyr-name { font-size: 12px; font-weight: 500; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lyr-row.active .lyr-name { color: var(--stone-900); font-weight: 600; }
+
   /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
   .group > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
@@ -567,6 +587,12 @@
     .panel.dragging .panel-header { cursor: grabbing; }
     .features { grid-template-columns: 1fr; }
 
+    /* the Layers rail + its tabs are a desktop feature; mobile keeps the existing
+       bottom-sheet UX (theme settings groups + tap-a-section-to-edit). */
+    .panel-tabs { display: none; }
+    .panel[data-mode] #layers { display: none; }
+    .panel[data-mode] #groups { display: block; }
+
     /* section selected: the contextual card lives inside the sheet, and the
        global style-guide groups hide until the X (in the header) deselects. */
     .section-float.in-sheet { position: static; width: 100%; max-height: none; display: block; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
@@ -584,14 +610,14 @@
 <div class="app">
 
   <!-- ===================== LEFT: SETTINGS PANEL ========================= -->
-  <aside class="panel">
+  <aside class="panel" data-mode="layers">
     <div class="sheet-handle" id="sheet-handle"><span class="grip"></span></div>
     <div class="panel-header">
       <!-- global header (default) -->
       <div class="ph-global">
         <div class="brand">
           <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
-          <div><div class="t1">Theme Settings</div><div class="t2">Global · v1</div></div>
+          <div><div class="t1">NOIR</div><div class="t2">Home page</div></div>
         </div>
         <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
       </div>
@@ -601,6 +627,12 @@
         <button class="reset" id="ph-section-close" title="Deselect section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
     </div>
+    <!-- left-rail mode switch: Layers tree (default) ⇄ Theme settings (the gear panel) -->
+    <div class="panel-tabs">
+      <button type="button" class="ptab active" data-mode="layers">Layers</button>
+      <button type="button" class="ptab" data-mode="theme">Theme settings</button>
+    </div>
+    <div class="layers" id="layers"><!-- section/block tree injected by JS --></div>
     <div class="groups" id="groups"><!-- accordion groups injected by JS --></div>
   </aside>
 
@@ -1971,15 +2003,55 @@ function applyAllSectionSettings(){
   });
 }
 
+/* ============================================================================
+   LAYERS PANEL  —  the Shopify left-rail tree. Header / Template / Footer groups
+   → sections (in DOM order). Selecting a row selects the section and opens its
+   settings; preview and tree stay in sync. (Blocks land in the next pass.)
+   ============================================================================ */
+const SECTION_GROUPS = {
+  header:   { name:'Header',   sections:['nav'] },
+  template: { name:'Template', sections:['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter'] },
+  footer:   { name:'Footer',   sections:['footer'] },
+};
+const CATEGORY_ICON = { Header:'layout', Image:'box', Collections:'tag', Layout:'grid', Reviews:'star', Footer:'layout' };
+function layerIcon(schema){ return ICONS[CATEGORY_ICON[schema && schema.category]] || ICONS.box; }
+
+function buildLayers(){
+  const host = document.getElementById('layers'); if(!host) return;
+  host.innerHTML = '';
+  Object.values(SECTION_GROUPS).forEach(g=>{
+    const grp = el('<div class="lyr-group"></div>');
+    grp.appendChild(el(`<div class="lyr-grouphd">${g.name}</div>`));
+    g.sections.forEach(key=>{
+      const schema = SECTION_SCHEMAS[key] || { name: SECTION_TITLES[key] || key };
+      const row = el(`<button type="button" class="lyr-row" data-lyr="${key}"><span class="lyr-ic">${svg(layerIcon(schema),14)}</span><span class="lyr-name"></span></button>`);
+      row.querySelector('.lyr-name').textContent = schema.name;
+      row.onclick = ()=>{ selectSection(key); row.scrollIntoView({block:'nearest'}); };
+      grp.appendChild(row);
+    });
+    host.appendChild(grp);
+  });
+  highlightLayer(selectedSection);
+}
+function highlightLayer(key){
+  document.querySelectorAll('#layers .lyr-row').forEach(r => r.classList.toggle('active', r.getAttribute('data-lyr')===key));
+}
+function setPanelMode(m){
+  const panel = document.querySelector('.panel'); if(panel) panel.setAttribute('data-mode', m);
+  document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.dataset.mode===m));
+}
+
 function selectSection(key){
   selectedSection = key;
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
+  highlightLayer(key);
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
 }
 function deselectSection(){
   selectedSection = null;
   document.querySelectorAll('#store [data-sec].sec-selected').forEach(e => e.classList.remove('sec-selected'));
+  highlightLayer(null);
   renderSectionControls();
 }
 
@@ -2082,6 +2154,8 @@ buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
 applyAllSectionSettings();   // re-apply any persisted per-section settings to the preview
 initSectionSelection();
+buildLayers();   // populate the left-rail layers tree
+document.querySelectorAll('.ptab').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
 
 /* ============================================================================
    MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
