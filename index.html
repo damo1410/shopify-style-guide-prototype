@@ -132,6 +132,8 @@
   .lyr-add { display: flex; align-items: center; gap: 8px; margin: 2px 12px 6px 34px; padding: 7px 8px; border: 1px dashed var(--stone-300); background: none; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-500); width: calc(100% - 46px); }
   .lyr-add:hover { color: var(--sel); border-color: var(--sel); }
   .lyr-add svg { flex: 0 0 auto; }
+  /* section-level Add (less indented than the block-level Add) */
+  .lyr-add-sec { margin: 6px 12px 8px 20px; width: calc(100% - 32px); }
   /* Remove block button (bottom of the block settings card) */
   .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
   .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
@@ -2242,6 +2244,44 @@ function toast(msg){
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
+/* ----------------------------------------------------------------------------
+   ADD / REMOVE SECTIONS  —  Shopify-faithful: add from a picker (grouped by
+   category, one level), remove from the section's settings. The template order
+   lives in SECTION_GROUPS.template.sections; a removed section's DOM is cached so
+   re-adding restores its content. (True multi-instance duplication of a section
+   type arrives with the model-driven section rewrite that backs export.)
+   ---------------------------------------------------------------------------- */
+const TEMPLATE_SECTION_TYPES = ['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter'];
+const detachedSections = {};
+function isTemplateSection(key){ return SECTION_GROUPS.template.sections.includes(key); }
+function removeSection(key){
+  const i = SECTION_GROUPS.template.sections.indexOf(key); if(i<0) return;
+  const store=document.getElementById('store'); const node=store && store.querySelector(`[data-sec="${key}"]`);
+  if(node){ detachedSections[key]=node; node.remove(); }
+  SECTION_GROUPS.template.sections.splice(i,1);
+  if(selectedSection===key){ selectedSection=null; selectedBlock=null; }
+  clearBlockHighlight();
+  buildLayers(); renderSectionControls();
+  toast(`Removed ${(SECTION_SCHEMAS[key]||{}).name||'section'}.`);
+}
+function addSection(type){
+  if(SECTION_GROUPS.template.sections.includes(type)){ toast('That section is already added.'); return; }
+  const store=document.getElementById('store'); const footer=store && store.querySelector('[data-sec="footer"]');
+  const node = detachedSections[type]; if(node) delete detachedSections[type];
+  if(node && footer) store.insertBefore(node, footer);
+  SECTION_GROUPS.template.sections.push(type);
+  reorderSectionDom();
+  applySectionSchemes();
+  buildLayers(); selectSection(type);
+}
+function openSectionPicker(){
+  const avail = TEMPLATE_SECTION_TYPES.filter(t => !SECTION_GROUPS.template.sections.includes(t));
+  if(!avail.length){ toast('Every available section is already on the page.'); return; }
+  const groups = {};
+  avail.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t }); });
+  openPicker('Add section', groups, t=>addSection(t));
+}
+
 /* ============================================================================
    LAYERS PANEL  —  the Shopify left-rail tree. Header / Template / Footer groups
    → sections (in DOM order) → blocks (expandable). Selecting a row selects the
@@ -2307,6 +2347,11 @@ function buildLayers(){
         }
       }
     });
+    if(gid==='template'){
+      const addS = el(`<button type="button" class="lyr-add lyr-add-sec">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add section</span></button>`);
+      addS.onclick = ()=> openSectionPicker();
+      grp.appendChild(addS);
+    }
     host.appendChild(grp);
   });
   refreshLayerHighlight();
@@ -2423,6 +2468,11 @@ function renderSectionControls(){
   };
   const b = el('<div class="sf-body"></div>');
   renderSettingsList(b, schema.settings, getVal, setVal);
+  if(isTemplateSection(selectedSection)){
+    const rm = el(`<button type="button" class="sf-remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}<span>Remove section</span></button>`);
+    rm.onclick = (e)=>{ e.stopPropagation(); removeSection(selectedSection); };
+    b.appendChild(rm);
+  }
   card.appendChild(b);
   placeCard(card);
 }
