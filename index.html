@@ -204,7 +204,7 @@
   /* a section with an assigned scheme paints its own background from that scheme */
   #store .sec-themed { background-color: var(--c-bg) !important; }
 
-  .section-float { position: fixed; bottom: 24px; right: 24px; width: 256px; background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; box-shadow: 0 8px 32px -8px rgba(0,0,0,.18); z-index: 40; }
+  .section-float { position: fixed; bottom: 24px; right: 24px; width: 280px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; box-shadow: 0 8px 32px -8px rgba(0,0,0,.18); z-index: 40; }
   .section-float[hidden] { display: none; }
   .sf-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
   .sf-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -212,8 +212,27 @@
   .sf-name { font-size: 12px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; flex: 0 0 auto; }
   .sf-close:hover { color: var(--stone-900); }
-  .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .sf-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  /* type/limit caption under the section name (mirrors Shopify's section subtitle) */
+  .sf-sub { font-size: 10px; color: var(--stone-400); font-weight: 500; margin-top: 1px; }
+
+  /* ---- schema-engine controls (Shopify setting types) ---- */
+  .text-input { width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-900); padding: 0; }
+  .text-input.ta { resize: vertical; min-height: 52px; padding: 7px 0; line-height: 1.45; }
+  .field.field-ta { align-items: stretch; }
+  .ctl-inline { display: flex; align-items: center; }
+  .switch { width: 38px; height: 22px; flex: 0 0 38px; border: none; padding: 2px; border-radius: 999px; background: var(--stone-300); cursor: pointer; transition: background .15s; }
+  .switch .knob { display: block; width: 18px; height: 18px; border-radius: 999px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .15s; }
+  .switch.on { background: var(--sel); }
+  .switch.on .knob { transform: translateX(16px); }
+  .picker-field { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; color: var(--stone-500); }
+  .picker-field .pf-label { font-size: 11px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picker-field svg { color: var(--stone-400); flex: 0 0 auto; }
+  /* header / paragraph — the ONLY grouping Shopify allows inside a section's settings */
+  .set-header { font-size: 11px; font-weight: 600; color: var(--stone-700); letter-spacing: .01em; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--stone-100); }
+  .sf-body > .set-header:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .set-paragraph { font-size: 11px; color: var(--stone-500); line-height: 1.5; }
   /* contextual scheme picker — bigger rows that match the left panel's scheme list */
   .sf-scheme .dd-trigger { min-height: 56px; padding: 8px 10px; gap: 10px; }
   .sf-scheme .dd-cur { gap: 10px; }
@@ -550,8 +569,9 @@
 
     /* section selected: the contextual card lives inside the sheet, and the
        global style-guide groups hide until the X (in the header) deselects. */
-    .section-float.in-sheet { position: static; width: 100%; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
+    .section-float.in-sheet { position: static; width: 100%; max-height: none; display: block; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
     .section-float.in-sheet .sf-head { display: none; }   /* header now carries the dot + name + X */
+    .section-float.in-sheet .sf-body { overflow: visible; min-height: 0; }   /* the sheet itself scrolls */
     body.sec-selected .groups { display: none; }
     /* swap the panel header to the section view (blue dot + name + close) */
     body.sec-selected .panel-header .ph-global { display: none; }
@@ -867,6 +887,10 @@ const DEFAULTS = {
   // paints its own background + role colors from that scheme; others inherit the baseline.
   // Newsletter ships dark, expressed cleanly as the Dark scheme on that one section.
   sectionSchemes: { newsletter:'Dark' },
+  // Per-section setting VALUES (Shopify: section.settings → { settingId: value }). Lazily
+  // filled as you edit; color scheme is NOT stored here (it lives in sectionSchemes, which
+  // already drives the scheme wiring). Survives Reset because it's part of DEFAULTS.
+  sectionSettings: {},
   // TYPOGRAPHY: split into HEADING + BODY. Each owns font + weight/line-height/letter-
   // spacing/case. Scale RATIO (heading steps) lives with Heading; BASE SIZE (body text,
   // and the foundation H1–H6 derive from) lives with Body. overrides kept for the H1–H6 math.
@@ -1735,6 +1759,218 @@ function schemeSelect(value, onChange){
   return wrap;
 }
 
+/* ============================================================================
+   SCHEMA ENGINE  —  renders a Shopify-shaped settings array into the contextual
+   panel. Each real Shopify setting `type` maps to one of the shared controls, so
+   anything authored here is Shopify-legal and ports straight to {% schema %}.
+   Per SHOPIFY_SPEC.md: settings are a FLAT array; only `header`/`paragraph` group.
+   ============================================================================ */
+// plain text / textarea field
+function textField(value, onChange, opts={}){
+  const f = opts.multiline
+    ? el(`<div class="field field-ta"><textarea class="text-input ta" rows="3"></textarea></div>`)
+    : el(`<div class="field"><input class="text-input" type="text"></div>`);
+  const input = f.querySelector(opts.multiline ? 'textarea' : 'input');
+  if(opts.placeholder) input.placeholder = opts.placeholder;
+  input.value = value==null ? '' : value;
+  input.addEventListener('change', ()=>onChange(input.value));
+  return f;
+}
+function numberField(value, onChange, opts={}){
+  const f = el(`<div class="field val-field"><input type="text" inputmode="decimal" class="val-input"></div>`);
+  const input = f.querySelector('input');
+  if(opts.placeholder) input.placeholder = opts.placeholder;
+  input.value = value==null ? '' : value;
+  input.addEventListener('change', ()=>{ const t=input.value.trim(); const v = t==='' ? null : parseFloat(t); onChange(isNaN(v)?null:v); });
+  return f;
+}
+function switchField(value, onChange){
+  const wrap = el('<div class="ctl-inline"></div>');
+  const sw = el('<button type="button" class="switch"><span class="knob"></span></button>');
+  const paint = (v)=>{ sw.classList.toggle('on', !!v); sw.setAttribute('aria-pressed', String(!!v)); };
+  let v = !!value; paint(v);
+  sw.onclick = ()=>{ v=!v; paint(v); onChange(v); };
+  wrap.appendChild(sw); return wrap;
+}
+// Faithful-SHAPE media/resource picker. The prototype has no store resources, so the
+// picker doesn't open a real browser — but it renders the exact field Shopify shows, so
+// the schema and panel layout stay accurate. (Real picker is store-bound; comes with export.)
+const PICKER_LABELS = {
+  image_picker:'Select image', video:'Select video', video_url:'youtube.com/…',
+  collection:'Select collection', collection_list:'Select collections', product:'Select product',
+  product_list:'Select products', blog:'Select blog', page:'Select page', article:'Select article',
+  link_list:'Select menu', metaobject:'Select metaobject', metaobject_list:'Select metaobjects',
+  font_picker:'Select font', url:'Paste a link or search',
+};
+function pickerField(setting, value, onChange){
+  const f = el(`<button type="button" class="field picker-field"><span class="pf-label"></span>${svg('<path d="m6 9 6 6 6-6"/>',14)}</button>`);
+  f.querySelector('.pf-label').textContent = value || PICKER_LABELS[setting.type] || 'Select';
+  return f;
+}
+
+// Render ONE setting → a DOM row (or a header/paragraph divider). Returns null for unknowns.
+function renderSetting(setting, value, onChange){
+  const t = setting.type;
+  if(t==='header')    return el(`<div class="set-header">${setting.content||''}</div>`);
+  if(t==='paragraph') return el(`<div class="set-paragraph">${setting.content||''}</div>`);
+  if(t==='range')     return slider(setting.label||'', value==null?setting.default:value, setting.min, setting.max, setting.step||1, setting.unit||'', onChange);
+  let control;
+  switch(t){
+    case 'text': case 'url':
+      control = textField(value, onChange, {placeholder:setting.placeholder}); break;
+    case 'textarea': case 'richtext': case 'inline_richtext': case 'html': case 'liquid':
+      control = textField(value, onChange, {multiline:true, placeholder:setting.placeholder}); break;
+    case 'number':
+      control = numberField(value, onChange, {placeholder:setting.placeholder}); break;
+    case 'checkbox':
+      control = switchField(value, onChange); break;
+    case 'radio': case 'select':
+      control = customDropdown(value, (setting.options||[]).map(o=>({value:o.value,label:o.label})), onChange); break;
+    case 'text_alignment':
+      control = segmented(value||setting.default||'left', [{value:'left',label:'Left'},{value:'center',label:'Center'},{value:'right',label:'Right'}], onChange); break;
+    case 'color':
+      control = colorInput(value||setting.default||'#000000', onChange); break;
+    case 'color_scheme':
+      control = schemeSelect(value, onChange); break;
+    case 'font_picker':
+      control = fontDropdown(value||setting.default||'Inter', onChange); break;
+    default: // image_picker, video, video_url, collection(_list), product(_list), blog, page, article, link_list, metaobject(_list)
+      control = pickerField(setting, value, onChange);
+  }
+  return controlRow(setting.label || '', control);
+}
+
+// Walk a flat settings array (Shopify section.settings) into a host element.
+function renderSettingsList(host, settings, getVal, setVal){
+  (settings||[]).forEach(s=>{
+    const isInput = s.type!=='header' && s.type!=='paragraph';
+    const node = renderSetting(s, isInput ? getVal(s) : null, v=>setVal(s, v));
+    if(node) host.appendChild(node);
+  });
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION SCHEMA REGISTRY  —  a real, Shopify-shaped {% schema %} per section.
+   These are the schemas that will export to sections/*.liquid. Settings here are
+   persisted to STATE.sectionSettings and rendered by the engine above; color_scheme
+   and section padding are wired to the live preview today, the rest persist as
+   faithful values (preview-wiring of each is the per-section migration work).
+   `category` is the single grouping level allowed in the Add-section picker.
+   ---------------------------------------------------------------------------- */
+const PAD = (id,label,def)=>({ type:'range', id, label, min:0, max:160, step:4, unit:'px', default:def });
+const PADDING_BLOCK = [ {type:'header', content:'Section padding'}, PAD('padding_top','Top padding',80), PAD('padding_bottom','Bottom padding',80) ];
+const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color scheme' };
+
+const SECTION_SCHEMAS = {
+  nav: { name:'Header', category:'Header', settings:[
+    SCHEME_SETTING,
+    {type:'header', content:'Logo'},
+    {type:'text', id:'logo_text', label:'Logo text', default:'NOIR'},
+    {type:'image_picker', id:'logo', label:'Logo image'},
+    {type:'header', content:'Menu'},
+    {type:'link_list', id:'menu', label:'Menu'},
+    {type:'checkbox', id:'show_search', label:'Show search', default:true},
+    {type:'checkbox', id:'sticky', label:'Sticky header', default:false},
+  ]},
+  hero: { name:'Image banner', category:'Image', settings:[
+    SCHEME_SETTING,
+    {type:'image_picker', id:'image', label:'Background image'},
+    {type:'select', id:'height', label:'Banner height', default:'large', options:[
+      {value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'},{value:'full',label:'Full screen'}]},
+    {type:'header', content:'Content'},
+    {type:'text', id:'eyebrow', label:'Eyebrow', default:"New · Summer '26"},
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'See the world sharper'},
+    {type:'textarea', id:'subheading', label:'Subheading', default:'Premium polarized sunglasses, built to last.'},
+    {type:'text_alignment', id:'alignment', label:'Content alignment', default:'left'},
+    ...PADDING_BLOCK,
+  ]},
+  valueprops: { name:'Multicolumn', category:'Layout', max_blocks:6, settings:[
+    SCHEME_SETTING,
+    {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:4},
+    {type:'text_alignment', id:'alignment', label:'Alignment', default:'center'},
+    ...PADDING_BLOCK,
+  ]},
+  collections: { name:'Collection list', category:'Collections', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'Find your fit'},
+    {type:'collection_list', id:'collections', label:'Collections', limit:12},
+    {type:'range', id:'columns', label:'Columns', min:2, max:5, step:1, default:4},
+    ...PADDING_BLOCK,
+  ]},
+  bestsellers: { name:'Featured collection', category:'Collections', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'Loved by thousands'},
+    {type:'collection', id:'collection', label:'Collection'},
+    {type:'range', id:'products_to_show', label:'Products to show', min:2, max:12, step:1, default:6},
+    {type:'checkbox', id:'show_view_all', label:'Enable "View all"', default:true},
+    ...PADDING_BLOCK,
+  ]},
+  guarantee: { name:'Image with text', category:'Image', settings:[
+    SCHEME_SETTING,
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'select', id:'image_position', label:'Image position', default:'left', options:[
+      {value:'left',label:'Left'},{value:'right',label:'Right'}]},
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'Try at home, risk-free'},
+    {type:'richtext', id:'text', label:'Text', default:'<p>14-day home try-on. Keep what you love.</p>'},
+    ...PADDING_BLOCK,
+  ]},
+  reviews: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'4.8 out of 5'},
+    {type:'select', id:'layout', label:'Layout', default:'grid', options:[
+      {value:'grid',label:'Grid'},{value:'carousel',label:'Carousel'}]},
+    ...PADDING_BLOCK,
+  ]},
+  press: { name:'Logo list', category:'Layout', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'As featured in'},
+    ...PADDING_BLOCK,
+  ]},
+  ugc: { name:'Image gallery', category:'Image', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'#NoirOnYou'},
+    {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:6},
+    ...PADDING_BLOCK,
+  ]},
+  journal: { name:'Blog posts', category:'Layout', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'From the journal'},
+    {type:'blog', id:'blog', label:'Blog'},
+    {type:'range', id:'post_limit', label:'Posts to show', min:2, max:6, step:1, default:3},
+    ...PADDING_BLOCK,
+  ]},
+  newsletter: { name:'Email signup', category:'Layout', settings:[
+    SCHEME_SETTING,
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'Get 10% off'},
+    {type:'textarea', id:'subheading', label:'Subheading', default:'Join the list for early drops.'},
+    {type:'text', id:'button_label', label:'Button label', default:'Subscribe'},
+    ...PADDING_BLOCK,
+  ]},
+  footer: { name:'Footer', category:'Footer', settings:[
+    SCHEME_SETTING,
+    {type:'checkbox', id:'show_payment_icons', label:'Show payment icons', default:true},
+    {type:'text', id:'copyright', label:'Copyright text', default:'© NOIR'},
+  ]},
+};
+
+// Per-section value bag + safe live-wiring of the settings we can drive today.
+function secVals(sec){ return (STATE.sectionSettings[sec] || (STATE.sectionSettings[sec] = {})); }
+function sectionEl(sec){ return document.querySelector(`#store [data-sec="${sec}"]`); }
+function applySectionSetting(sec, setting, v){
+  const elm = sectionEl(sec); if(!elm) return;
+  if(setting.id==='padding_top')    elm.style.paddingTop = v + 'px';
+  if(setting.id==='padding_bottom') elm.style.paddingBottom = v + 'px';
+}
+// Re-apply persisted section settings to the preview (e.g. after Reset rebuild).
+function applyAllSectionSettings(){
+  Object.keys(SECTION_SCHEMAS).forEach(sec=>{
+    const elm = sectionEl(sec); if(!elm) return;
+    elm.style.removeProperty('padding-top'); elm.style.removeProperty('padding-bottom');
+    const vals = STATE.sectionSettings[sec]; if(!vals) return;
+    (SECTION_SCHEMAS[sec].settings||[]).forEach(s=>{ if(s.id in vals) applySectionSetting(sec, s, vals[s.id]); });
+  });
+}
+
 function selectSection(key){
   selectedSection = key;
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
@@ -1763,19 +1999,29 @@ function renderSectionControls(){
   }
   card.hidden = false;
   document.body.classList.add('sec-selected');
-  const title = SECTION_TITLES[selectedSection] || 'Section';
+  const schema = SECTION_SCHEMAS[selectedSection] || { name: SECTION_TITLES[selectedSection]||'Section', settings:[SCHEME_SETTING] };
+  const title = schema.name;
   const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
   if(phName) phName.textContent = title;
-  const curName = STATE.sectionSchemes[selectedSection] || baselineSchemeName();
   card.innerHTML = '';
-  const head = el('<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><span class="sf-name"></span></div></div>');
+  const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div>${schema.category?`<div class="sf-sub">${schema.category} section</div>`:''}</div></div></div>`);
   head.querySelector('.sf-name').textContent = title;
   const close = el(`<button class="sf-close" title="Deselect section">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
   close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
   head.appendChild(close); card.appendChild(head);
+
+  // Render the section's Shopify-shaped settings via the schema engine. color_scheme routes
+  // to STATE.sectionSchemes (existing scheme wiring); every other setting persists to secVals.
+  const vals = secVals(selectedSection);
+  const getVal = (s)=> s.type==='color_scheme'
+    ? (STATE.sectionSchemes[selectedSection] || baselineSchemeName())
+    : ((s.id in vals) ? vals[s.id] : s.default);
+  const setVal = (s, v)=>{
+    if(s.type==='color_scheme'){ STATE.sectionSchemes[selectedSection]=v; applySectionSchemes(); return; }
+    vals[s.id] = v; applySectionSetting(selectedSection, s, v);
+  };
   const b = el('<div class="sf-body"></div>');
-  b.appendChild(el('<label class="sf-label">Color scheme</label>'));
-  b.appendChild(schemeSelect(curName, id=>{ STATE.sectionSchemes[selectedSection]=id; applySectionSchemes(); renderSectionControls(); }));
+  renderSettingsList(b, schema.settings, getVal, setVal);
   card.appendChild(b);
   placeCard(card);
 }
@@ -1828,12 +2074,13 @@ function buildPanel(){
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; deselectSection(); buildPanel(); applyRoles(); };
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
 
 refreshNames();   // derive palette names from their hex values
 buildPanel();
 buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
+applyAllSectionSettings();   // re-apply any persisted per-section settings to the preview
 initSectionSelection();
 
 /* ============================================================================
