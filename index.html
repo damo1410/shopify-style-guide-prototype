@@ -235,7 +235,7 @@
     --c-btn-bg-hover:#a83716; --c-btn-text-hover:#ffffff; --c-btn-border-hover:#a83716; --c-btn-bg-eff:#dc4a2a;
     --c-btn2-bg:#1c1917; --c-btn2-border:#1c1917; --c-btn2-text:#1c1917;
     --c-btn2-bg-hover:#1c1917; --c-btn2-text-hover:#ffffff; --c-btn2-border-hover:#1c1917; --c-btn2-bg-eff:transparent;
-    --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12); --c-icon-bg:#f0efed;
+    --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12); --c-icon:#dc4a2a; --c-icon-bg:#f0efed;
     /* button geometry/type — one shared set for both buttons (set by applyRoles from STATE.buttons).
        border thickness is drawn as an INSET box-shadow so changing it never shifts layout. */
     --btn-border-w:2px; --btn-radius:10px; --btn-font:var(--font-body); --btn-case:none;
@@ -260,7 +260,7 @@
     --body-weight:400; --body-lh:1.6; --body-ls:0em; --body-case:none;
     /* icon levers (set by applyIcons from STATE.icons; colours resolve per active scheme) */
     --icon-size:24px; --icon-stroke:2; --icon-pad:14px; --icon-radius:40px;
-    --icon-bg:var(--c-icon-bg); --icon-fg:var(--c-accent); --icon-bd-w:0px; --icon-bd:transparent;
+    --icon-bg:var(--c-icon-bg); --icon-fg:var(--c-icon); --icon-bd-w:0px; --icon-bd:transparent;
     background: var(--c-bg); color: var(--c-body); font-family: var(--font-body); font-size: var(--fs-base);
     font-weight: var(--body-weight); line-height: var(--body-lh); letter-spacing: var(--body-ls); text-transform: var(--body-case);
   }
@@ -803,7 +803,8 @@ const DEFAULTS = {
     { key:'link',      label:'Links',                cssVar:'--c-link' },
     { key:'linkHover', label:'Links hover',          cssVar:'--c-link-hover' },
     { key:'border',    label:'Borders',              cssVar:'--c-border' },
-    { key:'icon',     label:'Icon',                 cssVar:'--c-accent' },
+    { key:'accent',   label:'Accent',               cssVar:'--c-accent' },
+    { key:'icon',     label:'Icon',                 cssVar:'--c-icon' },
     { key:'iconBg',   label:'Icon background',      cssVar:'--c-icon-bg' },
     // Primary button
     { key:'btnBg',          label:'Fill',             cssVar:'--c-btn-bg',           group:'Primary button' },
@@ -831,19 +832,19 @@ const DEFAULTS = {
   ],
   schemes: {
     Light: {
-      bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist', icon:'brand', iconBg:'mist',
+      bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist', accent:'brand', icon:'brand', iconBg:'mist',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
       btn2Bg:'transparent', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'transparent', btn2TextHover:'paper', btn2BorderHover:'ink',
       inputBg:'mist', inputBorder:'mist', inputText:'ink', inputPlaceholder:'stone', inputBgFocus:'paper', inputBorderFocus:'brand', inputTextFocus:'ink',
     },
     Dark: {
-      bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night', icon:'brand', iconBg:'night',
+      bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night', accent:'brand', icon:'brand', iconBg:'night',
       btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
       btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'ink', btn2BorderHover:'paper',
       inputBg:'night', inputBorder:'night', inputText:'paper', inputPlaceholder:'stone', inputBgFocus:'night', inputBorderFocus:'brand', inputTextFocus:'paper',
     },
     Brand: {
-      bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust', icon:'paper', iconBg:'rust',
+      bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust', accent:'paper', icon:'paper', iconBg:'rust',
       btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
       btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'brand', btn2BorderHover:'paper',
       inputBg:'rust', inputBorder:'rust', inputText:'paper', inputPlaceholder:'mist', inputBgFocus:'rust', inputBorderFocus:'paper', inputTextFocus:'paper',
@@ -1027,7 +1028,7 @@ function applyInputs(){
 
 /* Map the icon controls onto the store. Stroke = global line-icon weight; size = global
    glyph size. The background STYLE picks fill / border from the scheme's Icon background
-   token and the glyph always uses the Icon token (--c-accent) — written as var() expressions
+   token and the glyph always uses the Icon token (--c-icon) — written as var() expressions
    so each section re-resolves them through its own scheme; "off" collapses to a bare glyph. */
 const ICON_STROKE = { light:1.5, regular:2, heavy:2.5 };
 function applyIcons(){
@@ -1039,12 +1040,12 @@ function applyIcons(){
   s.setProperty('--icon-pad', off ? '0px' : ic.padding+'px');
   s.setProperty('--icon-radius', ic.radius+'px');
   // background style -> fill / border, both from the scheme's Icon background token. The glyph
-  // is always the scheme's Icon token (--c-accent). Border weight only bites for Outline.
+  // is always the scheme's Icon token (--c-icon). Border weight only bites for Outline.
   let bg='transparent', bdw='0px', bd='transparent';
   if(ic.container==='filled')       { bg='var(--c-icon-bg)'; }
   else if(ic.container==='outline') { bdw=ic.borderWidth+'px'; bd='var(--c-icon-bg)'; }
   s.setProperty('--icon-bg', bg);
-  s.setProperty('--icon-fg', 'var(--c-accent)');
+  s.setProperty('--icon-fg', 'var(--c-icon)');
   s.setProperty('--icon-bd-w', bdw);
   s.setProperty('--icon-bd', bd);
 }
@@ -1093,7 +1094,7 @@ function applyCards(){
      containers, badges all read --c-accent, which the colorRoles loop writes directly).
    - --c-btn-bg-eff / --c-btn2-bg-eff: the resting background — simply the Fill token. */
 function setSchemeButtonVars(style, scheme){
-  style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.icon), 0.12));
+  style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.accent), 0.12));
   // Resting background is always the chosen Fill color. To get an "outline" look, pick a
   // Fill that matches the section background (and/or set the button border width to 0px).
   style.setProperty('--c-btn-bg-eff',  swatchHex(scheme.btnBg));
@@ -1328,7 +1329,7 @@ function reconcileSchemes(){
 function paintSquare(sq, scheme){
   sq.style.background = swatchHex(scheme.bg);
   sq.querySelector('span').style.color = swatchHex(scheme.heading);
-  sq.querySelector('.bar').style.background = swatchHex(scheme.icon);
+  sq.querySelector('.bar').style.background = swatchHex(scheme.accent);
 }
 function schemePreview(scheme){
   const sq = el('<div class="scheme-sq"><span>Aa</span><div class="bar"></div></div>');
