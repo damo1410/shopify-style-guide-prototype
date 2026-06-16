@@ -21,7 +21,7 @@
                 - fonts, base size + ratio, radius, spacing (px), shadow.
 
    2) ROLES   : semantic CSS custom properties on the .store element
-                (--c-heading, --c-btn-fill, --radius, --section-padding, ...).
+                (--c-heading, --c-btn-bg, --radius, --section-padding, ...).
                 A COLOR SCHEME maps each role DIRECTLY to a palette swatch
                 (chosen from a custom dropdown — never free hex). Schemes can
                 therefore never reference an undefined color.
@@ -106,12 +106,21 @@
   .subgroup-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--stone-400); }
   .subgroup-items { display: flex; flex-direction: column; gap: 10px; }
 
-  /* ---- control row + CONSISTENT label sizing (fixes the oversized labels) -- */
-  .ctl { display: flex; flex-direction: column; gap: 6px; }
-  .ctl.inline { flex-direction: row; align-items: center; justify-content: space-between; }
-  .ctl > label, .ctl-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
-  .ctl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .ctl-head .val { font-size: 11px; color: var(--stone-400); font-weight: 500; font-variant-numeric: tabular-nums; }
+  /* ---- control row: LABEL on the left, CONTROL on the right (skimmable, Shopify-like) -- */
+  .ctl { display: flex; align-items: center; gap: 12px; }
+  .ctl > label, .ctl > .ctl-label { flex: 0 0 76px; width: 76px; font-size: 11px; color: var(--stone-600); font-weight: 500; line-height: 1.3; }
+  .ctl > *:not(label):not(.ctl-label) { flex: 1 1 auto; min-width: 0; }   /* the control fills the rest of the row */
+  .ctl-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  /* slider: rail on the right, with a fixed-width EDITABLE value box at the end (Shopify range).
+     slider-wrap is the row's single flex child, so it lines up to the same width as a dropdown /
+     colour field; the value box is a FIXED width, so the rail width — and therefore the column
+     alignment — stays identical across every slider row regardless of the value's length. */
+  .slider-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .slider-wrap .slider-field { flex: 1 1 auto; min-width: 0; }
+  .val-field { flex: 0 0 80px; width: 80px; gap: 2px; padding: 0 8px; }
+  .val-field:focus-within { background: var(--stone-200); }
+  .val-input { flex: 1 1 auto; width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-700); text-align: right; font-variant-numeric: tabular-nums; padding: 0; }
+  .val-unit { flex: 0 0 auto; font-size: 11px; color: var(--stone-400); font-weight: 500; }
 
   /* ---- shared 32px field surface ---- */
   .field { min-height: 32px; border-radius: 6px; background: var(--stone-100); display: flex; align-items: center; padding: 0 12px; transition: background .12s; }
@@ -155,9 +164,10 @@
   .colorinput .sw input[type=color] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; padding: 0; }
   .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 11px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
 
-  /* ---- palette rows: derived name label above, color input + delete beside ---- */
-  .palette-row { display: flex; flex-direction: column; gap: 6px; }
-  .palette-input-row { display: flex; align-items: center; gap: 6px; }
+  /* ---- palette rows: derived name on the left, color input + delete on the right ---- */
+  .palette-row { display: flex; align-items: center; gap: 12px; }
+  .palette-row > .ctl-label { flex: 0 0 76px; width: 76px; }
+  .palette-input-row { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; }
   .palette-input-row .field { flex: 1; }
   .icon-btn { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; }
   .icon-btn:hover { color: #dc2626; }
@@ -179,6 +189,7 @@
   .scheme-chev { width: 14px; height: 14px; color: var(--stone-400); transition: transform .15s; flex: 0 0 auto; }
   .scheme-item.expanded .scheme-chev { transform: rotate(180deg); }
   .scheme-tokens { display: flex; flex-direction: column; gap: 10px; padding: 6px 6px 12px; }
+  .scheme-subgroup { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--stone-100); }
   .subgroup-hint { font-size: 11px; line-height: 1.45; color: var(--stone-400); font-weight: 400; }
 
   /* ==========================================================================
@@ -193,7 +204,7 @@
   /* a section with an assigned scheme paints its own background from that scheme */
   #store .sec-themed { background-color: var(--c-bg) !important; }
 
-  .section-float { position: fixed; bottom: 24px; right: 24px; width: 256px; background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; box-shadow: 0 8px 32px -8px rgba(0,0,0,.18); z-index: 40; }
+  .section-float { position: fixed; bottom: 24px; right: 24px; width: 280px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; box-shadow: 0 8px 32px -8px rgba(0,0,0,.18); z-index: 40; }
   .section-float[hidden] { display: none; }
   .sf-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
   .sf-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -201,8 +212,27 @@
   .sf-name { font-size: 12px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; flex: 0 0 auto; }
   .sf-close:hover { color: var(--stone-900); }
-  .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .sf-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  /* type/limit caption under the section name (mirrors Shopify's section subtitle) */
+  .sf-sub { font-size: 10px; color: var(--stone-400); font-weight: 500; margin-top: 1px; }
+
+  /* ---- schema-engine controls (Shopify setting types) ---- */
+  .text-input { width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-900); padding: 0; }
+  .text-input.ta { resize: vertical; min-height: 52px; padding: 7px 0; line-height: 1.45; }
+  .field.field-ta { align-items: stretch; }
+  .ctl-inline { display: flex; align-items: center; }
+  .switch { width: 38px; height: 22px; flex: 0 0 38px; border: none; padding: 2px; border-radius: 999px; background: var(--stone-300); cursor: pointer; transition: background .15s; }
+  .switch .knob { display: block; width: 18px; height: 18px; border-radius: 999px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .15s; }
+  .switch.on { background: var(--sel); }
+  .switch.on .knob { transform: translateX(16px); }
+  .picker-field { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; color: var(--stone-500); }
+  .picker-field .pf-label { font-size: 11px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picker-field svg { color: var(--stone-400); flex: 0 0 auto; }
+  /* header / paragraph — the ONLY grouping Shopify allows inside a section's settings */
+  .set-header { font-size: 11px; font-weight: 600; color: var(--stone-700); letter-spacing: .01em; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--stone-100); }
+  .sf-body > .set-header:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .set-paragraph { font-size: 11px; color: var(--stone-500); line-height: 1.5; }
   /* contextual scheme picker — bigger rows that match the left panel's scheme list */
   .sf-scheme .dd-trigger { min-height: 56px; padding: 8px 10px; gap: 10px; }
   .sf-scheme .dd-cur { gap: 10px; }
@@ -218,15 +248,38 @@
 
   /* ROLE DEFAULTS — overwritten at runtime by applyRoles(). */
   .store {
-    --c-bg:#ffffff; --c-surface:#f0efed; --c-heading:#1c1917; --c-body:#57534e; --c-border:#f0efed;
-    --c-btn-fill:#dc4a2a; --c-btn-text:#ffffff; --c-btn2-fill:#1c1917; --c-btn2-text:#ffffff;
-    --c-accent-soft:rgba(220,74,42,.12);
+    --c-bg:#ffffff; --c-surface:#f0efed; --c-heading:#1c1917; --c-body:#57534e;
+    --c-link:#dc4a2a; --c-link-hover:#a83716; --c-border:#f0efed;
+    --c-btn-bg:#dc4a2a; --c-btn-border:#dc4a2a; --c-btn-text:#ffffff;
+    --c-btn-bg-hover:#a83716; --c-btn-text-hover:#ffffff; --c-btn-border-hover:#a83716; --c-btn-bg-eff:#dc4a2a;
+    --c-btn2-bg:#1c1917; --c-btn2-border:#1c1917; --c-btn2-text:#1c1917;
+    --c-btn2-bg-hover:#1c1917; --c-btn2-text-hover:#ffffff; --c-btn2-border-hover:#1c1917; --c-btn2-bg-eff:transparent;
+    --c-accent:#dc4a2a; --c-accent-soft:rgba(220,74,42,.12); --c-icon:#dc4a2a; --c-icon-bg:#f0efed;
+    /* button geometry/type — one shared set for both buttons (set by applyRoles from STATE.buttons).
+       border thickness is drawn as an INSET box-shadow so changing it never shifts layout. */
+    --btn-border-w:2px; --btn-radius:10px; --btn-font:var(--font-body); --btn-case:none;
+    /* input geometry/type — one shared set for every form field (set by applyInputs from
+       STATE.inputs). Border thickness is an INSET box-shadow (like the buttons) so changing
+       it never shifts layout. Input COLOURS are their own scheme tokens (--c-input-*), never
+       borrowed from heading/surface, so the source of every colour is explicit + editable. */
+    --input-border-w:1px; --input-radius:10px; --input-font:var(--font-body); --input-case:none;
+    --input-pad:13px 16px; --input-fs:15px;
+    --c-input-bg:#f0efed; --c-input-border:#f0efed; --c-input-text:#1c1917; --c-input-placeholder:#57534e;
+    --c-input-bg-focus:#ffffff; --c-input-border-focus:#dc4a2a; --c-input-text-focus:#1c1917;
     --font-heading:"Inter",sans-serif; --font-body:"Inter",sans-serif;
     --fs-base:16px; --fs-h1:48.8px; --fs-h2:39px; --fs-h3:31.2px; --fs-h4:25px; --fs-h5:20px; --fs-h6:16px;
     --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
-    --section-padding:80px; --container-max:1120px; --gutter:24px;
+    --section-padding:80px; --container-max:1120px; --gutter:24px; --product-gutter:24px; --collection-gutter:24px;
+    /* product + collection card geometry (set by applyCards from STATE) */
+    --pcard-ratio:4/3; --pcard-radius:10px; --pcard-items:flex-start; --pcard-text:left; --pcard-pad:0px;
+    --pcard-overlay-v:flex-end; --pcard-overlay-color:#000000; --pcard-overlay-opacity:.35;
+    --ccard-ratio:3/4; --ccard-radius:10px; --ccard-v:flex-end; --ccard-h:flex-start; --ccard-text:left; --ccard-pad:0px;
+    --ccard-overlay-color:#000000; --ccard-overlay-opacity:.35;
     --heading-weight:700; --heading-lh:1.14; --heading-ls:-0.01em; --heading-case:none;
     --body-weight:400; --body-lh:1.6; --body-ls:0em; --body-case:none;
+    /* icon levers (set by applyIcons from STATE.icons; colours resolve per active scheme) */
+    --icon-size:24px; --icon-stroke:2; --icon-pad:14px; --icon-radius:40px;
+    --icon-bg:var(--c-icon-bg); --icon-fg:var(--c-icon); --icon-bd-w:0px; --icon-bd:transparent;
     background: var(--c-bg); color: var(--c-body); font-family: var(--font-body); font-size: var(--fs-base);
     font-weight: var(--body-weight); line-height: var(--body-lh); letter-spacing: var(--body-ls); text-transform: var(--body-case);
   }
@@ -241,19 +294,24 @@
   .store .section { padding: var(--section-padding) 0; }
 
   /* shared bits */
-  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-btn-fill); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-accent); }
   .sec-surface { background: var(--c-surface); }
   .section-head { text-align: center; max-width: 46rem; margin: 0 auto 3rem; display: flex; flex-direction: column; gap: .9rem; align-items: center; }
   .section-head .eyebrow { justify-content: center; }
   .section-head p { color: var(--c-body); font-size: 1.05rem; line-height: 1.6; }
 
   /* buttons */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--font-body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--radius); border: 2px solid transparent; text-decoration: none; transition: transform .08s, opacity .15s; white-space: nowrap; }
-  .btn:hover { opacity: .9; } .btn:active { transform: translateY(1px); }
-  .btn-primary.fill    { background: var(--c-btn-fill); color: var(--c-btn-text); border-color: var(--c-btn-fill); }
-  .btn-primary.outline { background: transparent; color: var(--c-btn-fill); border-color: var(--c-btn-fill); }
-  .btn-secondary.fill    { background: var(--c-btn2-fill); color: var(--c-btn2-text); border-color: var(--c-btn2-fill); }
-  .btn-secondary.outline { background: transparent; color: var(--c-btn2-fill); border-color: var(--c-btn2-fill); }
+  /* No real border — the outline is an INSET box-shadow (--btn-border-w thick) so toggling
+     thickness never changes the box size / shifts layout. Geometry/type come from the shared
+     Buttons controls; each button's outline colour is its own per-scheme Border token. */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--btn-font); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--btn-radius); border: none; text-transform: var(--btn-case); text-decoration: none; transition: transform .08s, background-color .15s, color .15s, box-shadow .15s; white-space: nowrap; }
+  .btn:active { transform: translateY(1px); }
+  /* Primary / secondary buttons read every color from per-scheme tokens; the resting
+     background is the Fill token (--c-btn-bg-eff) and hover fills in with the hover tokens. */
+  .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn-border); }
+  .btn-primary:hover   { background: var(--c-btn-bg-hover); color: var(--c-btn-text-hover); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn-border-hover); }
+  .btn-secondary       { background: var(--c-btn2-bg-eff); color: var(--c-btn2-text); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn2-border); }
+  .btn-secondary:hover { background: var(--c-btn2-bg-hover); color: var(--c-btn2-text-hover); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn2-border-hover); }
 
   /* announcement + nav */
   .announce { background: var(--c-heading); color: var(--c-bg); text-align: center; font-size: .82rem; font-weight: 500; letter-spacing: .02em; padding: 9px 16px; }
@@ -261,12 +319,12 @@
   .nav .container { display: flex; align-items: center; justify-content: space-between; padding-top: 1.05rem; padding-bottom: 1.05rem; }
   .nav .logo { font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; letter-spacing: .14em; color: var(--c-heading); }
   .nav-links { display: flex; gap: 1.6rem; }
-  .nav-links a { color: var(--c-body); text-decoration: none; font-size: .92rem; font-weight: 500; }
-  .nav-links a:hover { color: var(--c-heading); }
+  .nav-links a { color: var(--c-link); text-decoration: none; font-size: .92rem; font-weight: 500; }
+  .nav-links a:hover { color: var(--c-link-hover); }
   .nav-actions { display: flex; gap: 1.1rem; align-items: center; color: var(--c-heading); }
   .nav-actions svg { width: 20px; height: 20px; cursor: pointer; }
   .nav .cart { position: relative; display: inline-flex; }
-  .nav .cart .dot { position: absolute; top: -7px; right: -8px; background: var(--c-btn-fill); color: var(--c-btn-text); font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: grid; place-items: center; padding: 0 3px; }
+  .nav .cart .dot { position: absolute; top: -7px; right: -8px; background: var(--c-accent); color: var(--c-btn-text); font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: grid; place-items: center; padding: 0 3px; }
 
   /* hero */
   .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 560px; background-size: cover; background-position: center; }
@@ -282,31 +340,102 @@
   /* value props */
   .valueprops { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); }
   .vp { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .6rem; }
-  .vp .ic { padding: .85rem; border-radius: 999px; background: var(--c-accent-soft); color: var(--c-btn-fill); display: inline-flex; }
-  .vp .ic svg { width: 24px; height: 24px; }
+  /* feature-icon background — geometry comes from the global Icon controls (applyIcons);
+     the glyph uses the scheme's Icon token and the background its Icon background token.
+     "Off" collapses to a bare glyph (transparent bg, no padding, no border). */
+  .vp .ic {
+    display: inline-flex;
+    padding: var(--icon-pad);
+    border-radius: var(--icon-radius);
+    background: var(--icon-bg);
+    color: var(--icon-fg);
+    box-shadow: inset 0 0 0 var(--icon-bd-w) var(--icon-bd);
+  }
+  .vp .ic svg { width: var(--icon-size); height: var(--icon-size); }
+  /* GLOBAL ICON WEIGHT — stroke width on every line icon in the store. The product
+     illustration (.sg) keeps its own heavy stroke, so it opts out. */
+  .store svg:not(.sg) { stroke-width: var(--icon-stroke); }
   .vp h5 { color: var(--c-heading); font-size: 1rem; }
   .vp p { color: var(--c-body); font-size: .9rem; opacity: .85; }
 
-  /* collections */
-  .collections { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gutter); }
-  .collection { position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 3/4; display: flex; align-items: flex-end; box-shadow: var(--shadow); cursor: pointer; }
-  .collection img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
-  .collection:hover img { transform: scale(1.05); }
-  .collection::after { content:""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,0) 60%); }
-  .collection .clabel { position: relative; z-index: 1; padding: 1.1rem 1.2rem; color: #fff; }
+  /* collections + products share ONE card model — STYLE is a class on .store, set from
+     the card controls (applyCards), and is one of three values per card type:
+       .ccard-standard / .pcard-standard — image on top, info below on a transparent bg
+       .ccard-card     / .pcard-card     — image edge-to-edge on top, info below on a card surface
+       .ccard-overlay  / .pcard-overlay  — info sits over the image (user-controlled scrim)
+     RATIO/RADIUS/ALIGN/PADDING/OVERLAY/HOVER come from store custom properties + hover classes.
+     ALIGN is horizontal (left/center); the overlay POSITION (top/middle/bottom) is its own knob. */
+  .collections { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--collection-gutter); }
+  .collection { position: relative; display: flex; flex-direction: column; border-radius: var(--ccard-radius); cursor: pointer; transition: transform .25s, box-shadow .25s; }
+  .collection .cmedia { position: relative; aspect-ratio: var(--ccard-ratio); overflow: hidden; flex: 0 0 auto; border-radius: var(--ccard-radius); }
+  .collection .cimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .35s, opacity .35s; }
+  .collection .cimg-2 { opacity: 0; }
+  /* user-controlled scrim (overlay style only) */
+  .collection .coverlay { position: absolute; inset: 0; background: var(--ccard-overlay-color); opacity: var(--ccard-overlay-opacity); pointer-events: none; }
+  /* the label, positioned over the image (overlay style) */
+  .collection .clabel-on { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: var(--ccard-v); align-items: var(--ccard-h); text-align: var(--ccard-text); padding: 1.1rem calc(var(--ccard-pad) + 1.2rem); color: #fff; }
+  /* the label, in a box below the image (standard + card styles) */
+  .collection .clabel-below { display: flex; flex-direction: column; align-items: var(--ccard-h); text-align: var(--ccard-text); color: var(--c-body); }
+  .collection .clabel-below .cname { color: var(--c-heading); }
   .collection .cname { font-family: var(--font-heading); font-weight: 700; font-size: 1.25rem; }
   .collection .cgo { font-size: .85rem; opacity: .92; display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; }
   .collection .cgo svg { width: 14px; height: 14px; }
+  /* STANDARD: label below on a transparent background, image keeps its own radius */
+  .store.ccard-standard .collection .clabel-below { padding: .9rem var(--ccard-pad) 0; }
+  /* CARD: a surface wraps the whole card; the image squares off so the card clips its corners */
+  .store.ccard-card .collection { background: var(--c-surface); box-shadow: var(--shadow); overflow: hidden; }
+  .store.ccard-card .collection .cmedia { border-radius: 0; }
+  .store.ccard-card .collection .clabel-below { padding: 1rem var(--ccard-pad) 1.1rem; }
+  /* OVERLAY: the card clips the image; label + scrim sit on top */
+  .store.ccard-overlay .collection { overflow: hidden; box-shadow: var(--shadow); }
+  .store.ccard-overlay .collection .cmedia { border-radius: 0; }
+  /* show the right label for the active style; overlay scrim only in overlay mode */
+  .store.ccard-overlay .collection .clabel-below { display: none; }
+  .store:not(.ccard-overlay) .collection .clabel-on,
+  .store:not(.ccard-overlay) .collection .coverlay { display: none; }
+  /* hover effects (collection) */
+  .store.ccard-zoom .collection:hover .cimg { transform: scale(1.06); }
+  .store.ccard-secondary .collection:hover .cimg-1 { opacity: 0; }
+  .store.ccard-secondary .collection:hover .cimg-2 { opacity: 1; }
+  .store.ccard-lift .collection:hover { transform: translateY(-6px); box-shadow: 0 18px 40px -12px rgba(0,0,0,.32); }
 
   /* products carousel */
   .rowhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
   .rowhead .ey { display: flex; flex-direction: column; gap: .75rem; }
-  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
-  .product { display: flex; flex-direction: column; scroll-snap-align: start; }
-  .product .thumb { position: relative; aspect-ratio: 4/3; display: grid; place-items: center; background: linear-gradient(140deg, #eef1f4, #dfe4ea); border-radius: var(--radius); overflow: hidden; }
+  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--product-gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+  /* products mirror the collection card model: STYLE via classes on .store
+     (.pcard-standard / .pcard-card / .pcard-overlay) plus the same RATIO/RADIUS/ALIGN/
+     PADDING/OVERLAY/HOVER custom properties, so both card types share one set of controls. */
+  .product { position: relative; display: flex; flex-direction: column; scroll-snap-align: start; border-radius: var(--pcard-radius); transition: transform .25s, box-shadow .25s; }
+  .product .thumb { position: relative; aspect-ratio: var(--pcard-ratio); background: linear-gradient(140deg, #eef1f4, #dfe4ea); border-radius: var(--pcard-radius); overflow: hidden; }
+  /* layered product images so a secondary can crossfade in on hover */
+  .product .thumb .sg-layer { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .35s, opacity .35s; }
+  .product .thumb .sg-2 { opacity: 0; }
   .product .thumb .sg { width: 64%; height: auto; }
-  .product .badge { position: absolute; top: 10px; left: 10px; background: var(--c-btn-fill); color: var(--c-btn-text); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; }
-  .product .pbody { padding: .9rem 0 0; display: flex; flex-direction: column; gap: .35rem; flex: 1; }
+  .product .badge { position: absolute; top: 10px; left: 10px; z-index: 3; background: var(--c-accent); color: var(--c-btn-text); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; }
+  /* user-controlled scrim (overlay style only) */
+  .product .poverlay { display: none; }
+  /* alignment + side padding come from the Product cards controls */
+  .product .pbody { padding: .9rem var(--pcard-pad) 0; display: flex; flex-direction: column; gap: .35rem; flex: 1; align-items: var(--pcard-items); text-align: var(--pcard-text); }
+  /* STANDARD: info below on a transparent bg (rule above is the standard padding). */
+  /* CARD: a surface wraps the whole card; the image squares off so the card clips its corners */
+  .store.pcard-card .product { background: var(--c-surface); box-shadow: var(--shadow); overflow: hidden; }
+  .store.pcard-card .product .thumb { border-radius: 0; }
+  .store.pcard-card .product .pbody { padding: 1rem var(--pcard-pad) 1.1rem; }
+  /* OVERLAY: the card clips the image; the info block + scrim sit on top */
+  .store.pcard-overlay .product { overflow: hidden; box-shadow: var(--shadow); }
+  .store.pcard-overlay .product .thumb { border-radius: 0; }
+  .store.pcard-overlay .product .poverlay { display: block; position: absolute; inset: 0; z-index: 1; background: var(--pcard-overlay-color); opacity: var(--pcard-overlay-opacity); pointer-events: none; }
+  .store.pcard-overlay .product .pbody { position: absolute; inset: 0; z-index: 2; justify-content: var(--pcard-overlay-v); padding: 1.1rem calc(var(--pcard-pad) + 1.2rem); color: #fff; }
+  .store.pcard-overlay .product .pname,
+  .store.pcard-overlay .product .price,
+  .store.pcard-overlay .product .rev { color: #fff; }
+  .store.pcard-overlay .product .price s { color: #fff; opacity: .6; }
+  /* hover effects (product) */
+  .store.pcard-zoom .product:hover .sg-layer { transform: scale(1.08); }
+  .store.pcard-secondary .product:hover .sg-1 { opacity: 0; }
+  .store.pcard-secondary .product:hover .sg-2 { opacity: 1; }
+  .store.pcard-lift .product:hover { transform: translateY(-6px); box-shadow: 0 18px 40px -12px rgba(0,0,0,.32); }
   .product .pname { color: var(--c-heading); font-weight: 600; font-size: 1.02rem; }
   .rrow { display: flex; align-items: center; gap: .5rem; }
   .product .rev { font-size: .82rem; color: var(--c-body); opacity: .7; }
@@ -314,7 +443,7 @@
   .product .price s { color: var(--c-body); opacity: .5; font-weight: 400; margin-right: 6px; }
   .product .btn { margin-top: .7rem; }
 
-  .stars { display: inline-flex; gap: 1px; color: var(--c-btn-fill); font-size: 13px; letter-spacing: .5px; line-height: 1; }
+  .stars { display: inline-flex; gap: 1px; color: var(--c-accent); font-size: 13px; letter-spacing: .5px; line-height: 1; }
 
   /* guarantee */
   .guarantee { background: var(--c-surface); }
@@ -325,7 +454,7 @@
   .guarantee .gtext p { color: var(--c-body); margin-bottom: 1.4rem; max-width: 42ch; font-size: 1.05rem; line-height: 1.6; }
   .glist { display: flex; flex-direction: column; gap: .8rem; margin-bottom: 1.6rem; }
   .gitem { display: flex; gap: .7rem; align-items: center; color: var(--c-body); font-weight: 500; }
-  .gitem svg { width: 20px; height: 20px; color: var(--c-btn-fill); flex: 0 0 auto; }
+  .gitem svg { width: 20px; height: 20px; color: var(--c-accent); flex: 0 0 auto; }
 
   /* reviews */
   .reviews-agg { text-align: center; margin-bottom: 2.5rem; display: flex; flex-direction: column; align-items: center; gap: .4rem; }
@@ -335,10 +464,10 @@
   .review { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); padding: 1.6rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .8rem; }
   .review p { color: var(--c-body); flex: 1; font-size: .98rem; line-height: 1.6; }
   .review .who { display: flex; align-items: center; gap: .7rem; }
-  .review .av { width: 38px; height: 38px; border-radius: 999px; background: var(--c-accent-soft); color: var(--c-btn-fill); display: grid; place-items: center; font-weight: 700; font-size: .85rem; }
+  .review .av { width: 38px; height: 38px; border-radius: 999px; background: var(--c-accent-soft); color: var(--c-accent); display: grid; place-items: center; font-weight: 700; font-size: .85rem; }
   .review .nm { color: var(--c-heading); font-weight: 600; font-size: .92rem; }
   .review .vf { color: var(--c-body); opacity: .75; font-size: .78rem; display: flex; align-items: center; gap: 4px; }
-  .review .vf svg { width: 12px; height: 12px; color: var(--c-btn-fill); }
+  .review .vf svg { width: 12px; height: 12px; color: var(--c-accent); }
 
   /* press */
   .press { padding: 2.6rem 0; background: var(--c-surface); }
@@ -357,18 +486,38 @@
   .post { display: flex; flex-direction: column; }
   .post img { aspect-ratio: 16/10; object-fit: cover; width: 100%; border-radius: var(--radius); }
   .post .pbody { padding: .9rem 0 0; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
-  .post .cat { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--c-btn-fill); }
+  .post .cat { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--c-accent); }
   .post h4 { color: var(--c-heading); font-size: 1.15rem; line-height: 1.25; }
-  .post .link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--c-heading); font-weight: 600; font-size: 14px; cursor: pointer; }
+  .post .link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--c-link); font-weight: 600; font-size: 14px; cursor: pointer; }
+  .post .link:hover { color: var(--c-link-hover); }
   .post .link svg { width: 15px; height: 15px; }
+
+  /* form inputs — one shared look. No real border: the outline is an INSET box-shadow
+     (--input-border-w thick) so toggling thickness never resizes the field. Every COLOUR is
+     its own scheme token (--c-input-*) so the user always knows where it comes from and can
+     edit it directly — set Fill to Transparent for an outline style (like the buttons). Focus
+     swaps to the focus token set. Targets text-like fields so future forms inherit. */
+  .store input[type=text], .store input[type=email], .store input[type=search],
+  .store input[type=tel], .store input[type=number], .store input[type=password], .store textarea {
+    border: none; border-radius: var(--input-radius); background: var(--c-input-bg);
+    box-shadow: inset 0 0 0 var(--input-border-w) var(--c-input-border);
+    padding: var(--input-pad); font: inherit; font-family: var(--input-font); font-size: var(--input-fs);
+    text-transform: var(--input-case); color: var(--c-input-text); outline: none;
+    transition: box-shadow .15s, background-color .15s, color .15s;
+  }
+  .store input::placeholder, .store textarea::placeholder { color: var(--c-input-placeholder); }
+  .store input:focus, .store textarea:focus {
+    background: var(--c-input-bg-focus); color: var(--c-input-text-focus);
+    box-shadow: inset 0 0 0 var(--input-border-w) var(--c-input-border-focus);
+  }
 
   /* newsletter — a normal scheme surface (defaults to the Dark section scheme) */
   .newsletter .container { text-align: center; display: flex; flex-direction: column; align-items: center; gap: .8rem; }
-  .newsletter .eyebrow { color: var(--c-btn-fill); opacity: .9; justify-content: center; }
+  .newsletter .eyebrow { color: var(--c-accent); opacity: .9; justify-content: center; }
   .newsletter h2 { color: var(--c-heading); }
   .newsletter p { color: var(--c-body); opacity: .85; max-width: 44ch; font-size: 1.05rem; }
   .newsletter form { display: flex; gap: 10px; width: 100%; max-width: 460px; margin-top: .6rem; flex-wrap: wrap; }
-  .newsletter input { flex: 1; min-width: 200px; border: 1px solid var(--c-border); border-radius: var(--radius); padding: 13px 16px; font: inherit; font-size: 15px; background: var(--c-surface); color: var(--c-heading); outline: none; }
+  .newsletter input { flex: 1; min-width: 200px; }
 
   /* footer */
   .store-footer { background: var(--c-surface); border-top: 1px solid var(--c-border); }
@@ -376,8 +525,8 @@
   .store-footer .cols { display: flex; flex-wrap: wrap; gap: 2.5rem 3rem; }
   .store-footer .cols > div:first-child { flex: 1 1 220px; }
   .store-footer .brandmark { font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; letter-spacing: .12em; color: var(--c-heading); margin-bottom: .5rem; }
-  .store-footer a { display: block; color: var(--c-body); opacity: .8; text-decoration: none; font-size: .92rem; margin: 8px 0; }
-  .store-footer a:hover { opacity: 1; }
+  .store-footer a { display: block; color: var(--c-link); opacity: .8; text-decoration: none; font-size: .92rem; margin: 8px 0; }
+  .store-footer a:hover { color: var(--c-link-hover); opacity: 1; }
   .store-footer h6 { color: var(--c-heading); margin-bottom: .6rem; font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; }
   .footer-bottom { border-top: 1px solid var(--c-border); margin-top: 2.5rem; padding-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; color: var(--c-body); font-size: .85rem; opacity: .85; }
   .pay { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -420,8 +569,9 @@
 
     /* section selected: the contextual card lives inside the sheet, and the
        global style-guide groups hide until the X (in the header) deselects. */
-    .section-float.in-sheet { position: static; width: 100%; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
+    .section-float.in-sheet { position: static; width: 100%; max-height: none; display: block; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
     .section-float.in-sheet .sf-head { display: none; }   /* header now carries the dot + name + X */
+    .section-float.in-sheet .sf-body { overflow: visible; min-height: 0; }   /* the sheet itself scrolls */
     body.sec-selected .groups { display: none; }
     /* swap the panel header to the section view (blue dot + name + close) */
     body.sec-selected .panel-header .ph-global { display: none; }
@@ -485,8 +635,8 @@
               <p>Premium polarized sunglasses, handcrafted from Italian acetate. Designed to turn heads — built to last a lifetime.</p>
               <div class="rating" id="hero-rating"><span><strong>4.8</strong>/5 · 12,000+ five-star reviews</span></div>
               <div class="ctas">
-                <a class="btn btn-primary fill">Shop best sellers</a>
-                <a class="btn btn-secondary outline">Explore collections</a>
+                <a class="btn btn-primary">Shop best sellers</a>
+                <a class="btn btn-secondary">Explore collections</a>
               </div>
             </div>
           </header>
@@ -510,7 +660,7 @@
           <section class="section" data-sec="bestsellers"><div class="container">
             <div class="rowhead">
               <div class="ey"><div class="eyebrow">Best sellers</div><h2>Loved by thousands</h2></div>
-              <a class="btn btn-secondary outline">View all</a>
+              <a class="btn btn-secondary">View all</a>
             </div>
             <div class="carousel" id="products"></div>
           </div></section>
@@ -523,7 +673,7 @@
               <h2>Try them on at home, on us.</h2>
               <p>Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.</p>
               <div class="glist" id="glist"></div>
-              <a class="btn btn-primary fill">Start your home try-on</a>
+              <a class="btn btn-primary">Start your home try-on</a>
             </div>
           </div></section>
 
@@ -569,7 +719,7 @@
             <p>Sign up for early access to new drops, styling tips, and members-only offers.</p>
             <form onsubmit="return false">
               <input type="email" placeholder="Enter your email" aria-label="Email">
-              <button class="btn btn-primary fill" type="submit">Get my 10% off</button>
+              <button class="btn btn-primary" type="submit">Get my 10% off</button>
             </form>
           </div></section>
 
@@ -630,16 +780,31 @@ const FONTS = {
   Fraunces:'"Fraunces", serif', 'Playfair Display':'"Playfair Display", serif', 'JetBrains Mono':'"JetBrains Mono", monospace',
 };
 const SHADOWS = { None:'none', Soft:'0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06)', Hard:'0 18px 40px -12px rgba(0,0,0,.28)' };
-const RADIUS_PRESETS = { Sharp:0, Soft:8, Rounded:16, Pill:999 };
+
+/* Card aspect-ratio presets (shared by product + collection size controls). */
+const CARD_RATIOS = { Portrait:'3/4', Square:'1/1', Landscape:'4/3', Wide:'16/9' };
+/* Card alignment helpers (shared by product + collection cards).
+   ALIGN is horizontal: left | center -> flex placement + text-align.
+   OVERLAY POSITION is vertical (overlay style only): top | middle | bottom -> justify.
+   For the Overlay style the panel shows ONE 6-way picker that sets both at once
+   (value = `${overlayPos}-${align}`); Standard/Card show just the Left/Center toggle. */
+const CARD_ALIGN_ITEMS = a => a === 'center' ? 'center' : 'flex-start';
+const CARD_ALIGN_TEXT  = a => a === 'center' ? 'center' : 'left';
+const CARD_OVERLAY_V   = { top:'flex-start', middle:'center', bottom:'flex-end' };
+const CARD_POS_OPTS = [
+  { value:'top-left',      label:'Top left' },
+  { value:'top-center',    label:'Top center' },
+  { value:'middle-left',   label:'Middle left' },
+  { value:'middle-center', label:'Middle center' },
+  { value:'bottom-left',   label:'Bottom left' },
+  { value:'bottom-center', label:'Bottom center' },
+];
 
 /* Typography levers (named presets -> resolved CSS values). Heading and body each
    own their own weight / line-height / letter-spacing / case; the type SCALE is split
    so each knob lands where it actually acts: scale RATIO drives the heading steps,
    BASE SIZE drives body text (and is the foundation the headings derive from). */
 const TYPE_WEIGHTS = { Light:300, Regular:400, Medium:500, Semibold:600, Bold:700, Extrabold:800 };
-const HEADING_LINE_HEIGHT = { Tight:1.05, Regular:1.14, Relaxed:1.3 };
-const BODY_LINE_HEIGHT    = { Tight:1.4, Regular:1.6, Relaxed:1.85 };
-const LETTER_SPACING = { Tight:-0.025, Normal:0, Wide:0.05 };   // em
 const TEXT_CASE = { 'Default':'none', 'UPPERCASE':'uppercase', 'Title Case':'capitalize', 'lowercase':'lowercase' };
 
 /* ============================================================================
@@ -657,21 +822,63 @@ const DEFAULTS = {
     { id:'night', name:'Night', hex:'#292524' },
   ],
   // The color roles every scheme maps (role -> swatch id, via dropdown only).
+  // `group` drives the subgroup headers in the scheme editor; ungrouped roles are the
+  // scheme's top-level tokens. The list stays FLAT so applyRoles / applySectionSchemes /
+  // reconcileSchemes can keep iterating it directly.
   colorRoles: [
-    { key:'bg',       label:'Background',     cssVar:'--c-bg' },
-    { key:'surface',  label:'Surface',        cssVar:'--c-surface' },
-    { key:'heading',  label:'Heading text',   cssVar:'--c-heading' },
-    { key:'body',     label:'Body text',      cssVar:'--c-body' },
-    { key:'border',   label:'Border',         cssVar:'--c-border' },
-    { key:'btnFill',  label:'Button fill',    cssVar:'--c-btn-fill' },
-    { key:'btnText',  label:'Button text',    cssVar:'--c-btn-text' },
-    { key:'btn2Fill', label:'Secondary fill', cssVar:'--c-btn2-fill' },
-    { key:'btn2Text', label:'Secondary text', cssVar:'--c-btn2-text' },
+    { key:'bg',        label:'Background',           cssVar:'--c-bg' },
+    { key:'surface',   label:'Background Secondary', cssVar:'--c-surface' },
+    { key:'heading',   label:'Heading text',         cssVar:'--c-heading' },
+    { key:'body',      label:'Body text',            cssVar:'--c-body' },
+    { key:'link',      label:'Links',                cssVar:'--c-link' },
+    { key:'linkHover', label:'Links hover',          cssVar:'--c-link-hover' },
+    { key:'border',    label:'Borders',              cssVar:'--c-border' },
+    { key:'accent',   label:'Accent',               cssVar:'--c-accent' },
+    { key:'icon',     label:'Icon',                 cssVar:'--c-icon' },
+    { key:'iconBg',   label:'Icon background',      cssVar:'--c-icon-bg' },
+    // Primary button
+    { key:'btnBg',          label:'Fill',             cssVar:'--c-btn-bg',           group:'Primary button' },
+    { key:'btnBorder',      label:'Border',           cssVar:'--c-btn-border',       group:'Primary button' },
+    { key:'btnText',        label:'Text',             cssVar:'--c-btn-text',         group:'Primary button' },
+    { key:'btnBgHover',     label:'Fill hover',       cssVar:'--c-btn-bg-hover',     group:'Primary button' },
+    { key:'btnTextHover',   label:'Text hover',       cssVar:'--c-btn-text-hover',   group:'Primary button' },
+    { key:'btnBorderHover', label:'Border hover',     cssVar:'--c-btn-border-hover', group:'Primary button' },
+    // Secondary button
+    { key:'btn2Bg',          label:'Fill',             cssVar:'--c-btn2-bg',           group:'Secondary button' },
+    { key:'btn2Border',      label:'Border',           cssVar:'--c-btn2-border',       group:'Secondary button' },
+    { key:'btn2Text',        label:'Text',             cssVar:'--c-btn2-text',         group:'Secondary button' },
+    { key:'btn2BgHover',     label:'Fill hover',       cssVar:'--c-btn2-bg-hover',     group:'Secondary button' },
+    { key:'btn2TextHover',   label:'Text hover',       cssVar:'--c-btn2-text-hover',   group:'Secondary button' },
+    { key:'btn2BorderHover', label:'Border hover',     cssVar:'--c-btn2-border-hover', group:'Secondary button' },
+    // Inputs — dedicated form-field colours (never borrowed from heading/surface, so changing
+    // a heading colour can't silently move the input text). Resting set + a focus ("off") set.
+    { key:'inputBg',          label:'Fill',          cssVar:'--c-input-bg',           group:'Inputs' },
+    { key:'inputBorder',      label:'Border',        cssVar:'--c-input-border',       group:'Inputs' },
+    { key:'inputText',        label:'Text',          cssVar:'--c-input-text',         group:'Inputs' },
+    { key:'inputPlaceholder', label:'Placeholder',   cssVar:'--c-input-placeholder',  group:'Inputs' },
+    { key:'inputBgFocus',     label:'Fill focus',    cssVar:'--c-input-bg-focus',     group:'Inputs' },
+    { key:'inputBorderFocus', label:'Border focus',  cssVar:'--c-input-border-focus', group:'Inputs' },
+    { key:'inputTextFocus',   label:'Text focus',    cssVar:'--c-input-text-focus',   group:'Inputs' },
   ],
   schemes: {
-    Light: { bg:'paper', surface:'mist',  heading:'ink',   body:'stone', border:'mist',  btnFill:'brand', btnText:'paper', btn2Fill:'ink',   btn2Text:'paper' },
-    Dark:  { bg:'ink',   surface:'night', heading:'paper', body:'mist',  border:'night', btnFill:'brand', btnText:'paper', btn2Fill:'paper', btn2Text:'ink'   },
-    Brand: { bg:'brand', surface:'rust',  heading:'paper', body:'paper', border:'rust',  btnFill:'paper', btnText:'brand', btn2Fill:'paper', btn2Text:'brand' },
+    Light: {
+      bg:'paper', surface:'mist', heading:'ink', body:'stone', link:'brand', linkHover:'rust', border:'mist', accent:'brand', icon:'brand', iconBg:'mist',
+      btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
+      btn2Bg:'transparent', btn2Border:'ink', btn2Text:'ink', btn2BgHover:'transparent', btn2TextHover:'paper', btn2BorderHover:'ink',
+      inputBg:'mist', inputBorder:'mist', inputText:'ink', inputPlaceholder:'stone', inputBgFocus:'paper', inputBorderFocus:'brand', inputTextFocus:'ink',
+    },
+    Dark: {
+      bg:'ink', surface:'night', heading:'paper', body:'mist', link:'brand', linkHover:'paper', border:'night', accent:'brand', icon:'brand', iconBg:'night',
+      btnBg:'brand', btnBorder:'brand', btnText:'paper', btnBgHover:'rust', btnTextHover:'paper', btnBorderHover:'rust',
+      btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'ink', btn2BorderHover:'paper',
+      inputBg:'night', inputBorder:'night', inputText:'paper', inputPlaceholder:'stone', inputBgFocus:'night', inputBorderFocus:'brand', inputTextFocus:'paper',
+    },
+    Brand: {
+      bg:'brand', surface:'rust', heading:'paper', body:'paper', link:'paper', linkHover:'mist', border:'rust', accent:'paper', icon:'paper', iconBg:'rust',
+      btnBg:'paper', btnBorder:'paper', btnText:'brand', btnBgHover:'mist', btnTextHover:'brand', btnBorderHover:'mist',
+      btn2Bg:'transparent', btn2Border:'paper', btn2Text:'paper', btn2BgHover:'transparent', btn2TextHover:'brand', btn2BorderHover:'paper',
+      inputBg:'rust', inputBorder:'rust', inputText:'paper', inputPlaceholder:'mist', inputBgFocus:'rust', inputBorderFocus:'paper', inputTextFocus:'paper',
+    },
   },
   // The store's BASELINE scheme (what unthemed sections inherit). It is NOT changed by
   // clicking schemes in the panel — schemes are applied per-section via the preview.
@@ -680,34 +887,69 @@ const DEFAULTS = {
   // paints its own background + role colors from that scheme; others inherit the baseline.
   // Newsletter ships dark, expressed cleanly as the Dark scheme on that one section.
   sectionSchemes: { newsletter:'Dark' },
+  // Per-section setting VALUES (Shopify: section.settings → { settingId: value }). Lazily
+  // filled as you edit; color scheme is NOT stored here (it lives in sectionSchemes, which
+  // already drives the scheme wiring). Survives Reset because it's part of DEFAULTS.
+  sectionSettings: {},
   // TYPOGRAPHY: split into HEADING + BODY. Each owns font + weight/line-height/letter-
   // spacing/case. Scale RATIO (heading steps) lives with Heading; BASE SIZE (body text,
   // and the foundation H1–H6 derive from) lives with Body. overrides kept for the H1–H6 math.
   typography: {
     headingFont:'Inter', bodyFont:'Inter', baseSize:16, ratio:1.25,
-    heading: { weight:'Bold',    lineHeight:'Regular', letterSpacing:'Tight',  case:'Default' },
-    body:    { weight:'Regular', lineHeight:'Regular', letterSpacing:'Normal', case:'Default' },
+    heading: { weight:'Bold',    lineHeight:1.14, letterSpacing:-0.025, case:'Default' },
+    body:    { weight:'Regular', lineHeight:1.6,  letterSpacing:0,      case:'Default' },
     overrides:{ h1:'', h2:'', h3:'', h4:'', h5:'', h6:'' },
   },
-  buttons: { primaryStyle:'fill', secondaryStyle:'outline' },
+  // BUTTONS: one shared set of geometry/type levers applied to BOTH buttons. Color is owned
+  // per-scheme (see colorRoles); these are global — border thickness, corner radius, font
+  // (heading vs body), and text case.
+  buttons: { borderWidth:2, radius:10, font:'body', case:'default' },
+  // INPUTS: one shared set of geometry/type levers applied to EVERY form field — mirrors the
+  // button levers (border thickness, corner radius, font, case) plus SIZE (field height/text).
+  // Colours are owned per-scheme via the --c-input-* tokens (set Fill to Transparent there for
+  // an outline style), so nothing colour-related is stored here.
+  inputs: { borderWidth:1, radius:10, font:'body', case:'default', size:'medium' },
+  // ICONS: global line-icon weight + the feature-icon background. `container` is the background
+  // STYLE (off = none / filled / outline); off folds the on/off choice into the style so there's
+  // no separate boolean — radius/padding have no effect (and dim in the panel) when off.
+  // Colours are NOT stored here: the glyph reads the scheme's Icon token and the background reads
+  // its Icon background token, so legibility is fully under the merchant's control (no auto fill).
+  // size — global default for feature icons (overridable per-section later, like base font size).
+  // borderWidth — only bites for the Outline style.
+  icons: { size:24, weight:'regular', container:'filled', radius:40, padding:14, borderWidth:2 },  // weight: light|regular|heavy; container(style): off|filled|outline
   radius: 10,                                   // px, one global corner radius
-  spacing: { sectionPadding:80, containerMax:1120, gutter:24 },  // px
+  // gutter        — generic grid gap (value props, reviews, journal)
+  // productGutter  — gap between product cards in the products carousel
+  // collectionGutter — gap between collection cards in the collections grid
+  spacing: { sectionPadding:80, containerMax:1120, gutter:24, productGutter:24, collectionGutter:24 },  // px
   elevation: 'None',
+  // PRODUCT + COLLECTION CARDS share ONE control shape (consistent controls across both):
+  //   style        — standard | card | overlay
+  //   ratio/radius — image aspect ratio + corner radius
+  //   align        — horizontal info alignment (left | center)
+  //   padding      — info side padding (px)
+  //   overlayPos   — vertical placement of the info for the Overlay style (top | middle | bottom)
+  //   overlayColor/overlayOpacity — the scrim behind the info (Overlay style only)
+  //   hover        — none | zoom | secondary | lift
+  productCard:    { style:'standard', ratio:'Landscape', radius:10, align:'left', padding:0, overlayPos:'bottom', overlayColor:'#000000', overlayOpacity:35, hover:'zoom' },
+  collectionCard: { style:'overlay',  ratio:'Portrait',  radius:10, align:'left', padding:0, overlayPos:'bottom', overlayColor:'#000000', overlayOpacity:35, hover:'zoom' },
 };
 let STATE = clone(DEFAULTS);
 
 /* Dummy homepage data for the sunglasses store. */
+/* frame2 = an alternate colourway shown on hover (Show secondary image effect). */
 const PRODUCTS = [
-  { name:'Cardinal',   price:'$145', frame:'#1c1917', rating:5, reviews:412, badge:'Best seller' },
-  { name:'Riviera',    price:'$152', was:'$190', frame:'#5b4636', rating:5, reviews:298, badge:'Sale' },
-  { name:'Meridian',   price:'$155', frame:'#6b7076', rating:4, reviews:531 },
-  { name:'Marlowe',    price:'$135', frame:'#27408b', rating:5, reviews:204, badge:'New' },
-  { name:'Dune',       price:'$150', frame:'#8a5a2b', rating:5, reviews:176 },
-  { name:'Apex Sport', price:'$175', frame:'#1f6f5c', rating:4, reviews:389 },
+  { name:'Cardinal',   price:'$145', frame:'#1c1917', frame2:'#a83716', rating:5, reviews:412, badge:'Best seller' },
+  { name:'Riviera',    price:'$152', was:'$190', frame:'#5b4636', frame2:'#1c1917', rating:5, reviews:298, badge:'Sale' },
+  { name:'Meridian',   price:'$155', frame:'#6b7076', frame2:'#27408b', rating:4, reviews:531 },
+  { name:'Marlowe',    price:'$135', frame:'#27408b', frame2:'#6b7076', rating:5, reviews:204, badge:'New' },
+  { name:'Dune',       price:'$150', frame:'#8a5a2b', frame2:'#1f6f5c', rating:5, reviews:176 },
+  { name:'Apex Sport', price:'$175', frame:'#1f6f5c', frame2:'#8a5a2b', rating:4, reviews:389 },
 ];
+/* seed2 = a second photo shown on hover (Show secondary image effect). */
 const COLLECTIONS = [
-  { name:'Aviators',  seed:'noir-aviator' }, { name:'Wayfarers', seed:'noir-wayfarer' },
-  { name:'Round',     seed:'noir-round' },   { name:'Sport',     seed:'noir-sport' },
+  { name:'Aviators',  seed:'noir-aviator',  seed2:'noir-aviator-b' }, { name:'Wayfarers', seed:'noir-wayfarer', seed2:'noir-wayfarer-b' },
+  { name:'Round',     seed:'noir-round',     seed2:'noir-round-b' },   { name:'Sport',     seed:'noir-sport',    seed2:'noir-sport-b' },
 ];
 const VALUEPROPS = [
   { ic:'truck',   h:'Free shipping',     p:'On all orders over $75' },
@@ -731,7 +973,9 @@ const POSTS = [
 /* ============================================================================
    RESOLVERS + applyRoles()  — THE HEART OF THE WIRING.
    ============================================================================ */
-function swatchHex(id){ const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+function swatchHex(id){ if(id==='transparent') return 'transparent'; const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+// CSS checkerboard used to preview the Transparent swatch option in dropdowns.
+const TRANSPARENT_SWATCH = 'repeating-conic-gradient(#cbcbcb 0% 25%, #fff 0% 50%) 50% / 8px 8px';
 function computeHeadingSizes(){
   const exp = { h1:5, h2:4, h3:3, h4:2, h5:1, h6:0 };  // h6 = base; each step up *= ratio
   const t = STATE.typography; const out = {};
@@ -747,7 +991,7 @@ function applyRoles(){
 
   // 1) COLOR roles — each maps directly to a palette swatch.
   STATE.colorRoles.forEach(r => s.setProperty(r.cssVar, swatchHex(scheme[r.key])));
-  s.setProperty('--c-accent-soft', rgba(swatchHex(scheme.btnFill), 0.12));
+  setSchemeButtonVars(s, scheme);
 
   // 2) TYPOGRAPHY roles.
   const t = STATE.typography;
@@ -762,27 +1006,133 @@ function applyRoles(){
   for(const lvl of ['h1','h2','h3','h4','h5','h6']) s.setProperty('--fs-'+lvl, h[lvl]+'px');
   // heading + body typographic levers (resolve named presets to CSS values)
   s.setProperty('--heading-weight', TYPE_WEIGHTS[t.heading.weight] ?? 700);
-  s.setProperty('--heading-lh', HEADING_LINE_HEIGHT[t.heading.lineHeight] ?? 1.14);
-  s.setProperty('--heading-ls', (LETTER_SPACING[t.heading.letterSpacing] ?? 0)+'em');
+  s.setProperty('--heading-lh', t.heading.lineHeight ?? 1.14);
+  s.setProperty('--heading-ls', (t.heading.letterSpacing ?? 0)+'em');
   s.setProperty('--heading-case', TEXT_CASE[t.heading.case] || 'none');
   s.setProperty('--body-weight', TYPE_WEIGHTS[t.body.weight] ?? 400);
-  s.setProperty('--body-lh', BODY_LINE_HEIGHT[t.body.lineHeight] ?? 1.6);
-  s.setProperty('--body-ls', (LETTER_SPACING[t.body.letterSpacing] ?? 0)+'em');
+  s.setProperty('--body-lh', t.body.lineHeight ?? 1.6);
+  s.setProperty('--body-ls', (t.body.letterSpacing ?? 0)+'em');
   s.setProperty('--body-case', TEXT_CASE[t.body.case] || 'none');
 
-  // 3) SHAPE / SPACING / ELEVATION roles.
+  // 3) BUTTON geometry/type roles (global, per button type).
+  const b = STATE.buttons;
+  s.setProperty('--btn-border-w', b.borderWidth+'px');
+  s.setProperty('--btn-radius', b.radius+'px');
+  s.setProperty('--btn-font', b.font==='heading' ? 'var(--font-heading)' : 'var(--font-body)');
+  s.setProperty('--btn-case', b.case==='uppercase' ? 'uppercase' : 'none');
+
+  // 4) SHAPE / SPACING / ELEVATION roles.
   s.setProperty('--radius', STATE.radius+'px');
   s.setProperty('--shadow', SHADOWS[STATE.elevation]);
   s.setProperty('--section-padding', STATE.spacing.sectionPadding+'px');
   s.setProperty('--container-max', STATE.spacing.containerMax+'px');
   s.setProperty('--gutter', STATE.spacing.gutter+'px');
-
-  // 4) BUTTON style (fill vs outline) — swap classes on demo buttons.
-  document.querySelectorAll('.btn-primary').forEach(b=>{ b.classList.remove('fill','outline'); b.classList.add(STATE.buttons.primaryStyle); });
-  document.querySelectorAll('.btn-secondary').forEach(b=>{ b.classList.remove('fill','outline'); b.classList.add(STATE.buttons.secondaryStyle); });
+  s.setProperty('--product-gutter', STATE.spacing.productGutter+'px');
+  s.setProperty('--collection-gutter', STATE.spacing.collectionGutter+'px');
 
   // 5) PER-SECTION color schemes — repaint any section with its own assigned scheme.
   applySectionSchemes();
+
+  // 6) PRODUCT + COLLECTION card geometry / hover behaviour.
+  applyCards();
+
+  // 7) ICON size / weight + feature-icon background.
+  applyIcons();
+
+  // 8) INPUT geometry/type (global, every form field).
+  applyInputs();
+}
+
+/* Map the global Inputs controls onto the store. These are GEOMETRY/TYPE only — every input
+   COLOUR lives in the per-scheme --c-input-* tokens (written by the colorRoles loop in
+   applyRoles + per section in applySectionSchemes), so a themed section restyles its fields
+   automatically and the user owns every colour. SIZE picks the vertical padding + text size. */
+const INPUT_SIZES = { small:{ pad:'9px 13px', fs:14 }, medium:{ pad:'13px 16px', fs:15 }, large:{ pad:'16px 20px', fs:16 } };
+function applyInputs(){
+  const s = document.getElementById('store').style;
+  const inp = STATE.inputs;
+  s.setProperty('--input-border-w', inp.borderWidth+'px');
+  s.setProperty('--input-radius', inp.radius+'px');
+  s.setProperty('--input-font', inp.font==='heading' ? 'var(--font-heading)' : 'var(--font-body)');
+  s.setProperty('--input-case', inp.case==='uppercase' ? 'uppercase' : 'none');
+  const sz = INPUT_SIZES[inp.size] || INPUT_SIZES.medium;
+  s.setProperty('--input-pad', sz.pad);
+  s.setProperty('--input-fs', sz.fs+'px');
+}
+
+/* Map the icon controls onto the store. Stroke = global line-icon weight; size = global
+   glyph size. The background STYLE picks fill / border from the scheme's Icon background
+   token and the glyph always uses the Icon token (--c-icon) — written as var() expressions
+   so each section re-resolves them through its own scheme; "off" collapses to a bare glyph. */
+const ICON_STROKE = { light:1.5, regular:2, heavy:2.5 };
+function applyIcons(){
+  const s = document.getElementById('store').style;
+  const ic = STATE.icons;
+  s.setProperty('--icon-size', ic.size+'px');
+  s.setProperty('--icon-stroke', ICON_STROKE[ic.weight] ?? 2);
+  const off = ic.container === 'off';
+  s.setProperty('--icon-pad', off ? '0px' : ic.padding+'px');
+  s.setProperty('--icon-radius', ic.radius+'px');
+  // background style -> fill / border, both from the scheme's Icon background token. The glyph
+  // is always the scheme's Icon token (--c-icon). Border weight only bites for Outline.
+  let bg='transparent', bdw='0px', bd='transparent';
+  if(ic.container==='filled')       { bg='var(--c-icon-bg)'; }
+  else if(ic.container==='outline') { bdw=ic.borderWidth+'px'; bd='var(--c-icon-bg)'; }
+  s.setProperty('--icon-bg', bg);
+  s.setProperty('--icon-fg', 'var(--c-icon)');
+  s.setProperty('--icon-bd-w', bdw);
+  s.setProperty('--icon-bd', bd);
+}
+
+/* Write the product- and collection-card controls onto the store: geometry via custom
+   properties, hover behaviour + collection layout style via classes on .store. */
+function applyCards(){
+  const store = document.getElementById('store');
+  const s = store.style;
+
+  // Product cards
+  const pc = STATE.productCard;
+  s.setProperty('--pcard-ratio', (CARD_RATIOS[pc.ratio] || pc.ratio).replace('/', ' / '));
+  s.setProperty('--pcard-radius', pc.radius+'px');
+  s.setProperty('--pcard-items', CARD_ALIGN_ITEMS(pc.align));
+  s.setProperty('--pcard-text',  CARD_ALIGN_TEXT(pc.align));
+  s.setProperty('--pcard-pad',   pc.padding+'px');
+  s.setProperty('--pcard-overlay-v', CARD_OVERLAY_V[pc.overlayPos] || 'flex-end');
+  s.setProperty('--pcard-overlay-color', pc.overlayColor);
+  s.setProperty('--pcard-overlay-opacity', (pc.overlayOpacity/100));
+
+  // Collection cards
+  const cc = STATE.collectionCard;
+  s.setProperty('--ccard-ratio', (CARD_RATIOS[cc.ratio] || cc.ratio).replace('/', ' / '));
+  s.setProperty('--ccard-radius', cc.radius+'px');
+  s.setProperty('--ccard-h', CARD_ALIGN_ITEMS(cc.align));
+  s.setProperty('--ccard-text', CARD_ALIGN_TEXT(cc.align));
+  s.setProperty('--ccard-pad', cc.padding+'px');
+  s.setProperty('--ccard-v', CARD_OVERLAY_V[cc.overlayPos] || 'flex-end');
+  s.setProperty('--ccard-overlay-color', cc.overlayColor);
+  s.setProperty('--ccard-overlay-opacity', (cc.overlayOpacity/100));
+
+  // Layout style + hover behaviour as classes (so pure-CSS rules can key off them).
+  ['pcard-standard','pcard-card','pcard-overlay'].forEach(c=>store.classList.remove(c));
+  store.classList.add('pcard-'+pc.style);
+  ['ccard-standard','ccard-card','ccard-overlay'].forEach(c=>store.classList.remove(c));
+  store.classList.add('ccard-'+cc.style);
+  ['pcard-zoom','pcard-secondary','pcard-lift'].forEach(c=>store.classList.remove(c));
+  if(pc.hover && pc.hover!=='none') store.classList.add('pcard-'+pc.hover);
+  ['ccard-zoom','ccard-secondary','ccard-lift'].forEach(c=>store.classList.remove(c));
+  if(cc.hover && cc.hover!=='none') store.classList.add('ccard-'+cc.hover);
+}
+
+/* Derive the non-token button vars for a scheme onto a CSSStyleDeclaration:
+   - --c-accent-soft: a soft tint of the scheme's Accent token (eyebrows, stars, icon
+     containers, badges all read --c-accent, which the colorRoles loop writes directly).
+   - --c-btn-bg-eff / --c-btn2-bg-eff: the resting background — simply the Fill token. */
+function setSchemeButtonVars(style, scheme){
+  style.setProperty('--c-accent-soft', rgba(swatchHex(scheme.accent), 0.12));
+  // Resting background is always the chosen Fill color. To get an "outline" look, pick a
+  // Fill that matches the section background (and/or set the button border width to 0px).
+  style.setProperty('--c-btn-bg-eff',  swatchHex(scheme.btnBg));
+  style.setProperty('--c-btn2-bg-eff', swatchHex(scheme.btn2Bg));
 }
 
 /* Paint each selectable section from its assigned scheme (STATE.sectionSchemes).
@@ -792,11 +1142,11 @@ function applySectionSchemes(){
   document.querySelectorAll('#store [data-sec]').forEach(elm=>{
     const name = STATE.sectionSchemes[elm.getAttribute('data-sec')];
     STATE.colorRoles.forEach(r => elm.style.removeProperty(r.cssVar));
-    elm.style.removeProperty('--c-accent-soft');
+    ['--c-accent','--c-accent-soft','--c-btn-bg-eff','--c-btn2-bg-eff'].forEach(v => elm.style.removeProperty(v));
     if(name && STATE.schemes[name]){
       const sc = STATE.schemes[name];
       STATE.colorRoles.forEach(r => elm.style.setProperty(r.cssVar, swatchHex(sc[r.key])));
-      elm.style.setProperty('--c-accent-soft', rgba(swatchHex(sc.btnFill), 0.12));
+      setSchemeButtonVars(elm.style, sc);
       elm.classList.add('sec-themed');
     } else {
       elm.classList.remove('sec-themed');
@@ -816,6 +1166,10 @@ const ICONS = {
   layout:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
   layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
   box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>',
+  tag:'<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+  grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+  star:'<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  input:'<rect width="18" height="13" x="3" y="6" rx="2"/><line x1="7" x2="7" y1="9.5" y2="14.5"/>',
 };
 const svg = (path,w=14)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
@@ -830,8 +1184,8 @@ function subgroup(label, divider){
   const w = el(`<div class="subgroup ${divider?'divider':''}"><div class="subgroup-label">${label}</div><div class="subgroup-items"></div></div>`);
   return { wrap:w, body:w.querySelector('.subgroup-items') };
 }
-function controlRow(label, control, inline){
-  const w = el(`<div class="ctl ${inline?'inline':''}"><label>${label}</label></div>`);
+function controlRow(label, control){
+  const w = el(`<div class="ctl"><label>${label}</label></div>`);
   w.appendChild(control); return w;
 }
 
@@ -902,18 +1256,31 @@ function segmented(value, options, onChange, extraClass){
 // ---- single shared slider (continuous). wrap.setValue(v) updates externally. ----
 function slider(label, value, min, max, step, suffix, onChange){
   const wrap = el(`<div class="ctl">
-    <div class="ctl-head"><span class="ctl-label">${label}</span><span class="val"></span></div>
-    <div class="field"><div class="slider-track"><div class="slider-rail"></div><div class="slider-fill"></div><div class="slider-thumb"></div></div></div>
+    <span class="ctl-label">${label}</span>
+    <div class="slider-wrap">
+      <div class="field slider-field"><div class="slider-track"><div class="slider-rail"></div><div class="slider-fill"></div><div class="slider-thumb"></div></div></div>
+      <div class="field val-field"><input type="text" class="val-input" inputmode="decimal" aria-label="${label}">${suffix?`<span class="val-unit">${suffix}</span>`:''}</div>
+    </div>
   </div>`);
-  const track=wrap.querySelector('.slider-track'), fill=wrap.querySelector('.slider-fill'), thumb=wrap.querySelector('.slider-thumb'), valEl=wrap.querySelector('.val');
+  const track=wrap.querySelector('.slider-track'), fill=wrap.querySelector('.slider-fill'), thumb=wrap.querySelector('.slider-thumb'), input=wrap.querySelector('.val-input');
   let cur = value;
   const clamp = (v)=> Math.round(Math.max(min, Math.min(max, Math.round(v/step)*step)) * 1e4) / 1e4;
-  function paint(){ const pct=(cur-min)/(max-min); fill.style.width=pct*100+'%'; thumb.style.left=pct*100+'%'; thumb.style.transform='translate(-50%,-50%)'; valEl.textContent=cur+suffix; }
+  function paint(){ const pct=(cur-min)/(max-min); fill.style.width=pct*100+'%'; thumb.style.left=pct*100+'%'; thumb.style.transform='translate(-50%,-50%)'; input.value=cur; }
   function setFromX(x){ const r=track.getBoundingClientRect(); const p=Math.max(0,Math.min(1,(x-r.left)/r.width)); const v=clamp(min+p*(max-min)); if(v!==cur){ cur=v; paint(); onChange(cur); } }
   let dragging=false;
   track.addEventListener('pointerdown', e=>{ e.preventDefault(); dragging=true; track.setPointerCapture(e.pointerId); thumb.style.transform='translate(-50%,-50%) scale(1.1)'; setFromX(e.clientX); });
   track.addEventListener('pointermove', e=>{ if(dragging) setFromX(e.clientX); });
   track.addEventListener('pointerup', ()=>{ dragging=false; paint(); });
+  // Typed value: commit on blur / Enter (clamped + snapped to step); arrow keys nudge by one step.
+  function commit(){ const v=parseFloat(input.value); if(isNaN(v)){ paint(); return; } const c=clamp(v); if(c!==cur){ cur=c; onChange(cur); } paint(); }
+  function nudge(d){ const c=clamp(cur+d*step); if(c!==cur){ cur=c; onChange(cur); paint(); } }
+  input.addEventListener('change', commit);
+  input.addEventListener('focus', ()=>input.select());
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commit(); input.blur(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); nudge(1); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); nudge(-1); }
+  });
   wrap.setValue = (v)=>{ cur=clamp(v); paint(); };
   paint();
   return wrap;
@@ -933,6 +1300,7 @@ function colorInput(value, onChange){
 // swatch-token dropdown for scheme roles: lists every palette swatch.
 function swatchDropdown(value, onChange){
   const opts = STATE.palette.map(c => ({ value:c.id, label:c.name, color:c.hex }));
+  opts.push({ value:'transparent', label:'Transparent', color:TRANSPARENT_SWATCH });
   return customDropdown(value, opts, onChange);
 }
 function fontDropdown(value, onChange){
@@ -944,7 +1312,7 @@ function fontDropdown(value, onChange){
    PANEL GROUPS  (each control: change -> mutate STATE -> applyRoles())
    ============================================================================ */
 let schemesHost;
-let expandedScheme = 'Light';   // which scheme is expanded for editing (and previewed)
+let expandedScheme = null;   // which scheme is expanded for editing (and previewed); null = all collapsed
 
 function renderColor(body){
   // ---- Palette: derived name label above, color input + delete beside ----
@@ -978,14 +1346,15 @@ function renderColor(body){
   sch.body.appendChild(el('<p class="subgroup-hint">Edit a scheme’s tokens here. To use a scheme, select a section in the preview and pick it there.</p>'));
   schemesHost = el('<div></div>');           // renderSchemes() owns this node (hint stays put)
   sch.body.appendChild(schemesHost);
-  if(!STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
+  // null = intentionally all collapsed; only repoint if it points at a now-missing scheme
+  if(expandedScheme !== null && !STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
   renderSchemes();
   body.appendChild(sch.wrap);
 }
 
 // If a swatch is deleted, repoint any scheme role that referenced it.
 function reconcileSchemes(){
-  const valid = new Set(STATE.palette.map(c=>c.id));
+  const valid = new Set([...STATE.palette.map(c=>c.id), 'transparent']);
   const fallback = STATE.palette[0].id;
   Object.values(STATE.schemes).forEach(sc => { STATE.colorRoles.forEach(r=>{ if(!valid.has(sc[r.key])) sc[r.key]=fallback; }); });
 }
@@ -994,7 +1363,7 @@ function reconcileSchemes(){
 function paintSquare(sq, scheme){
   sq.style.background = swatchHex(scheme.bg);
   sq.querySelector('span').style.color = swatchHex(scheme.heading);
-  sq.querySelector('.bar').style.background = swatchHex(scheme.btnFill);
+  sq.querySelector('.bar').style.background = swatchHex(scheme.accent);
 }
 function schemePreview(scheme){
   const sq = el('<div class="scheme-sq"><span>Aa</span><div class="bar"></div></div>');
@@ -1044,9 +1413,27 @@ function renderSchemes(){
     item.appendChild(head);
     if(expanded){
       const tokens = el('<div class="scheme-tokens"></div>');
+      // editing anything repaints any section currently using this scheme, live.
+      const onChange = ()=>{ paintSquare(sq, scheme); applyRoles(); renderSectionControls(); };
+      // Bucket roles by their `group`: ungrouped roles are the scheme's top-level tokens;
+      // grouped roles (Primary button / Secondary button) render under a subgroup header.
+      const buckets = [];
       STATE.colorRoles.forEach(r=>{
-        // editing a token repaints any section currently using this scheme, live.
-        tokens.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; paintSquare(sq, scheme); applyRoles(); renderSectionControls(); })));
+        const g = r.group || '';
+        let b = buckets.find(x=>x.name===g);
+        if(!b){ b = { name:g, roles:[] }; buckets.push(b); }
+        b.roles.push(r);
+      });
+      buckets.forEach(b=>{
+        let host = tokens;
+        if(b.name){
+          const sub = el(`<div class="scheme-subgroup"><div class="subgroup-label">${b.name}</div></div>`);
+          tokens.appendChild(sub);
+          host = sub;
+        }
+        b.roles.forEach(r=>{
+          host.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; onChange(); })));
+        });
       });
       item.appendChild(tokens);
     }
@@ -1066,10 +1453,8 @@ function weightDropdown(value, onChange){
 
 // Case control as a glyph toggle group (value = TEXT_CASE key, label = sample glyphs).
 const CASE_GLYPHS = [
-  { value:'Default',    label:'—' },
-  { value:'UPPERCASE',  label:'AG' },
-  { value:'Title Case', label:'Ag' },
-  { value:'lowercase',  label:'ag' },
+  { value:'Default',    label:'Default' },
+  { value:'UPPERCASE',  label:'Uppercase' },
 ];
 function caseToggle(value, onChange){ return segmented(value, CASE_GLYPHS, onChange, 'seg-glyph'); }
 
@@ -1088,8 +1473,7 @@ function renderTypography(body){
   const head = subgroup('Heading', true);
   head.body.appendChild(controlRow('Font', fontDropdown(t.headingFont, v=>{ t.headingFont=v; applyRoles(); })));
   head.body.appendChild(controlRow('Weight', weightDropdown(t.heading.weight, v=>{ t.heading.weight=v; applyRoles(); })));
-  head.body.appendChild(controlRow('Line height', segmented(t.heading.lineHeight, Object.keys(HEADING_LINE_HEIGHT), v=>{ t.heading.lineHeight=v; applyRoles(); })));
-  head.body.appendChild(controlRow('Letter spacing', segmented(t.heading.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.heading.letterSpacing=v; applyRoles(); })));
+  head.body.appendChild(slider('Letter spacing', t.heading.letterSpacing, -0.05, 0.05, 0.005, 'em', v=>{ t.heading.letterSpacing=+v; applyRoles(); }));
   head.body.appendChild(controlRow('Case', caseToggle(t.heading.case, v=>{ t.heading.case=v; applyRoles(); })));
   head.body.appendChild(slider('Scale ratio', t.ratio, 1.1, 1.6, 0.1, '', v=>{ t.ratio=+v; applyRoles(); }));
   body.appendChild(head.wrap);
@@ -1098,37 +1482,153 @@ function renderTypography(body){
   const bod = subgroup('Body', true);
   bod.body.appendChild(controlRow('Font', fontDropdown(t.bodyFont, v=>{ t.bodyFont=v; applyRoles(); })));
   bod.body.appendChild(controlRow('Weight', weightDropdown(t.body.weight, v=>{ t.body.weight=v; applyRoles(); })));
-  bod.body.appendChild(controlRow('Line height', segmented(t.body.lineHeight, Object.keys(BODY_LINE_HEIGHT), v=>{ t.body.lineHeight=v; applyRoles(); })));
-  bod.body.appendChild(controlRow('Letter spacing', segmented(t.body.letterSpacing, Object.keys(LETTER_SPACING), v=>{ t.body.letterSpacing=v; applyRoles(); })));
-  bod.body.appendChild(controlRow('Case', caseToggle(t.body.case, v=>{ t.body.case=v; applyRoles(); })));
+  bod.body.appendChild(slider('Letter spacing', t.body.letterSpacing, -0.05, 0.05, 0.005, 'em', v=>{ t.body.letterSpacing=+v; applyRoles(); }));
   body.appendChild(bod.wrap);
 }
 
+// ---- Buttons: one shared set of levers applied to BOTH buttons — border thickness,
+//      corner radius, font (heading vs body), text case. ----
 function renderButtons(body){
-  body.appendChild(controlRow('Primary style', segmented(STATE.buttons.primaryStyle, ['fill','outline'], v=>{ STATE.buttons.primaryStyle=v; applyRoles(); })));
-  body.appendChild(controlRow('Secondary style', segmented(STATE.buttons.secondaryStyle, ['fill','outline'], v=>{ STATE.buttons.secondaryStyle=v; applyRoles(); })));
-  body.appendChild(el(`<div class="ctl"><span class="ctl-label" style="color:var(--stone-400);font-weight:400;line-height:1.4">Button fill &amp; text colors come from the palette via the active scheme's Button / Secondary roles.</span></div>`));
+  const b = STATE.buttons;
+  body.appendChild(slider('Border thickness', b.borderWidth, 0, 4, 1, 'px', v=>{ b.borderWidth=v; applyRoles(); }));
+  body.appendChild(slider('Corner radius', b.radius, 0, 40, 1, 'px', v=>{ b.radius=v; applyRoles(); }));
+  body.appendChild(controlRow('Font', segmented(b.font,
+    [{value:'body',label:'Body'},{value:'heading',label:'Heading'}], v=>{ b.font=v; applyRoles(); })));
+  body.appendChild(controlRow('Case', segmented(b.case,
+    [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ b.case=v; applyRoles(); })));
 }
 
+// ---- Inputs: one shared set of geometry/type levers applied to EVERY form field. Mirrors the
+//      Buttons controls (border thickness, corner radius, font, case) plus Size. Colours live in
+//      the scheme's Inputs tokens — to get an outline style, set Fill to Transparent there. ----
+function renderInputs(body){
+  const inp = STATE.inputs;
+  body.appendChild(slider('Border thickness', inp.borderWidth, 0, 4, 1, 'px', v=>{ inp.borderWidth=v; applyInputs(); }));
+  body.appendChild(slider('Corner radius', inp.radius, 0, 40, 1, 'px', v=>{ inp.radius=v; applyInputs(); }));
+  body.appendChild(controlRow('Font', segmented(inp.font,
+    [{value:'body',label:'Body'},{value:'heading',label:'Heading'}], v=>{ inp.font=v; applyInputs(); })));
+  body.appendChild(controlRow('Case', segmented(inp.case,
+    [{value:'default',label:'Default'},{value:'uppercase',label:'Uppercase'}], v=>{ inp.case=v; applyInputs(); })));
+  body.appendChild(controlRow('Size', segmented(inp.size,
+    [{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}], v=>{ inp.size=v; applyInputs(); })));
+  body.appendChild(el('<p class="subgroup-hint" style="margin-top:4px">Input colours (fill, border, text, placeholder &amp; focus) live in each color scheme. Set Fill to Transparent for an outline style.</p>'));
+}
+
+// ---- Icons: global glyph size + weight, plus the feature-icon background. The Style picker
+//      folds on/off into the background style (off = none); radius + padding dim when it's off
+//      and border weight is Outline-only (mirroring how a real theme would `visible_if` them).
+//      Glyph + background COLOURS are scheme tokens (Icon / Icon background), not set here. ----
+function renderIcons(body){
+  const ic = STATE.icons;
+
+  // glyph size + weight live at the top of the group (no subgroup header).
+  body.appendChild(slider('Size', ic.size, 16, 48, 2, 'px', v=>{ ic.size=v; applyIcons(); }));
+  body.appendChild(el('<p class="subgroup-hint">Global default — override per section locally (coming later).</p>'));
+  body.appendChild(controlRow('Weight', segmented(ic.weight,
+    [{value:'light',label:'Light'},{value:'regular',label:'Regular'},{value:'heavy',label:'Heavy'}],
+    v=>{ ic.weight=v; applyIcons(); })));
+
+  const bgs = subgroup('Background', true);
+  bgs.body.appendChild(el('<p class="subgroup-hint">Shown on feature icons (value props). The glyph &amp; background colours come from the section’s color scheme (Icon &amp; Icon background tokens).</p>'));
+  bgs.body.appendChild(controlRow('Style', segmented(ic.container,
+    [{value:'off',label:'Off'},{value:'filled',label:'Filled'},{value:'outline',label:'Outline'}],
+    v=>{ ic.container=v; applyIcons(); drawOpts(); })));
+  const opts = el('<div class="subgroup-items"></div>');
+  bgs.body.appendChild(opts);
+  // radius + padding apply to any background (dim when off); border weight is Outline-only.
+  function drawOpts(){
+    opts.innerHTML='';
+    const c = ic.container, hasBg = c!=='off';
+    const dim = (on)=> el(`<div class="subgroup-items"${on?'':' style="opacity:.4;pointer-events:none"'}></div>`);
+    const geo = dim(hasBg);
+    geo.appendChild(slider('Radius', ic.radius, 0, 40, 1, 'px', v=>{ ic.radius=v; applyIcons(); }));
+    geo.appendChild(slider('Padding', ic.padding, 0, 28, 1, 'px', v=>{ ic.padding=v; applyIcons(); }));
+    opts.appendChild(geo);
+    const bw = dim(c==='outline');
+    bw.appendChild(slider('Border', ic.borderWidth, 0, 4, 1, 'px', v=>{ ic.borderWidth=v; applyIcons(); }));
+    opts.appendChild(bw);
+    if(!hasBg) opts.appendChild(el('<p class="subgroup-hint">Radius, padding &amp; border apply once a background is set.</p>'));
+    else if(c!=='outline') opts.appendChild(el('<p class="subgroup-hint">Border weight applies to the Outline style.</p>'));
+  }
+  drawOpts();
+  body.appendChild(bgs.wrap);
+}
+
+// Reusable ratio dropdown (Portrait / Square / Landscape / Wide).
+function ratioDropdown(value, onChange){
+  const opts = Object.keys(CARD_RATIOS).map(k => ({ value:k, label:`${k} (${CARD_RATIOS[k]})` }));
+  return customDropdown(value, opts, onChange);
+}
+// Reusable hover-effect dropdown (shared option set for both card types).
+function hoverDropdown(value, onChange){
+  const opts = [
+    { value:'none',      label:'None' },
+    { value:'zoom',      label:'Zoom in' },
+    { value:'secondary', label:'Show secondary image' },
+    { value:'lift',      label:'Lift on hover' },
+  ];
+  return customDropdown(value, opts, onChange);
+}
+
+// ---- Card controls: ONE shared set for product + collection cards, so the two stay
+//   consistent. cfg is STATE.productCard / STATE.collectionCard; gutterKey picks which
+//   spacing gutter the card type uses. Three layout styles (Standard / Card / Overlay);
+//   alignment is horizontal and the Overlay subgroup carries the vertical position + scrim. ----
+function renderCardControls(body, cfg, gutterKey){
+  body.innerHTML = '';                       // re-rendered in place when Style changes
+  const isOverlay = cfg.style === 'overlay';
+
+  const lay = subgroup('Layout');
+  lay.body.appendChild(controlRow('Style', segmented(cfg.style, [
+    { value:'standard', label:'Standard' },
+    { value:'card',     label:'Card' },
+    { value:'overlay',  label:'Overlay' },
+    // Style drives which Alignment control shows, so re-render the group on change.
+  ], v=>{ cfg.style=v; applyCards(); renderCardControls(body, cfg, gutterKey); })));
+  lay.body.appendChild(controlRow('Aspect ratio', ratioDropdown(cfg.ratio, v=>{ cfg.ratio=v; applyCards(); })));
+  lay.body.appendChild(slider('Corner radius', cfg.radius, 0, 40, 1, 'px', v=>{ cfg.radius=v; applyCards(); }));
+  lay.body.appendChild(slider('Gutter', STATE.spacing[gutterKey], 0, 48, 2, 'px', v=>{ STATE.spacing[gutterKey]=v; applyRoles(); }));
+  body.appendChild(lay.wrap);
+
+  const info = subgroup('Info', true);
+  if(isOverlay){
+    // Overlay: one 6-way picker that sets vertical position + horizontal alignment together.
+    info.body.appendChild(controlRow('Alignment', customDropdown(`${cfg.overlayPos}-${cfg.align}`, CARD_POS_OPTS,
+      v=>{ const [vert,horiz]=v.split('-'); cfg.overlayPos=vert; cfg.align=horiz; applyCards(); })));
+  } else {
+    // Standard / Card: info sits below the image, so only horizontal alignment applies.
+    info.body.appendChild(controlRow('Alignment', segmented(cfg.align,
+      [{value:'left',label:'Left'},{value:'center',label:'Center'}], v=>{ cfg.align=v; applyCards(); })));
+  }
+  info.body.appendChild(slider('Side padding', cfg.padding, 0, 40, 1, 'px', v=>{ cfg.padding=v; applyCards(); }));
+  body.appendChild(info.wrap);
+
+  const ov = subgroup('Overlay', true);
+  ov.body.appendChild(el('<p class="subgroup-hint">Tints the image behind the info (Overlay style only).</p>'));
+  ov.body.appendChild(controlRow('Color', colorInput(cfg.overlayColor, v=>{ cfg.overlayColor=v; applyCards(); })));
+  ov.body.appendChild(slider('Opacity', cfg.overlayOpacity, 0, 100, 1, '%', v=>{ cfg.overlayOpacity=v; applyCards(); }));
+  body.appendChild(ov.wrap);
+
+  const inter = subgroup('Interaction', true);
+  inter.body.appendChild(controlRow('Hover effect', hoverDropdown(cfg.hover, v=>{ cfg.hover=v; applyCards(); })));
+  body.appendChild(inter.wrap);
+}
+function renderProductCards(body){ renderCardControls(body, STATE.productCard, 'productGutter'); }
+function renderCollectionCards(body){ renderCardControls(body, STATE.collectionCard, 'collectionGutter'); }
+
 function renderShape(body){
-  const radiusSlider = slider('Corner radius', STATE.radius, 0, 40, 1, 'px', v=>{ STATE.radius=v; applyRoles(); });
-  body.appendChild(controlRow('Preset', segmented(
-    Object.keys(RADIUS_PRESETS).find(k=>RADIUS_PRESETS[k]===STATE.radius) || 'Custom',
-    Object.keys(RADIUS_PRESETS),
-    name=>{ STATE.radius=RADIUS_PRESETS[name]; radiusSlider.setValue(Math.min(STATE.radius,40)); applyRoles(); }
-  )));
-  body.appendChild(radiusSlider);
+  body.appendChild(slider('Corner radius', STATE.radius, 0, 40, 1, 'px', v=>{ STATE.radius=v; applyRoles(); }));
 }
 
 function renderSpacing(body){
   body.appendChild(slider('Section padding', STATE.spacing.sectionPadding, 24, 140, 4, 'px', v=>{ STATE.spacing.sectionPadding=v; applyRoles(); }));
   body.appendChild(slider('Container max-width', STATE.spacing.containerMax, 720, 1400, 20, 'px', v=>{ STATE.spacing.containerMax=v; applyRoles(); }));
-  body.appendChild(slider('Gutter', STATE.spacing.gutter, 8, 48, 2, 'px', v=>{ STATE.spacing.gutter=v; applyRoles(); }));
+  body.appendChild(slider('Gutter', STATE.spacing.gutter, 0, 48, 2, 'px', v=>{ STATE.spacing.gutter=v; applyRoles(); }));
 }
 
-function renderElevation(body){
-  body.appendChild(controlRow('Shadow', segmented(STATE.elevation, ['None','Soft','Hard'], v=>{ STATE.elevation=v; applyRoles(); })));
-}
+/* Elevation/shadow controls intentionally removed for now (most stores ship flat).
+   STATE.elevation stays at its default ('None') and applyRoles still writes --shadow,
+   so the preview is unchanged and the group can be re-added later. */
 
 /* ============================================================================
    PREVIEW BUILDERS
@@ -1165,16 +1665,25 @@ function buildHomepage(){
   document.getElementById('valueprops').innerHTML = VALUEPROPS.map(v=>
     `<div class="vp"><div class="ic">${svg(SI[v.ic],24)}</div><h5>${v.h}</h5><p>${v.p}</p></div>`).join('');
 
-  document.getElementById('collections').innerHTML = COLLECTIONS.map(c=>
-    `<a class="collection"><img src="https://picsum.photos/seed/${c.seed}/520/720" alt="${c.name}">
-      <div class="clabel"><div class="cname">${c.name}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div></div></a>`).join('');
+  document.getElementById('collections').innerHTML = COLLECTIONS.map(c=>{
+    const label = `<div class="cname">${c.name}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
+    return `<a class="collection">
+      <div class="cmedia">
+        <img class="cimg cimg-1" src="https://picsum.photos/seed/${c.seed}/520/720" alt="${c.name}">
+        <img class="cimg cimg-2" src="https://picsum.photos/seed/${c.seed2}/520/720" alt="" aria-hidden="true">
+        <span class="coverlay"></span>
+        <div class="clabel clabel-on">${label}</div>
+      </div>
+      <div class="clabel clabel-below">${label}</div></a>`;
+  }).join('');
 
   document.getElementById('products').innerHTML = PRODUCTS.map(p=>
-    `<article class="product"><div class="thumb">${p.badge?`<span class="badge">${p.badge}</span>`:''}${sunglasses(p.frame)}</div>
+    `<article class="product"><div class="thumb">${p.badge?`<span class="badge">${p.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(p.frame)}</div><div class="sg-layer sg-2">${sunglasses(p.frame2)}</div></div>
+      <span class="poverlay"></span>
       <div class="pbody"><div class="pname">${p.name}</div>
         <div class="rrow">${stars(p.rating)}<span class="rev">(${p.reviews})</span></div>
         <span class="price">${p.was?`<s>${p.was}</s>`:''}${p.price}</span>
-        <a class="btn btn-primary fill">Add to cart</a></div></article>`).join('');
+        <a class="btn btn-primary">Add to cart</a></div></article>`).join('');
 
   document.getElementById('glist').innerHTML = [
     'Free 14-day home try-on', '2-year warranty + lifetime repairs', 'Free returns &amp; exchanges'
@@ -1250,6 +1759,218 @@ function schemeSelect(value, onChange){
   return wrap;
 }
 
+/* ============================================================================
+   SCHEMA ENGINE  —  renders a Shopify-shaped settings array into the contextual
+   panel. Each real Shopify setting `type` maps to one of the shared controls, so
+   anything authored here is Shopify-legal and ports straight to {% schema %}.
+   Per SHOPIFY_SPEC.md: settings are a FLAT array; only `header`/`paragraph` group.
+   ============================================================================ */
+// plain text / textarea field
+function textField(value, onChange, opts={}){
+  const f = opts.multiline
+    ? el(`<div class="field field-ta"><textarea class="text-input ta" rows="3"></textarea></div>`)
+    : el(`<div class="field"><input class="text-input" type="text"></div>`);
+  const input = f.querySelector(opts.multiline ? 'textarea' : 'input');
+  if(opts.placeholder) input.placeholder = opts.placeholder;
+  input.value = value==null ? '' : value;
+  input.addEventListener('change', ()=>onChange(input.value));
+  return f;
+}
+function numberField(value, onChange, opts={}){
+  const f = el(`<div class="field val-field"><input type="text" inputmode="decimal" class="val-input"></div>`);
+  const input = f.querySelector('input');
+  if(opts.placeholder) input.placeholder = opts.placeholder;
+  input.value = value==null ? '' : value;
+  input.addEventListener('change', ()=>{ const t=input.value.trim(); const v = t==='' ? null : parseFloat(t); onChange(isNaN(v)?null:v); });
+  return f;
+}
+function switchField(value, onChange){
+  const wrap = el('<div class="ctl-inline"></div>');
+  const sw = el('<button type="button" class="switch"><span class="knob"></span></button>');
+  const paint = (v)=>{ sw.classList.toggle('on', !!v); sw.setAttribute('aria-pressed', String(!!v)); };
+  let v = !!value; paint(v);
+  sw.onclick = ()=>{ v=!v; paint(v); onChange(v); };
+  wrap.appendChild(sw); return wrap;
+}
+// Faithful-SHAPE media/resource picker. The prototype has no store resources, so the
+// picker doesn't open a real browser — but it renders the exact field Shopify shows, so
+// the schema and panel layout stay accurate. (Real picker is store-bound; comes with export.)
+const PICKER_LABELS = {
+  image_picker:'Select image', video:'Select video', video_url:'youtube.com/…',
+  collection:'Select collection', collection_list:'Select collections', product:'Select product',
+  product_list:'Select products', blog:'Select blog', page:'Select page', article:'Select article',
+  link_list:'Select menu', metaobject:'Select metaobject', metaobject_list:'Select metaobjects',
+  font_picker:'Select font', url:'Paste a link or search',
+};
+function pickerField(setting, value, onChange){
+  const f = el(`<button type="button" class="field picker-field"><span class="pf-label"></span>${svg('<path d="m6 9 6 6 6-6"/>',14)}</button>`);
+  f.querySelector('.pf-label').textContent = value || PICKER_LABELS[setting.type] || 'Select';
+  return f;
+}
+
+// Render ONE setting → a DOM row (or a header/paragraph divider). Returns null for unknowns.
+function renderSetting(setting, value, onChange){
+  const t = setting.type;
+  if(t==='header')    return el(`<div class="set-header">${setting.content||''}</div>`);
+  if(t==='paragraph') return el(`<div class="set-paragraph">${setting.content||''}</div>`);
+  if(t==='range')     return slider(setting.label||'', value==null?setting.default:value, setting.min, setting.max, setting.step||1, setting.unit||'', onChange);
+  let control;
+  switch(t){
+    case 'text': case 'url':
+      control = textField(value, onChange, {placeholder:setting.placeholder}); break;
+    case 'textarea': case 'richtext': case 'inline_richtext': case 'html': case 'liquid':
+      control = textField(value, onChange, {multiline:true, placeholder:setting.placeholder}); break;
+    case 'number':
+      control = numberField(value, onChange, {placeholder:setting.placeholder}); break;
+    case 'checkbox':
+      control = switchField(value, onChange); break;
+    case 'radio': case 'select':
+      control = customDropdown(value, (setting.options||[]).map(o=>({value:o.value,label:o.label})), onChange); break;
+    case 'text_alignment':
+      control = segmented(value||setting.default||'left', [{value:'left',label:'Left'},{value:'center',label:'Center'},{value:'right',label:'Right'}], onChange); break;
+    case 'color':
+      control = colorInput(value||setting.default||'#000000', onChange); break;
+    case 'color_scheme':
+      control = schemeSelect(value, onChange); break;
+    case 'font_picker':
+      control = fontDropdown(value||setting.default||'Inter', onChange); break;
+    default: // image_picker, video, video_url, collection(_list), product(_list), blog, page, article, link_list, metaobject(_list)
+      control = pickerField(setting, value, onChange);
+  }
+  return controlRow(setting.label || '', control);
+}
+
+// Walk a flat settings array (Shopify section.settings) into a host element.
+function renderSettingsList(host, settings, getVal, setVal){
+  (settings||[]).forEach(s=>{
+    const isInput = s.type!=='header' && s.type!=='paragraph';
+    const node = renderSetting(s, isInput ? getVal(s) : null, v=>setVal(s, v));
+    if(node) host.appendChild(node);
+  });
+}
+
+/* ----------------------------------------------------------------------------
+   SECTION SCHEMA REGISTRY  —  a real, Shopify-shaped {% schema %} per section.
+   These are the schemas that will export to sections/*.liquid. Settings here are
+   persisted to STATE.sectionSettings and rendered by the engine above; color_scheme
+   and section padding are wired to the live preview today, the rest persist as
+   faithful values (preview-wiring of each is the per-section migration work).
+   `category` is the single grouping level allowed in the Add-section picker.
+   ---------------------------------------------------------------------------- */
+const PAD = (id,label,def)=>({ type:'range', id, label, min:0, max:160, step:4, unit:'px', default:def });
+const PADDING_BLOCK = [ {type:'header', content:'Section padding'}, PAD('padding_top','Top padding',80), PAD('padding_bottom','Bottom padding',80) ];
+const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color scheme' };
+
+const SECTION_SCHEMAS = {
+  nav: { name:'Header', category:'Header', settings:[
+    SCHEME_SETTING,
+    {type:'header', content:'Logo'},
+    {type:'text', id:'logo_text', label:'Logo text', default:'NOIR'},
+    {type:'image_picker', id:'logo', label:'Logo image'},
+    {type:'header', content:'Menu'},
+    {type:'link_list', id:'menu', label:'Menu'},
+    {type:'checkbox', id:'show_search', label:'Show search', default:true},
+    {type:'checkbox', id:'sticky', label:'Sticky header', default:false},
+  ]},
+  hero: { name:'Image banner', category:'Image', settings:[
+    SCHEME_SETTING,
+    {type:'image_picker', id:'image', label:'Background image'},
+    {type:'select', id:'height', label:'Banner height', default:'large', options:[
+      {value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'},{value:'full',label:'Full screen'}]},
+    {type:'header', content:'Content'},
+    {type:'text', id:'eyebrow', label:'Eyebrow', default:"New · Summer '26"},
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'See the world sharper'},
+    {type:'textarea', id:'subheading', label:'Subheading', default:'Premium polarized sunglasses, built to last.'},
+    {type:'text_alignment', id:'alignment', label:'Content alignment', default:'left'},
+    ...PADDING_BLOCK,
+  ]},
+  valueprops: { name:'Multicolumn', category:'Layout', max_blocks:6, settings:[
+    SCHEME_SETTING,
+    {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:4},
+    {type:'text_alignment', id:'alignment', label:'Alignment', default:'center'},
+    ...PADDING_BLOCK,
+  ]},
+  collections: { name:'Collection list', category:'Collections', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'Find your fit'},
+    {type:'collection_list', id:'collections', label:'Collections', limit:12},
+    {type:'range', id:'columns', label:'Columns', min:2, max:5, step:1, default:4},
+    ...PADDING_BLOCK,
+  ]},
+  bestsellers: { name:'Featured collection', category:'Collections', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'Loved by thousands'},
+    {type:'collection', id:'collection', label:'Collection'},
+    {type:'range', id:'products_to_show', label:'Products to show', min:2, max:12, step:1, default:6},
+    {type:'checkbox', id:'show_view_all', label:'Enable "View all"', default:true},
+    ...PADDING_BLOCK,
+  ]},
+  guarantee: { name:'Image with text', category:'Image', settings:[
+    SCHEME_SETTING,
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'select', id:'image_position', label:'Image position', default:'left', options:[
+      {value:'left',label:'Left'},{value:'right',label:'Right'}]},
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'Try at home, risk-free'},
+    {type:'richtext', id:'text', label:'Text', default:'<p>14-day home try-on. Keep what you love.</p>'},
+    ...PADDING_BLOCK,
+  ]},
+  reviews: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'4.8 out of 5'},
+    {type:'select', id:'layout', label:'Layout', default:'grid', options:[
+      {value:'grid',label:'Grid'},{value:'carousel',label:'Carousel'}]},
+    ...PADDING_BLOCK,
+  ]},
+  press: { name:'Logo list', category:'Layout', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'As featured in'},
+    ...PADDING_BLOCK,
+  ]},
+  ugc: { name:'Image gallery', category:'Image', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'#NoirOnYou'},
+    {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:6},
+    ...PADDING_BLOCK,
+  ]},
+  journal: { name:'Blog posts', category:'Layout', settings:[
+    SCHEME_SETTING,
+    {type:'text', id:'heading', label:'Heading', default:'From the journal'},
+    {type:'blog', id:'blog', label:'Blog'},
+    {type:'range', id:'post_limit', label:'Posts to show', min:2, max:6, step:1, default:3},
+    ...PADDING_BLOCK,
+  ]},
+  newsletter: { name:'Email signup', category:'Layout', settings:[
+    SCHEME_SETTING,
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'Get 10% off'},
+    {type:'textarea', id:'subheading', label:'Subheading', default:'Join the list for early drops.'},
+    {type:'text', id:'button_label', label:'Button label', default:'Subscribe'},
+    ...PADDING_BLOCK,
+  ]},
+  footer: { name:'Footer', category:'Footer', settings:[
+    SCHEME_SETTING,
+    {type:'checkbox', id:'show_payment_icons', label:'Show payment icons', default:true},
+    {type:'text', id:'copyright', label:'Copyright text', default:'© NOIR'},
+  ]},
+};
+
+// Per-section value bag + safe live-wiring of the settings we can drive today.
+function secVals(sec){ return (STATE.sectionSettings[sec] || (STATE.sectionSettings[sec] = {})); }
+function sectionEl(sec){ return document.querySelector(`#store [data-sec="${sec}"]`); }
+function applySectionSetting(sec, setting, v){
+  const elm = sectionEl(sec); if(!elm) return;
+  if(setting.id==='padding_top')    elm.style.paddingTop = v + 'px';
+  if(setting.id==='padding_bottom') elm.style.paddingBottom = v + 'px';
+}
+// Re-apply persisted section settings to the preview (e.g. after Reset rebuild).
+function applyAllSectionSettings(){
+  Object.keys(SECTION_SCHEMAS).forEach(sec=>{
+    const elm = sectionEl(sec); if(!elm) return;
+    elm.style.removeProperty('padding-top'); elm.style.removeProperty('padding-bottom');
+    const vals = STATE.sectionSettings[sec]; if(!vals) return;
+    (SECTION_SCHEMAS[sec].settings||[]).forEach(s=>{ if(s.id in vals) applySectionSetting(sec, s, vals[s.id]); });
+  });
+}
+
 function selectSection(key){
   selectedSection = key;
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
@@ -1278,19 +1999,29 @@ function renderSectionControls(){
   }
   card.hidden = false;
   document.body.classList.add('sec-selected');
-  const title = SECTION_TITLES[selectedSection] || 'Section';
+  const schema = SECTION_SCHEMAS[selectedSection] || { name: SECTION_TITLES[selectedSection]||'Section', settings:[SCHEME_SETTING] };
+  const title = schema.name;
   const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
   if(phName) phName.textContent = title;
-  const curName = STATE.sectionSchemes[selectedSection] || baselineSchemeName();
   card.innerHTML = '';
-  const head = el('<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><span class="sf-name"></span></div></div>');
+  const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div>${schema.category?`<div class="sf-sub">${schema.category} section</div>`:''}</div></div></div>`);
   head.querySelector('.sf-name').textContent = title;
   const close = el(`<button class="sf-close" title="Deselect section">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
   close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
   head.appendChild(close); card.appendChild(head);
+
+  // Render the section's Shopify-shaped settings via the schema engine. color_scheme routes
+  // to STATE.sectionSchemes (existing scheme wiring); every other setting persists to secVals.
+  const vals = secVals(selectedSection);
+  const getVal = (s)=> s.type==='color_scheme'
+    ? (STATE.sectionSchemes[selectedSection] || baselineSchemeName())
+    : ((s.id in vals) ? vals[s.id] : s.default);
+  const setVal = (s, v)=>{
+    if(s.type==='color_scheme'){ STATE.sectionSchemes[selectedSection]=v; applySectionSchemes(); return; }
+    vals[s.id] = v; applySectionSetting(selectedSection, s, v);
+  };
   const b = el('<div class="sf-body"></div>');
-  b.appendChild(el('<label class="sf-label">Color scheme</label>'));
-  b.appendChild(schemeSelect(curName, id=>{ STATE.sectionSchemes[selectedSection]=id; applySectionSchemes(); renderSectionControls(); }));
+  renderSettingsList(b, schema.settings, getVal, setVal);
   card.appendChild(b);
   placeCard(card);
 }
@@ -1331,21 +2062,25 @@ function initSectionSelection(){
 function buildPanel(){
   const host=document.getElementById('groups'); host.innerHTML='';
   [
-    ['Color','palette',true,renderColor],
+    ['Color','palette',false,renderColor],
     ['Typography','type',false,renderTypography],
-    ['Buttons','click',false,renderButtons],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
-    ['Elevation','layers',false,renderElevation],
+    ['Buttons','click',false,renderButtons],
+    ['Inputs','input',false,renderInputs],
+    ['Icons','star',false,renderIcons],
+    ['Product cards','tag',false,renderProductCards],
+    ['Collection cards','grid',false,renderCollectionCards],
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; deselectSection(); buildPanel(); applyRoles(); };
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
 
 refreshNames();   // derive palette names from their hex values
 buildPanel();
 buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
+applyAllSectionSettings();   // re-apply any persisted per-section settings to the preview
 initSectionSelection();
 
 /* ============================================================================
