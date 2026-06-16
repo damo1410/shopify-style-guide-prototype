@@ -121,6 +121,30 @@
   /* breadcrumb in the block settings card */
   .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
   .sf-crumb:hover { text-decoration: underline; }
+  /* + Add block row in the tree */
+  .lyr-add { display: flex; align-items: center; gap: 8px; margin: 2px 12px 6px 34px; padding: 7px 8px; border: 1px dashed var(--stone-300); background: none; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-500); width: calc(100% - 46px); }
+  .lyr-add:hover { color: var(--sel); border-color: var(--sel); }
+  .lyr-add svg { flex: 0 0 auto; }
+  /* Remove block button (bottom of the block settings card) */
+  .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
+  .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
+
+  /* ---- Add picker modal (Shopify-style: one category level → preset entries) ---- */
+  .picker-ov { position: fixed; inset: 0; background: rgba(12,10,9,.45); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
+  .picker { width: 380px; max-width: 100%; max-height: 80vh; display: flex; flex-direction: column; background: #fff; border-radius: 12px; box-shadow: 0 24px 60px -12px rgba(0,0,0,.4); overflow: hidden; }
+  .picker-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--stone-200); font-size: 13px; font-weight: 600; }
+  .picker-x { border: none; background: none; cursor: pointer; color: var(--stone-400); display: inline-flex; padding: 2px; }
+  .picker-x:hover { color: var(--stone-900); }
+  .picker-body { padding: 8px; overflow-y: auto; }
+  .picker-cat { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone-400); padding: 10px 8px 4px; }
+  .picker-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 8px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; }
+  .picker-item:hover { background: var(--stone-100); }
+  .picker-ic { width: 32px; height: 32px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--stone-100); color: var(--stone-500); }
+  .picker-name { font-size: 12px; font-weight: 600; color: var(--stone-800); }
+
+  /* ---- toast ---- */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--stone-900); color: #fff; font-size: 12px; font-weight: 500; padding: 10px 16px; border-radius: 8px; box-shadow: 0 8px 24px -6px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 300; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
@@ -1713,48 +1737,7 @@ function sunglasses(frame){
 function buildHomepage(){
   document.getElementById('hero-rating').insertAdjacentHTML('afterbegin', `<span class="stars">${starsGold(5)}</span>`);
   document.getElementById('agg-stars').innerHTML = '★★★★★';
-
-  document.getElementById('valueprops').innerHTML = VALUEPROPS.map(v=>
-    `<div class="vp"><div class="ic">${svg(SI[v.ic],24)}</div><h5>${v.h}</h5><p>${v.p}</p></div>`).join('');
-
-  document.getElementById('collections').innerHTML = COLLECTIONS.map(c=>{
-    const label = `<div class="cname">${c.name}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
-    return `<a class="collection">
-      <div class="cmedia">
-        <img class="cimg cimg-1" src="https://picsum.photos/seed/${c.seed}/520/720" alt="${c.name}">
-        <img class="cimg cimg-2" src="https://picsum.photos/seed/${c.seed2}/520/720" alt="" aria-hidden="true">
-        <span class="coverlay"></span>
-        <div class="clabel clabel-on">${label}</div>
-      </div>
-      <div class="clabel clabel-below">${label}</div></a>`;
-  }).join('');
-
-  document.getElementById('products').innerHTML = PRODUCTS.map(p=>
-    `<article class="product"><div class="thumb">${p.badge?`<span class="badge">${p.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(p.frame)}</div><div class="sg-layer sg-2">${sunglasses(p.frame2)}</div></div>
-      <span class="poverlay"></span>
-      <div class="pbody"><div class="pname">${p.name}</div>
-        <div class="rrow">${stars(p.rating)}<span class="rev">(${p.reviews})</span></div>
-        <span class="price">${p.was?`<s>${p.was}</s>`:''}${p.price}</span>
-        <a class="btn btn-primary">Add to cart</a></div></article>`).join('');
-
-  document.getElementById('glist').innerHTML = [
-    'Free 14-day home try-on', '2-year warranty + lifetime repairs', 'Free returns &amp; exchanges'
-  ].map(t=>`<div class="gitem">${svg(SI.check,20)}${t}</div>`).join('');
-
-  document.getElementById('reviews').innerHTML = REVIEWS.map(r=>
-    `<div class="review">${stars(5)}<p>“${r.text}”</p>
-      <div class="who"><span class="av">${r.initials}</span><div><div class="nm">${r.name}</div>
-        <div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`).join('');
-
-  document.getElementById('press').innerHTML = PRESS.map(p=>`<span class="logo">${p}</span>`).join('');
-
-  document.getElementById('ugc').innerHTML = UGC.map(s=>
-    `<a class="ugc-tile"><img src="https://picsum.photos/seed/${s}/320/320" alt=""></a>`).join('');
-
-  document.getElementById('journal').innerHTML = POSTS.map(b=>
-    `<article class="post"><img src="https://picsum.photos/seed/${b.seed}/600/380" alt="">
-      <div class="pbody"><div class="cat">${b.cat}</div><h4>${b.title}</h4>
-        <span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`).join('');
+  renderBlockSections();   // value props, collections, products, reviews, press, gallery, journal, try-on list
 }
 
 /* ============================================================================
@@ -2071,16 +2054,19 @@ Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
 });
 
 // Seed block instances from the demo content so the tree shows real, named blocks.
+// `_demo` carries the prototype's render data (image seeds, prices, frame colours)
+// that isn't part of the Shopify schema — the block settings stay Shopify-faithful,
+// while _demo lets the hardcoded markup keep rendering. Exports drop _demo.
 function buildDefaultBlocks(){
-  const guarantee = ['Free 14-day home try-on','2-year warranty + lifetime repairs','Free returns & exchanges'];
+  const guarantee = ['Free 14-day home try-on','2-year warranty + lifetime repairs','Free returns &amp; exchanges'];
   return {
     valueprops:  VALUEPROPS.map(v => ({ type:'icon_column',    name:v.h,     settings:{ icon:v.ic, heading:v.h, text:v.p } })),
-    collections: COLLECTIONS.map(c => ({ type:'collection_card', name:c.name,  settings:{ title:c.name } })),
-    bestsellers: PRODUCTS.map(p => ({ type:'product_card',     name:p.name,  settings:{ show_badge:!!p.badge } })),
-    reviews:     REVIEWS.map(r => ({ type:'testimonial',       name:r.name,  settings:{ quote:r.text, author:r.name, rating:5 } })),
+    collections: COLLECTIONS.map(c => ({ type:'collection_card', name:c.name,  settings:{ title:c.name }, _demo:{ seed:c.seed, seed2:c.seed2 } })),
+    bestsellers: PRODUCTS.map(p => ({ type:'product_card',     name:p.name,  settings:{ show_badge:!!p.badge }, _demo:{ name:p.name, frame:p.frame, frame2:p.frame2, rating:p.rating, reviews:p.reviews, price:p.price, was:p.was, badge:p.badge } })),
+    reviews:     REVIEWS.map(r => ({ type:'testimonial',       name:r.name,  settings:{ quote:r.text, author:r.name, rating:5 }, _demo:{ initials:r.initials } })),
     press:       PRESS.map(n => ({ type:'logo',                name:n,       settings:{ name:n } })),
-    ugc:         UGC.map((s,i) => ({ type:'gallery_image',     name:'Image '+(i+1), settings:{} })),
-    journal:     POSTS.map(p => ({ type:'post_card',           name:p.title, settings:{ title:p.title } })),
+    ugc:         UGC.map((s,i) => ({ type:'gallery_image',     name:'Image '+(i+1), settings:{}, _demo:{ seed:s } })),
+    journal:     POSTS.map(p => ({ type:'post_card',           name:p.title, settings:{ title:p.title }, _demo:{ seed:p.seed, cat:p.cat } })),
     guarantee:   guarantee.map(t => ({ type:'checklist_item',  name:t,       settings:{ text:t } })),
   };
 }
@@ -2100,6 +2086,108 @@ function blockEl(section, index){
 }
 function clearBlockHighlight(){ document.querySelectorAll('#store .block-selected').forEach(e => e.classList.remove('block-selected')); }
 function highlightBlockEl(section, index){ clearBlockHighlight(); const e = blockEl(section, index); if(e){ e.classList.add('block-selected'); e.scrollIntoView({block:'nearest'}); } }
+
+/* ----------------------------------------------------------------------------
+   MODEL-DRIVEN BLOCK RENDERING  —  each block-bearing section paints its children
+   from STATE.sectionBlocks (settings + _demo). This is what makes Add/Remove (and
+   later reorder) visibly change the canvas. The markup matches the original
+   hardcoded output exactly so styling is unchanged.
+   ---------------------------------------------------------------------------- */
+function initialsOf(name){ return (name||'').split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '★'; }
+const SECTION_RENDERERS = {
+  valueprops: bs => bs.map(b=>{ const s=b.settings||{};
+    return `<div class="vp"><div class="ic">${svg(SI[s.icon]||SI.star,24)}</div><h5>${s.heading||''}</h5><p>${s.text||''}</p></div>`; }).join(''),
+  collections: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
+    return `<a class="collection"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; }).join(''),
+  bestsellers: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
+    return `<article class="product"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; }).join(''),
+  guarantee: bs => bs.map(b=>{ const s=b.settings||{}; return `<div class="gitem">${svg(SI.check,20)}${s.text||''}</div>`; }).join(''),
+  reviews: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{};
+    return `<div class="review">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; }).join(''),
+  press: bs => bs.map(b=>{ const s=b.settings||{}; return `<span class="logo">${s.name||''}</span>`; }).join(''),
+  ugc: bs => bs.map(b=>{ const d=b._demo||{}; return `<a class="ugc-tile"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; }).join(''),
+  journal: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; }).join(''),
+};
+function renderSectionContent(key){ const r=SECTION_RENDERERS[key]; if(!r) return; const host=document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]); if(host){ host.innerHTML=r(sectionBlocks(key)); applySectionSchemes(); } }
+function renderBlockSections(){ Object.keys(SECTION_RENDERERS).forEach(renderSectionContent); }
+
+/* ----------------------------------------------------------------------------
+   ADD / REMOVE BLOCKS  —  Shopify-faithful: blocks are added from a picker (one
+   grouping level by category), capped at max_blocks (≤ 50). Removing is offered
+   at the bottom of the block's settings (Shopify's placement).
+   ---------------------------------------------------------------------------- */
+const BLOCK_CATEGORY = { icon_column:'Content', testimonial:'Content', checklist_item:'Content', logo:'Content',
+  collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content' };
+// placeholder _demo for a freshly-added block so media-backed types still render
+const NEW_BLOCK_DEMO = {
+  collection_card: ()=>({ seed:'noir-'+Math.random().toString(36).slice(2,7), seed2:'noir-'+Math.random().toString(36).slice(2,7) }),
+  product_card:    ()=>({ frame:'#1c1917', frame2:'#a83716', rating:5, reviews:0, price:'$0' }),
+  gallery_image:   ()=>({ seed:'ugc-'+Math.random().toString(36).slice(2,7) }),
+  post_card:       ()=>({ seed:'jr-'+Math.random().toString(36).slice(2,7), cat:'Journal' }),
+  testimonial:     ()=>({ initials:'★' }),
+};
+function defaultSettingsFor(schema){ const o={}; (schema.settings||[]).forEach(s=>{ if(s.id!=null && s.default!==undefined) o[s.id]=s.default; }); return o; }
+function newBlockInstance(type){
+  const sc = BLOCK_SCHEMAS[type] || { settings:[] };
+  return { type, name:(sc.name||'Block'), settings:defaultSettingsFor(sc), _demo:(NEW_BLOCK_DEMO[type]?NEW_BLOCK_DEMO[type]():{}) };
+}
+function blockCap(section){ const sc=SECTION_SCHEMAS[section]||{}; return Math.min(sc.max_blocks||50, 50); }   // Shopify hard ceiling: 50
+function acceptedBlockTypes(section){ const sc=SECTION_SCHEMAS[section]||{}; return (sc.blocks||[]).map(b=>b.type); }
+function addBlock(section, type){
+  if(!STATE.sectionBlocks[section]) STATE.sectionBlocks[section]=[];
+  const blocks = STATE.sectionBlocks[section];
+  if(blocks.length >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
+  blocks.push(newBlockInstance(type));
+  renderSectionContent(section);
+  expandedLayers.add(section);
+  selectBlock(section, blocks.length-1);
+}
+function removeBlock(section, index){
+  const blocks = STATE.sectionBlocks[section]; if(!blocks || !blocks[index]) return;
+  blocks.splice(index,1);
+  selectedBlock = null;
+  renderSectionContent(section);
+  selectSection(section);
+}
+// Open the Add-block picker for a section: accepted types → preset entries, grouped by category.
+function openBlockPicker(section){
+  if((sectionBlocks(section).length) >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
+  const types = acceptedBlockTypes(section);
+  const groups = {};
+  types.forEach(t=>{ const cat=BLOCK_CATEGORY[t]||'Blocks'; (groups[cat]=groups[cat]||[]).push({ type:t, name:(BLOCK_SCHEMAS[t]||{}).name||t }); });
+  openPicker('Add block', groups, t=>addBlock(section, t));
+}
+
+/* Generic Shopify-style picker modal: one grouping level (category) → preset entries. */
+function openPicker(title, groups, onPick){
+  closePicker();
+  const ov = el(`<div class="picker-ov" id="picker-ov"><div class="picker"><div class="picker-hd"><span>${title}</span><button class="picker-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div><div class="picker-body"></div></div></div>`);
+  const body = ov.querySelector('.picker-body');
+  Object.entries(groups).forEach(([cat, items])=>{
+    body.appendChild(el(`<div class="picker-cat">${cat}</div>`));
+    items.forEach(it=>{
+      const row = el(`<button type="button" class="picker-item"><span class="picker-ic">${svg(ICONS.box,16)}</span><span class="picker-name"></span></button>`);
+      row.querySelector('.picker-name').textContent = it.name;
+      row.onclick = ()=>{ closePicker(); onPick(it.type); };
+      body.appendChild(row);
+    });
+  });
+  ov.querySelector('.picker-x').onclick = closePicker;
+  ov.addEventListener('mousedown', e=>{ if(e.target===ov) closePicker(); });
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', pickerEsc);
+}
+function pickerEsc(e){ if(e.key==='Escape') closePicker(); }
+function closePicker(){ const ov=document.getElementById('picker-ov'); if(ov) ov.remove(); document.removeEventListener('keydown', pickerEsc); }
+
+/* lightweight toast for limit messages */
+let toastTimer=null;
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=el('<div id="toast" class="toast"></div>'); document.body.appendChild(t); }
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), 2200);
+}
 
 /* ============================================================================
    LAYERS PANEL  —  the Shopify left-rail tree. Header / Template / Footer groups
@@ -2147,6 +2235,11 @@ function buildLayers(){
           brow.onclick = ()=>{ selectBlock(key, i); };
           grp.appendChild(brow);
         });
+        if(acceptedBlockTypes(key).length){
+          const add = el(`<button type="button" class="lyr-add">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
+          add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(key); };
+          grp.appendChild(add);
+        }
       }
     });
     host.appendChild(grp);
@@ -2233,6 +2326,9 @@ function renderSectionControls(){
       renderSettingsList(bb, bSchema.settings,
         s => (s.id in bvals) ? bvals[s.id] : s.default,
         (s,v) => { bvals[s.id] = v; });
+      const rm = el(`<button type="button" class="sf-remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}<span>Remove block</span></button>`);
+      rm.onclick = (e)=>{ e.stopPropagation(); removeBlock(selectedBlock.section, selectedBlock.index); };
+      bb.appendChild(rm);
       card.appendChild(bb);
       placeCard(card);
       return;
@@ -2314,15 +2410,15 @@ function buildPanel(){
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
+document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); renderBlockSections(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
 
 refreshNames();   // derive palette names from their hex values
+seedBlocks();    // seed per-section block instances BEFORE the homepage renders from them
 buildPanel();
 buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
 applyAllSectionSettings();   // re-apply any persisted per-section settings to the preview
 initSectionSelection();
-seedBlocks();    // seed per-section block instances from the demo content
 buildLayers();   // populate the left-rail layers tree
 document.querySelectorAll('.ptab').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
 
