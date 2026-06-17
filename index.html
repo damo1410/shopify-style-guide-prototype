@@ -775,18 +775,14 @@
 
           <!-- SHOP BY COLLECTION -->
           <section class="section sec-surface" data-sec="collections"><div class="container">
-            <div class="section-head">
-              <div class="eyebrow">Shop by style</div>
-              <h2>Find your perfect frame</h2>
-              <p>From timeless aviators to bold modern silhouettes — there's a NOIR for every face.</p>
-            </div>
+            <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="collections" id="collections"></div>
           </div></section>
 
           <!-- BEST SELLERS -->
           <section class="section" data-sec="bestsellers"><div class="container">
             <div class="rowhead">
-              <div class="ey"><div class="eyebrow">Best sellers</div><h2>Loved by thousands</h2></div>
+              <div class="ey" data-blocks-head><!-- heading/text blocks injected by JS --></div>
               <a class="btn btn-secondary">View all</a>
             </div>
             <div class="carousel" id="products"></div>
@@ -816,20 +812,13 @@
 
           <!-- UGC / INSTAGRAM -->
           <section class="section" data-sec="ugc"><div class="container">
-            <div class="section-head">
-              <div class="eyebrow">#NoirOnYou</div>
-              <h2>As seen on you</h2>
-              <p>Tag <strong>@noir</strong> for a chance to be featured. Join 200k+ wearers around the world.</p>
-            </div>
+            <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="ugc" id="ugc"></div>
           </div></section>
 
           <!-- BLOG / JOURNAL -->
           <section class="section sec-surface" data-sec="journal"><div class="container">
-            <div class="section-head">
-              <div class="eyebrow">The Journal</div>
-              <h2>Style notes &amp; guides</h2>
-            </div>
+            <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="journal" id="journal"></div>
           </div></section>
 
@@ -2093,9 +2082,13 @@ const SECTION_BLOCK_TYPES = {
   valueprops:['icon_column'], collections:['collection_card'], bestsellers:['product_card'],
   reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'],
 };
+// Grid sections that also host a heading/text block zone above their card grid.
+const HEADER_GRID = new Set(['collections','bestsellers','ugc','journal']);
 Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
   if(!SECTION_SCHEMAS[k]) return;
-  SECTION_SCHEMAS[k].blocks = types.map(t=>({type:t}));
+  const accept = types.map(t=>({type:t}));
+  if(HEADER_GRID.has(k)) accept.unshift({type:'@theme'});   // header-zone content blocks
+  SECTION_SCHEMAS[k].blocks = accept;
   if(!SECTION_SCHEMAS[k].max_blocks) SECTION_SCHEMAS[k].max_blocks = 50;
 });
 
@@ -2115,12 +2108,30 @@ function buildDefaultBlocks(){
       ]},
     ],
     valueprops:  VALUEPROPS.map(v => ({ type:'icon_column',    name:v.h,     settings:{ icon:v.ic, heading:v.h, text:v.p } })),
-    collections: COLLECTIONS.map(c => ({ type:'collection_card', name:c.name,  settings:{ title:c.name }, _demo:{ seed:c.seed, seed2:c.seed2 } })),
-    bestsellers: PRODUCTS.map(p => ({ type:'product_card',     name:p.name,  settings:{ show_badge:!!p.badge }, _demo:{ name:p.name, frame:p.frame, frame2:p.frame2, rating:p.rating, reviews:p.reviews, price:p.price, was:p.was, badge:p.badge } })),
+    collections: [
+      { type:'text_block',    name:'Shop by style', settings:{ text:'Shop by style' } },
+      { type:'heading_block', name:'Find your perfect frame', settings:{ text:'Find your perfect frame', size:'h2' } },
+      { type:'text_block',    name:'Body', settings:{ text:"From timeless aviators to bold modern silhouettes — there's a NOIR for every face." } },
+      ...COLLECTIONS.map(c => ({ type:'collection_card', name:c.name, settings:{ title:c.name }, _demo:{ seed:c.seed, seed2:c.seed2 } })),
+    ],
+    bestsellers: [
+      { type:'text_block',    name:'Best sellers', settings:{ text:'Best sellers' } },
+      { type:'heading_block', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
+      ...PRODUCTS.map(p => ({ type:'product_card', name:p.name, settings:{ show_badge:!!p.badge }, _demo:{ name:p.name, frame:p.frame, frame2:p.frame2, rating:p.rating, reviews:p.reviews, price:p.price, was:p.was, badge:p.badge } })),
+    ],
     reviews:     REVIEWS.map(r => ({ type:'testimonial',       name:r.name,  settings:{ quote:r.text, author:r.name, rating:5 }, _demo:{ initials:r.initials } })),
     press:       PRESS.map(n => ({ type:'logo',                name:n,       settings:{ name:n } })),
-    ugc:         UGC.map((s,i) => ({ type:'gallery_image',     name:'Image '+(i+1), settings:{}, _demo:{ seed:s } })),
-    journal:     POSTS.map(p => ({ type:'post_card',           name:p.title, settings:{ title:p.title }, _demo:{ seed:p.seed, cat:p.cat } })),
+    ugc: [
+      { type:'text_block',    name:'#NoirOnYou', settings:{ text:'#NoirOnYou' } },
+      { type:'heading_block', name:'As seen on you', settings:{ text:'As seen on you', size:'h2' } },
+      { type:'text_block',    name:'Body', settings:{ text:'Tag @noir for a chance to be featured. Join 200k+ wearers around the world.' } },
+      ...UGC.map((s,i) => ({ type:'gallery_image', name:'Image '+(i+1), settings:{}, _demo:{ seed:s } })),
+    ],
+    journal: [
+      { type:'text_block',    name:'The Journal', settings:{ text:'The Journal' } },
+      { type:'heading_block', name:'Style notes & guides', settings:{ text:'Style notes &amp; guides', size:'h2' } },
+      ...POSTS.map(p => ({ type:'post_card', name:p.title, settings:{ title:p.title }, _demo:{ seed:p.seed, cat:p.cat } })),
+    ],
     guarantee: [
       { type:'text_block',    name:'Risk-free', settings:{ text:'Risk-free' } },
       { type:'heading_block', name:'Try them on at home, on us.', settings:{ text:'Try them on at home, on us.', size:'h2' } },
@@ -2184,27 +2195,41 @@ function highlightBlockEl(section, path){ clearBlockHighlight(); const e = block
    hardcoded output exactly so styling is unchanged.
    ---------------------------------------------------------------------------- */
 function initialsOf(name){ return (name||'').split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '★'; }
+// Per-block CARD renderers (b, globalIndex) → HTML. These "grid" sections ALSO carry a
+// [data-blocks-head] zone where their heading/text theme blocks render, so a section's
+// one ordered block list is split by type: content blocks → header zone, cards → grid.
+const CARD_RENDERERS = {
+  collections: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
+    return `<a class="collection" data-bpath="${i}"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; },
+  bestsellers: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
+    return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; },
+  ugc: (b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; },
+  journal: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; },
+};
+// Full-list renderers for the remaining (pure-card) sections.
 const SECTION_RENDERERS = {
   valueprops: bs => bs.map((b,i)=>{ const s=b.settings||{};
     return `<div class="vp" data-bpath="${i}"><div class="ic">${svg(SI[s.icon]||SI.star,24)}</div><h5>${s.heading||''}</h5><p>${s.text||''}</p></div>`; }).join(''),
-  collections: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
-    return `<a class="collection" data-bpath="${i}"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; }).join(''),
-  bestsellers: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
-    return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; }).join(''),
   reviews: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{};
     return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; }).join(''),
   press: bs => bs.map((b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; }).join(''),
-  ugc: bs => bs.map((b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; }).join(''),
-  journal: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; }).join(''),
 };
 function renderSectionContent(key){
-  const r=SECTION_RENDERERS[key]; if(!r) return;
-  const secEl = sectionEl(key);
-  let host = secEl && secEl.querySelector('[data-blocks]');           // generic theme-block sections
-  if(!host) host = document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]);  // flat bespoke sections
-  if(host){ host.innerHTML=r(sectionBlocks(key)); applySectionSchemes(); }
+  const secEl = sectionEl(key); if(!secEl) return;
+  const list = sectionBlocks(key);
+  const head = secEl.querySelector('[data-blocks-head]');
+  const cardFn = CARD_RENDERERS[key];
+  if(head && cardFn){   // two-zone: content blocks → header zone, card blocks → grid
+    const cardHost = document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]);
+    let h='', c='';
+    list.forEach((b,i)=>{ if(THEME_BLOCK_TYPES.includes(b.type)) h+=renderThemeBlock(b,[i]); else c+=cardFn(b,i); });
+    head.innerHTML=h; if(cardHost) cardHost.innerHTML=c; applySectionSchemes(); return;
+  }
+  const gen = secEl.querySelector('[data-blocks]'); const r = SECTION_RENDERERS[key];
+  if(gen){ gen.innerHTML = r ? r(list) : renderThemeBlocks(list,[]); applySectionSchemes(); return; }  // generic sections
+  if(r){ const host = document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]); if(host){ host.innerHTML=r(list); applySectionSchemes(); } }  // pure-card sections
 }
-function renderBlockSections(){ Object.keys(SECTION_RENDERERS).forEach(renderSectionContent); }
+function renderBlockSections(){ [...new Set([...Object.keys(SECTION_RENDERERS), ...Object.keys(CARD_RENDERERS)])].forEach(renderSectionContent); }
 
 /* ----------------------------------------------------------------------------
    GENERIC THEME BLOCKS  —  reusable, NESTABLE blocks (Shopify /blocks). `group`
