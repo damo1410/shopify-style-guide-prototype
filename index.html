@@ -426,6 +426,8 @@
      Buttons controls; each button's outline colour is its own per-scheme Border token. */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font: inherit; font-family: var(--btn-font); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 13px 24px; border-radius: var(--btn-radius); border: none; text-transform: var(--btn-case); text-decoration: none; transition: transform .08s, background-color .15s, color .15s, box-shadow .15s; white-space: nowrap; }
   .btn:active { transform: translateY(1px); }
+  .btn-small { padding: 8px 15px; font-size: 13px; }
+  .btn-large { padding: 16px 30px; font-size: 16px; }
   /* Primary / secondary buttons read every color from per-scheme tokens; the resting
      background is the Fill token (--c-btn-bg-eff) and hover fills in with the hover tokens. */
   .btn-primary         { background: var(--c-btn-bg-eff); color: var(--c-btn-text); box-shadow: inset 0 0 0 var(--btn-border-w) var(--c-btn-border); }
@@ -448,7 +450,7 @@
 
   /* hero */
   .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 560px; background-size: cover; background-position: center; }
-  .hero::after { content:""; position:absolute; inset:0; background: linear-gradient(100deg, rgba(0,0,0,.66) 0%, rgba(0,0,0,.34) 55%, rgba(0,0,0,.12) 100%); }
+  .hero::after { content:""; position:absolute; inset:0; background: linear-gradient(100deg, #000 0%, rgba(0,0,0,.5) 55%, rgba(0,0,0,.18) 100%); opacity: var(--hero-overlay, .55); }
   .hero .container { position: relative; z-index: 1; width: 100%; padding-top: var(--section-padding); padding-bottom: var(--section-padding); }
   .hero .eyebrow { color: #fff; opacity: .92; }
   .hero h1 { color: #fff; max-width: 16ch; margin-bottom: 1.1rem; }
@@ -1940,41 +1942,34 @@ const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color sc
 const SECTION_SCHEMAS = {
   nav: { name:'Header', category:'Header', settings:[
     SCHEME_SETTING,
-    {type:'header', content:'Logo'},
     {type:'text', id:'logo_text', label:'Logo text', default:'NOIR'},
-    {type:'image_picker', id:'logo', label:'Logo image'},
-    {type:'header', content:'Menu'},
-    {type:'link_list', id:'menu', label:'Menu'},
-    {type:'checkbox', id:'show_search', label:'Show search', default:true},
-    {type:'checkbox', id:'sticky', label:'Sticky header', default:false},
+    {type:'checkbox', id:'show_search', label:'Show search icon', default:true},
+    {type:'checkbox', id:'sticky', label:'Stick to top on scroll', default:false},
   ]},
   hero: { name:'Image banner', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
     {type:'image_picker', id:'image', label:'Background image'},
     {type:'select', id:'height', label:'Banner height', default:'large', options:[
       {value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'},{value:'full',label:'Full screen'}]},
-    {type:'text_alignment', id:'alignment', label:'Content alignment', default:'left'},
+    {type:'range', id:'overlay_opacity', label:'Image overlay', min:0, max:90, step:5, unit:'%', default:55},
+    {type:'select', id:'content_width', label:'Content width', default:'medium', options:[
+      {value:'narrow',label:'Narrow'},{value:'medium',label:'Medium'},{value:'wide',label:'Wide'}]},
+    {type:'text_alignment', id:'content_alignment', label:'Content alignment', default:'left'},
     ...PADDING_BLOCK,
   ]},
   valueprops: { name:'Multicolumn', category:'Layout', max_blocks:6, settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:4},
-    {type:'text_alignment', id:'alignment', label:'Alignment', default:'center'},
     ...PADDING_BLOCK,
   ]},
   collections: { name:'Collection list', category:'Collections', settings:[
     SCHEME_SETTING,
-    {type:'text', id:'heading', label:'Heading', default:'Find your fit'},
-    {type:'collection_list', id:'collections', label:'Collections', limit:12},
     {type:'range', id:'columns', label:'Columns', min:2, max:5, step:1, default:4},
     ...PADDING_BLOCK,
   ]},
   bestsellers: { name:'Featured collection', category:'Collections', settings:[
     SCHEME_SETTING,
-    {type:'text', id:'heading', label:'Heading', default:'Loved by thousands'},
-    {type:'collection', id:'collection', label:'Collection'},
-    {type:'range', id:'products_to_show', label:'Products to show', min:2, max:12, step:1, default:6},
-    {type:'checkbox', id:'show_view_all', label:'Enable "View all"', default:true},
+    {type:'checkbox', id:'show_view_all', label:'Show "View all" button', default:true},
     ...PADDING_BLOCK,
   ]},
   guarantee: { name:'Image with text', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
@@ -1986,6 +1981,7 @@ const SECTION_SCHEMAS = {
   ]},
   reviews: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
     SCHEME_SETTING,
+    {type:'range', id:'columns', label:'Columns', min:1, max:4, step:1, default:3},
     ...PADDING_BLOCK,
   ]},
   press: { name:'Logo list', category:'Layout', settings:[
@@ -1994,45 +1990,83 @@ const SECTION_SCHEMAS = {
   ]},
   ugc: { name:'Image gallery', category:'Image', settings:[
     SCHEME_SETTING,
-    {type:'text', id:'heading', label:'Heading', default:'#NoirOnYou'},
     {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:6},
     ...PADDING_BLOCK,
   ]},
   journal: { name:'Blog posts', category:'Layout', settings:[
     SCHEME_SETTING,
-    {type:'text', id:'heading', label:'Heading', default:'From the journal'},
-    {type:'blog', id:'blog', label:'Blog'},
-    {type:'range', id:'post_limit', label:'Posts to show', min:2, max:6, step:1, default:3},
+    {type:'range', id:'columns', label:'Columns', min:2, max:4, step:1, default:3},
     ...PADDING_BLOCK,
   ]},
   newsletter: { name:'Email signup', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
+    {type:'text_alignment', id:'content_alignment', label:'Content alignment', default:'center'},
     ...PADDING_BLOCK,
   ]},
   footer: { name:'Footer', category:'Footer', settings:[
     SCHEME_SETTING,
     {type:'checkbox', id:'show_payment_icons', label:'Show payment icons', default:true},
-    {type:'text', id:'copyright', label:'Copyright text', default:'© NOIR'},
+    {type:'text', id:'copyright', label:'Copyright text', default:'© 2026 NOIR Eyewear. All rights reserved.'},
   ]},
 };
 
 // Per-section value bag + safe live-wiring of the settings we can drive today.
 function secVals(sec){ return (STATE.sectionSettings[sec] || (STATE.sectionSettings[sec] = {})); }
 function sectionEl(sec){ return document.querySelector(`#store [data-sec="${sec}"]`); }
-function applySectionSetting(sec, setting, v){
+// Current value of a section setting (stored override, else the schema default).
+function secSetting(sec, id){
+  const vals = STATE.sectionSettings[sec] || {};
+  if(id in vals) return vals[id];
+  const sc = SECTION_SCHEMAS[secType(sec)]; const s = sc && (sc.settings||[]).find(x=>x.id===id);
+  return s ? s.default : undefined;
+}
+// Grid column count → inline only when the user changed it (so the CSS responsive defaults win otherwise).
+function gridCols(elm, sec){
+  const vals = STATE.sectionSettings[sec] || {}; const host = elm.querySelector('[data-cards]'); if(!host) return;
+  host.style.gridTemplateColumns = ('columns' in vals) ? `repeat(${vals.columns}, minmax(0,1fr))` : '';
+}
+const HERO_HEIGHT = { small:'400px', medium:'540px', large:'640px', full:'90vh' };
+const CONTENT_WIDTH = { narrow:'420px', medium:'600px', wide:'820px' };
+const ALIGN_ITEMS = a => a==='center' ? 'center' : (a==='right' ? 'flex-end' : 'flex-start');
+// Per-section live wiring: read settings → set CSS vars / classes / inline styles on the section.
+const SECTION_WIRE = {
+  valueprops: gridCols, collections: gridCols, ugc: gridCols, journal: gridCols, reviews: gridCols,
+  hero(elm, sec){
+    elm.style.minHeight = HERO_HEIGHT[secSetting(sec,'height')] || '';
+    elm.style.setProperty('--hero-overlay', (Number(secSetting(sec,'overlay_opacity')) || 0) / 100);
+    const head = elm.querySelector('[data-blocks]'); if(head){
+      const al = secSetting(sec,'content_alignment');
+      head.style.alignItems = ALIGN_ITEMS(al); head.style.textAlign = al || 'left';
+      head.style.maxWidth = CONTENT_WIDTH[secSetting(sec,'content_width')] || '';
+    }
+  },
+  guarantee(elm, sec){ const gm=elm.querySelector('.gmedia'); if(gm) gm.style.order = secSetting(sec,'image_position')==='right' ? '2' : ''; },
+  newsletter(elm, sec){
+    const al = secSetting(sec,'content_alignment'), ai = ALIGN_ITEMS(al);
+    const c = elm.querySelector('.container'); if(c){ c.style.alignItems = ai; c.style.textAlign = al || 'center'; }
+    const head = elm.querySelector('[data-blocks]'); if(head) head.style.alignItems = ai;
+  },
+  bestsellers(elm, sec){ const btn=elm.querySelector('.rowhead > .btn'); if(btn) btn.style.display = secSetting(sec,'show_view_all')===false ? 'none' : ''; },
+  nav(elm, sec){
+    const logo=elm.querySelector('.logo'); if(logo) logo.textContent = secSetting(sec,'logo_text') || 'NOIR';
+    const search=elm.querySelector('.nav-actions svg'); if(search) search.style.display = secSetting(sec,'show_search')===false ? 'none' : '';
+    const st = !!secSetting(sec,'sticky');
+    elm.style.position = st?'sticky':''; elm.style.top = st?'0':''; elm.style.zIndex = st?'20':'';
+  },
+  footer(elm, sec){
+    const cr=elm.querySelector('.footer-bottom span'); if(cr) cr.textContent = secSetting(sec,'copyright') || '';
+    const pay=elm.querySelector('.pay'); if(pay) pay.style.display = secSetting(sec,'show_payment_icons')===false ? 'none' : '';
+  },
+};
+// Apply ALL of a section's settings to its element (padding + per-type wiring).
+function applySectionSettings(sec){
   const elm = sectionEl(sec); if(!elm) return;
-  if(setting.id==='padding_top')    elm.style.paddingTop = v + 'px';
-  if(setting.id==='padding_bottom') elm.style.paddingBottom = v + 'px';
+  const pt = secSetting(sec,'padding_top'), pb = secSetting(sec,'padding_bottom');
+  elm.style.paddingTop = (pt!=null) ? pt+'px' : '';
+  elm.style.paddingBottom = (pb!=null) ? pb+'px' : '';
+  const w = SECTION_WIRE[secType(sec)]; if(w) w(elm, sec);
 }
-// Re-apply persisted section settings to the preview (e.g. after Reset rebuild).
-function applyAllSectionSettings(){
-  allSectionIds().forEach(id=>{
-    const elm = sectionEl(id); if(!elm) return;
-    elm.style.removeProperty('padding-top'); elm.style.removeProperty('padding-bottom');
-    const vals = STATE.sectionSettings[id]; const sc = SECTION_SCHEMAS[secType(id)]; if(!vals || !sc) return;
-    (sc.settings||[]).forEach(s=>{ if(s.id in vals) applySectionSetting(id, s, vals[s.id]); });
-  });
-}
+function applyAllSectionSettings(){ allSectionIds().forEach(applySectionSettings); }
 
 /* ============================================================================
    BLOCKS  —  reusable theme blocks (Shopify /blocks). Each has its own settings
@@ -2052,11 +2086,14 @@ const BLOCK_SCHEMAS = {
     {type:'text', id:'title', label:'Title'} ]},
   product_card:   { name:'Product', settings:[
     {type:'product', id:'product', label:'Product'},
-    {type:'checkbox', id:'show_badge', label:'Show badge', default:true} ]},
+    {type:'checkbox', id:'show_badge', label:'Show badge', default:true},
+    {type:'checkbox', id:'show_rating', label:'Show rating', default:true},
+    {type:'checkbox', id:'show_price', label:'Show price', default:true} ]},
   testimonial:    { name:'Testimonial', settings:[
     {type:'textarea', id:'quote', label:'Quote'},
     {type:'text', id:'author', label:'Author'},
-    {type:'range', id:'rating', label:'Rating', min:1, max:5, step:1, default:5} ]},
+    {type:'range', id:'rating', label:'Rating', min:1, max:5, step:1, default:5},
+    {type:'checkbox', id:'show_avatar', label:'Show avatar', default:true} ]},
   logo:           { name:'Logo', settings:[
     {type:'image_picker', id:'image', label:'Logo'},
     {type:'text', id:'name', label:'Name'} ]},
@@ -2198,11 +2235,14 @@ const CARD_RENDERERS = {
   collections: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
     return `<a class="collection" data-bpath="${i}"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; },
   bestsellers: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
-    return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; },
+    const rating = (s.show_rating!==false) ? `<div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div>` : '';
+    const price = (s.show_price!==false) ? `<span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span>` : '';
+    return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div>${rating}${price}<a class="btn btn-primary">Add to cart</a></div></article>`; },
   ugc: (b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; },
   journal: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; },
   reviews: (b,i)=>{ const s=b.settings||{}, d=b._demo||{};
-    return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; },
+    const avatar = (s.show_avatar!==false) ? `<span class="av">${d.initials||initialsOf(s.author)}</span>` : '';
+    return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who">${avatar}<div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; },
   press: (b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; },
 };
 // Full-list renderers for the remaining (pure-card) sections.
@@ -2238,15 +2278,24 @@ function renderBlockSections(){ allSectionIds().forEach(renderSectionContent); }
 Object.assign(BLOCK_SCHEMAS, {
   group:        { name:'Group', blocks:[{type:'@theme'}], settings:[
     {type:'select', id:'direction', label:'Direction', default:'horizontal', options:[{value:'horizontal',label:'Horizontal'},{value:'vertical',label:'Vertical'}]},
-    {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
+    {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'},
+    {type:'range', id:'gap', label:'Spacing', min:0, max:48, step:2, unit:'px', default:16} ]},
   heading_block:{ name:'Heading', settings:[
     {type:'inline_richtext', id:'text', label:'Heading', default:'Built to last'},
-    {type:'select', id:'size', label:'Size', default:'h3', options:[{value:'h1',label:'Display'},{value:'h2',label:'Large'},{value:'h3',label:'Medium'},{value:'h4',label:'Small'}]} ]},
-  text_block:   { name:'Text', settings:[ {type:'textarea', id:'text', label:'Text', default:'Add your text here.'} ]},
+    {type:'select', id:'size', label:'Size', default:'h3', options:[{value:'h1',label:'Display'},{value:'h2',label:'Large'},{value:'h3',label:'Medium'},{value:'h4',label:'Small'}]},
+    {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
+  text_block:   { name:'Text', settings:[
+    {type:'textarea', id:'text', label:'Text', default:'Add your text here.'},
+    {type:'select', id:'size', label:'Size', default:'normal', options:[{value:'small',label:'Small'},{value:'normal',label:'Normal'},{value:'large',label:'Large'}]},
+    {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
   button_block: { name:'Button', settings:[
     {type:'text', id:'label', label:'Label', default:'Shop now'}, {type:'url', id:'link', label:'Link'},
-    {type:'select', id:'style', label:'Style', default:'primary', options:[{value:'primary',label:'Primary'},{value:'secondary',label:'Secondary'}]} ]},
-  image_block:  { name:'Image', settings:[ {type:'image_picker', id:'image', label:'Image'} ]},
+    {type:'select', id:'style', label:'Style', default:'primary', options:[{value:'primary',label:'Primary'},{value:'secondary',label:'Secondary'}]},
+    {type:'select', id:'size', label:'Size', default:'medium', options:[{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}]} ]},
+  image_block:  { name:'Image', settings:[
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'select', id:'ratio', label:'Aspect ratio', default:'landscape', options:[{value:'square',label:'Square'},{value:'portrait',label:'Portrait'},{value:'landscape',label:'Landscape'},{value:'wide',label:'Wide'}]},
+    {type:'range', id:'width', label:'Width', min:20, max:100, step:5, unit:'%', default:100} ]},
 });
 const THEME_BLOCK_TYPES = ['group','heading_block','text_block','button_block','image_block'];
 
@@ -2255,16 +2304,20 @@ const THEME_BLOCK_TYPES = ['group','heading_block','text_block','button_block','
 function renderThemeBlocks(list, path){ return (list||[]).map((b,i)=> renderThemeBlock(b, path.concat(i))).join(''); }
 function renderThemeBlock(b, path){
   const s=b.settings||{}, bp=path.join('.');
+  const RATIO = { square:'1/1', portrait:'3/4', landscape:'4/3', wide:'16/9' };
+  const TXT = { small:'.9em', normal:'1em', large:'1.15rem' };
+  const ta = a => (a==='center'||a==='right') ? `text-align:${a};` : '';
   switch(b.type){
     case 'group': {
       const dir = s.direction==='vertical' ? 'column' : 'row';
       const al  = s.alignment==='center' ? 'center' : (s.alignment==='right' ? 'flex-end' : 'flex-start');
-      return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:16px;align-items:${al}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
+      const gap = (s.gap!=null) ? s.gap : 16;
+      return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:${gap}px;align-items:${al}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
     }
-    case 'heading_block': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}"><${sz}>${s.text||''}</${sz}></div>`; }
-    case 'text_block':    return `<div class="tb" data-bpath="${bp}"><p>${s.text||''}</p></div>`;
-    case 'button_block':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'}">${s.label||'Button'}</a></div>`;
-    case 'image_block':   return `<div class="tb" data-bpath="${bp}"><div class="tb-img"></div></div>`;
+    case 'heading_block': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><${sz}>${s.text||''}</${sz}></div>`; }
+    case 'text_block':    return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><p style="font-size:${TXT[s.size]||'1em'}">${s.text||''}</p></div>`;
+    case 'button_block':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'} btn-${s.size||'medium'}">${s.label||'Button'}</a></div>`;
+    case 'image_block':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
@@ -2764,7 +2817,7 @@ function renderSectionControls(){
     : ((s.id in vals) ? vals[s.id] : s.default);
   const setVal = (s, v)=>{
     if(s.type==='color_scheme'){ STATE.sectionSchemes[selectedSection]=v; applySectionSchemes(); return; }
-    vals[s.id] = v; applySectionSetting(selectedSection, s, v);
+    vals[s.id] = v; applySectionSettings(selectedSection);
   };
   const b = el('<div class="sf-body"></div>');
   renderSettingsList(b, schema.settings, getVal, setVal);
