@@ -90,7 +90,7 @@
   .tb-ico svg { width: 18px; height: 18px; }
   /* mode toggle group (Layers ⇄ Theme settings) — segmented, like the device toggle */
   .tb-modes { display: flex; align-items: center; gap: 2px; background: var(--stone-100); border-radius: 9px; padding: 3px; }
-  .tb-mode { width: 34px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; transition: all .12s; }
+  .tb-mode { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; transition: all .12s; }
   .tb-mode:hover { color: var(--stone-900); }
   .tb-mode.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
   .tb-mode svg { width: 18px; height: 18px; }
@@ -102,7 +102,7 @@
   .tb-page .pg-chev { width: 14px; height: 14px; color: var(--stone-400); }
   /* device toggle (desktop ⇄ mobile preview) */
   .tb-devices { display: flex; align-items: center; gap: 2px; background: var(--stone-100); border-radius: 9px; padding: 3px; }
-  .tb-dev { width: 30px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; transition: all .12s; }
+  .tb-dev { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; transition: all .12s; }
   .tb-dev:hover { color: var(--stone-900); }
   .tb-dev.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
   .tb-dev svg { width: 16px; height: 16px; }
@@ -425,18 +425,18 @@
   /* color field — raw hex variant (swatch + value, db icon on hover). Even 6px padding so
      the swatch and the db button sit with equal top/right/bottom/left padding. */
   .cf { width: 100%; position: relative; }
-  .cf-hex { width: 100%; gap: 8px; cursor: pointer; padding: 0 6px; }
-  .cf-sw { width: 22px; height: 22px; border-radius: 5px; flex: 0 0 auto; overflow: hidden; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
+  .cf-hex { width: 100%; gap: 8px; cursor: pointer; padding: 0 4px; }
+  .cf-sw { width: 26px; height: 26px; border-radius: 6px; flex: 0 0 auto; overflow: hidden; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
   /* the colored fill carries a subtle border so white/light colors stay visible */
-  .cf-sw i { display: block; width: 100%; height: 100%; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
+  .cf-sw i { display: block; width: 100%; height: 100%; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
   .cf-val { flex: 1 1 auto; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
-  .cf-db { display: none; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: 5px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
+  .cf-db { display: none; align-items: center; justify-content: center; width: 26px; height: 26px; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
   .cf-hex:hover .cf-db { display: inline-flex; }
   .cf-db:hover { background: var(--stone-200); color: var(--stone-900); }
-  .cf-db svg { width: 15px; height: 15px; }
+  .cf-db svg { width: 16px; height: 16px; }
   /* color field — brand-connected chip variant (shows the brand color's swatch) */
-  .cf-chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 6px; border: none; border-radius: 8px; background: var(--stone-100); cursor: default; font: inherit; }
-  .cf-chip .cf-sw { width: 22px; height: 22px; }
+  .cf-chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 4px; border: none; border-radius: 8px; background: var(--stone-100); cursor: default; font: inherit; }
+  .cf-chip .cf-sw { width: 26px; height: 26px; }
   .cf-chip .cf-bname { flex: 1 1 auto; font-size: 12px; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cf-more { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
   .cf-more:hover { background: var(--stone-200); color: var(--stone-900); }
@@ -473,7 +473,7 @@
   .bc-list { max-height: 260px; overflow-y: auto; padding: 4px 6px 8px; }
   .bc-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; color: var(--stone-900); text-align: left; }
   .bc-item:hover { background: var(--stone-100); }
-  .bc-item .cf-sw { width: 20px; height: 20px; }
+  .bc-item .cf-sw { width: 26px; height: 26px; }
   .bc-item .bc-eye { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
   .bc-item .bc-eye svg { width: 16px; height: 16px; }
 
@@ -575,13 +575,12 @@
   .section-float.in-inspector .sf-head { padding: 12px 16px; border-bottom: 1px solid var(--stone-200); min-height: 49px; }
   .sf-head { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
   .sf-title { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1 1 auto; }
-  .sf-ic { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
+  .sf-ic { color: var(--stone-900); display: inline-flex; flex: 0 0 auto; }
   .sf-name { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
-  .sf-close:hover { color: var(--stone-900); background: var(--stone-100); }
-  .sf-more { border: none; background: none; cursor: pointer; color: var(--stone-500); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
-  .sf-more:hover { color: var(--stone-900); background: var(--stone-100); }
-  .sf-more svg { width: 18px; height: 18px; }
+  /* header action buttons: square, same height as top-bar buttons, black icons */
+  .sf-close, .sf-more { width: 32px; height: 32px; padding: 0; border: none; background: none; cursor: pointer; color: var(--stone-900); display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; flex: 0 0 auto; }
+  .sf-close:hover, .sf-more:hover { background: var(--stone-100); }
+  .sf-close svg, .sf-more svg { width: 18px; height: 18px; }
   .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .sf-label { font-size: 12px; color: var(--stone-600); font-weight: 400; }
   /* type/limit caption under the section name (mirrors Shopify's section subtitle) */
@@ -606,14 +605,14 @@
   .set-paragraph { font-size: 12px; color: var(--stone-500); line-height: 1.5; }
   /* contextual scheme picker — normal field height; left padding tightened so it wraps the
      swatch with equal padding top/left/bottom (swatch is 22px in a 34px field → 6px). */
-  .sf-scheme .dd-trigger { min-height: 34px; padding: 0 10px 0 6px; gap: 8px; }
+  .sf-scheme .dd-trigger { min-height: 34px; padding: 0 10px 0 4px; gap: 8px; }
   .sf-scheme .dd-cur { gap: 8px; }
   .sf-scheme .dd-label { font-size: 12px; font-weight: 400; color: var(--stone-900); }
   .sf-scheme .dd-menu .dd-item { padding: 6px; gap: 8px; min-height: 34px; }
   /* compact scheme swatch (trigger + menu rows) */
-  .scheme-sq-sm { width: 22px; height: 22px; border-radius: 5px; gap: 2px; }
-  .scheme-sq-sm span { font-size: 9px; }
-  .scheme-sq-sm .bar { width: 11px; height: 2px; }
+  .scheme-sq-sm { width: 26px; height: 26px; border-radius: 6px; gap: 3px; }
+  .scheme-sq-sm span { font-size: 11px; }
+  .scheme-sq-sm .bar { width: 14px; height: 3px; }
 
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
@@ -1730,7 +1729,7 @@ function colorInput(value, onChange){
    ---------------------------------------------------------------------------- */
 const DB_ICON = '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>';
 const EYEDROP_ICON = '<path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/>';
-const DOTS_ICON = '<circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>';
+const DOTS_ICON = '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>';
 
 function colorField(value, onChange){
   const wrap = el('<div class="cf"></div>');
@@ -3487,6 +3486,11 @@ function renderSectionControls(){
           b.appendChild(controlRow(r.label, colorField(scheme[r.key], v=>{ scheme[r.key]=v; applyRoles(); applyAllSectionSettings(); paintHero(); renderSchemes(); })));
         });
       });
+      if(Object.keys(STATE.schemes).length > 1){
+        const schRm = el(`<button type="button" class="sf-remove">${svg(ICON_TRASH,14)}<span>Remove scheme</span></button>`);
+        schRm.onclick = (e)=>{ e.stopPropagation(); removeScheme(schemeId); selectedScheme=null; buildLayers(); renderSchemes(); renderSectionControls(); };
+        b.appendChild(schRm);
+      }
       card.appendChild(b);
       placeCard(card);
       return;
@@ -3535,6 +3539,9 @@ function renderSectionControls(){
         addc.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
         bb.appendChild(addc);
       }
+      const blkRm = el(`<button type="button" class="sf-remove">${svg(ICON_TRASH,14)}<span>Remove block</span></button>`);
+      blkRm.onclick = (e)=>{ e.stopPropagation(); removeBlock(section, path); };
+      bb.appendChild(blkRm);
       card.appendChild(bb);
       placeCard(card);
       return;
@@ -3572,7 +3579,10 @@ function renderSectionControls(){
   };
   const b = el('<div class="sf-body"></div>');
   renderSettingsList(b, schema.settings, getVal, setVal);
-  // (Duplicate / Hide / Remove now live in the header ⋯ menu, matching Shopify)
+  // Duplicate / Hide live in the header ⋯ menu; Remove also gets a button at the bottom (Shopify)
+  const secRm = el(`<button type="button" class="sf-remove">${svg(ICON_TRASH,14)}<span>Remove section</span></button>`);
+  secRm.onclick = (e)=>{ e.stopPropagation(); removeSection(secId); };
+  b.appendChild(secRm);
   card.appendChild(b);
   placeCard(card);
 }
