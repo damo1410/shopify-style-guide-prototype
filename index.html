@@ -422,20 +422,21 @@
   .brand-launch .bl-t { flex: 1 1 auto; font-size: 13px; font-weight: 600; color: var(--stone-900); }
   .brand-launch .bl-chev { width: 16px; height: 16px; color: var(--stone-400); }
 
-  /* color field — raw hex variant (swatch + value, db icon on hover) */
+  /* color field — raw hex variant (swatch + value, db icon on hover). Even 6px padding so
+     the swatch and the db button sit with equal top/right/bottom/left padding. */
   .cf { width: 100%; position: relative; }
-  .cf-hex { width: 100%; gap: 8px; cursor: pointer; }
-  .cf-sw { width: 20px; height: 20px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); flex: 0 0 auto; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
-  .cf-sw i { display: block; width: 100%; height: 100%; border-radius: 5px; }
+  .cf-hex { width: 100%; gap: 8px; cursor: pointer; padding: 0 6px; }
+  .cf-sw { width: 22px; height: 22px; border-radius: 5px; flex: 0 0 auto; overflow: hidden; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
+  /* the colored fill carries a subtle border so white/light colors stay visible */
+  .cf-sw i { display: block; width: 100%; height: 100%; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
   .cf-val { flex: 1 1 auto; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
   .cf-db { display: none; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: 5px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
   .cf-hex:hover .cf-db { display: inline-flex; }
   .cf-db:hover { background: var(--stone-200); color: var(--stone-900); }
   .cf-db svg { width: 15px; height: 15px; }
-  /* color field — brand-connected chip variant */
-  .cf-chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 6px 0 10px; border: none; border-radius: 8px; background: var(--stone-100); cursor: default; font: inherit; }
-  .cf-chip .cf-bic { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
-  .cf-chip .cf-bic svg { width: 15px; height: 15px; }
+  /* color field — brand-connected chip variant (shows the brand color's swatch) */
+  .cf-chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 6px; border: none; border-radius: 8px; background: var(--stone-100); cursor: default; font: inherit; }
+  .cf-chip .cf-sw { width: 22px; height: 22px; }
   .cf-chip .cf-bname { flex: 1 1 auto; font-size: 12px; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cf-more { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
   .cf-more:hover { background: var(--stone-200); color: var(--stone-900); }
@@ -449,11 +450,16 @@
   .cp-thumb { position: absolute; width: 14px; height: 14px; border-radius: 999px; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.35); transform: translate(-50%,-50%); pointer-events: none; }
   .cp-hue { position: relative; height: 12px; border-radius: 999px; margin-top: 12px; cursor: pointer; touch-action: none; background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%); }
   .cp-hue-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.3); transform: translate(-50%,-50%); pointer-events: none; }
+  /* alpha slider: checkerboard track + transparent→color gradient overlay */
+  .cp-alpha { position: relative; height: 12px; border-radius: 999px; margin-top: 10px; cursor: pointer; touch-action: none; overflow: hidden; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
+  .cp-alpha-grad { position: absolute; inset: 0; border-radius: 999px; }
+  .cp-alpha-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.3); transform: translate(-50%,-50%); pointer-events: none; }
   .cp-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
   .cp-hexbox { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--stone-300); }
   .cp-hexbox span { color: var(--stone-400); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
   .cp-hexbox input { flex: 1 1 auto; border: none; outline: none; background: transparent; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-800); min-width: 0; }
-  .cp-prev { width: 32px; height: 32px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); flex: 0 0 auto; }
+  .cp-prev { width: 32px; height: 32px; border-radius: 8px; flex: 0 0 auto; overflow: hidden; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
+  .cp-prev i { display: block; width: 100%; height: 100%; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
 
   /* brand-color connect popover */
   .bc { width: 300px; background: #fff; border: 1px solid var(--stone-200); border-radius: 12px; box-shadow: 0 12px 40px -8px rgba(0,0,0,.28); z-index: 1100; overflow: hidden; }
@@ -465,8 +471,9 @@
   .bc-search input { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 13px; min-width: 0; }
   .bc-search svg { color: var(--stone-400); }
   .bc-list { max-height: 260px; overflow-y: auto; padding: 4px 6px 8px; }
-  .bc-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; color: var(--stone-900); text-align: left; }
+  .bc-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; color: var(--stone-900); text-align: left; }
   .bc-item:hover { background: var(--stone-100); }
+  .bc-item .cf-sw { width: 20px; height: 20px; }
   .bc-item .bc-eye { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
   .bc-item .bc-eye svg { width: 16px; height: 16px; }
 
@@ -1730,7 +1737,7 @@ function colorField(value, onChange){
     wrap.innerHTML='';
     if(isBrandRef(value)){
       const bc = brandColor(value);
-      const chip = el(`<div class="cf-chip"><span class="cf-bic">${svg('<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',15)}</span><span class="cf-bname"></span><button type="button" class="cf-more" title="Options">${svg(DOTS_ICON,16)}</button></div>`);
+      const chip = el(`<div class="cf-chip"><span class="cf-sw"><i style="background:${swatchHex(value)}"></i></span><span class="cf-bname"></span><button type="button" class="cf-more" title="Options">${svg(DOTS_ICON,16)}</button></div>`);
       chip.querySelector('.cf-bname').textContent = bc ? bc.name : 'Brand color';
       chip.querySelector('.cf-more').onclick = (e)=>{ e.stopPropagation(); openFieldMenu(e.currentTarget, value, set); };
       wrap.appendChild(chip);
@@ -1772,7 +1779,7 @@ function openBrandConnect(anchor, onPick){
     function draw(q){
       q=(q||'').trim().toLowerCase(); list.innerHTML='';
       STATE.palette.filter(c=>!q||c.name.toLowerCase().includes(q)).forEach(c=>{
-        const it = el(`<button type="button" class="bc-item"><span class="bc-eye">${svg(EYEDROP_ICON,16)}</span><span>${c.name}</span></button>`);
+        const it = el(`<button type="button" class="bc-item"><span class="cf-sw"><i style="background:${c.hex}"></i></span><span>${c.name}</span></button>`);
         it.onclick = ()=>{ close(); onPick(c.id); };
         list.appendChild(it);
       });
@@ -1786,27 +1793,41 @@ function openBrandConnect(anchor, onPick){
 // HSV color picker popover (SV square + hue slider + hex)
 function hexToHsv(hex){ const {r,g,b}=hexToRgb(hex); const r1=r/255,g1=g/255,b1=b/255; const mx=Math.max(r1,g1,b1),mn=Math.min(r1,g1,b1),d=mx-mn; let h=0; if(d){ if(mx===r1)h=((g1-b1)/d)%6; else if(mx===g1)h=(b1-r1)/d+2; else h=(r1-g1)/d+4; h*=60; if(h<0)h+=360; } return { h, s: mx?d/mx:0, v: mx }; }
 function hsvToHex(h,s,v){ const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c; let r=0,g=0,b=0; if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;} else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;} const to=n=>Math.round((n+m)*255).toString(16).padStart(2,'0'); return ('#'+to(r)+to(g)+to(b)); }
-function openColorPicker(anchor, hex, onChange){
+function openColorPicker(anchor, value, onChange){
   popover(anchor, (close)=>{
-    let { h, s, v } = hexToHsv(/^#[0-9a-f]{6}$/i.test(hex)?hex:'#ffffff');
+    // parse incoming value: '#rrggbb', '#rrggbbaa', or 'transparent'
+    let a=1, base='#ffffff';
+    if(value==='transparent') a=0;
+    else if(/^#[0-9a-f]{8}$/i.test(value)){ a=parseInt(value.slice(7,9),16)/255; base=value.slice(0,7); }
+    else if(/^#[0-9a-f]{6}$/i.test(value)) base=value;
+    let { h, s, v } = hexToHsv(base);
     const p = el(`<div class="cp">
       <div class="cp-sv"><div class="cp-white"></div><div class="cp-black"></div><div class="cp-thumb"></div></div>
       <div class="cp-hue"><div class="cp-hue-thumb"></div></div>
-      <div class="cp-foot"><div class="cp-prev"></div><div class="cp-hexbox"><span>#</span><input type="text" maxlength="6" autocomplete="off"></div></div></div>`);
-    const sv=p.querySelector('.cp-sv'), svThumb=p.querySelector('.cp-thumb'), hue=p.querySelector('.cp-hue'), hueThumb=p.querySelector('.cp-hue-thumb'), prev=p.querySelector('.cp-prev'), input=p.querySelector('input');
+      <div class="cp-alpha"><div class="cp-alpha-grad"></div><div class="cp-alpha-thumb"></div></div>
+      <div class="cp-foot"><div class="cp-prev"><i></i></div><div class="cp-hexbox"><span>#</span><input type="text" maxlength="8" autocomplete="off"></div></div></div>`);
+    const sv=p.querySelector('.cp-sv'), svThumb=p.querySelector('.cp-thumb'), hue=p.querySelector('.cp-hue'), hueThumb=p.querySelector('.cp-hue-thumb'),
+          alpha=p.querySelector('.cp-alpha'), alphaGrad=p.querySelector('.cp-alpha-grad'), alphaThumb=p.querySelector('.cp-alpha-thumb'),
+          prevI=p.querySelector('.cp-prev i'), input=p.querySelector('input');
+    const a2hex = ()=> Math.round(a*255).toString(16).padStart(2,'0');
+    const out = ()=> { const b6=hsvToHex(h,s,v); return a>=0.999 ? b6 : b6 + a2hex(); };
     function paint(emit){
-      const cur = hsvToHex(h,s,v);
+      const b6 = hsvToHex(h,s,v);
       sv.style.background = hsvToHex(h,1,1);
       svThumb.style.left=(s*100)+'%'; svThumb.style.top=((1-v)*100)+'%';
       hueThumb.style.left=(h/360*100)+'%';
-      prev.style.background = cur;
+      alphaGrad.style.background = `linear-gradient(to right, ${b6}00, ${b6})`;
+      alphaThumb.style.left=(a*100)+'%';
+      const cur = out();
+      prevI.style.background = cur;
       if(document.activeElement!==input) input.value = cur.slice(1).toUpperCase();
       if(emit) onChange(cur);
     }
     function svFromEvent(e){ const r=sv.getBoundingClientRect(); s=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); v=Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height)); paint(true); }
     function hueFromEvent(e){ const r=hue.getBoundingClientRect(); h=Math.min(360,Math.max(0,(e.clientX-r.left)/r.width*360)); paint(true); }
-    drag(sv, svFromEvent); drag(hue, hueFromEvent);
-    input.addEventListener('input', ()=>{ let val=input.value.trim().replace(/[^0-9a-fA-F]/g,''); if(val.length===6){ const o=hexToHsv('#'+val); h=o.h;s=o.s;v=o.v; paint(true); } });
+    function alphaFromEvent(e){ const r=alpha.getBoundingClientRect(); a=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); paint(true); }
+    drag(sv, svFromEvent); drag(hue, hueFromEvent); drag(alpha, alphaFromEvent);
+    input.addEventListener('input', ()=>{ let val=input.value.trim().replace(/[^0-9a-fA-F]/g,''); if(val.length===6 || val.length===8){ a = val.length===8 ? parseInt(val.slice(6,8),16)/255 : 1; const o=hexToHsv('#'+val.slice(0,6)); h=o.h;s=o.s;v=o.v; paint(true); } });
     paint(false);
     return p;
   });
