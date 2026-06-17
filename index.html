@@ -798,17 +798,13 @@
 
           <!-- SOCIAL PROOF / REVIEWS -->
           <section class="section" data-sec="reviews"><div class="container">
-            <div class="reviews-agg">
-              <div class="stars" id="agg-stars" style="font-size:22px"></div>
-              <div class="big">4.8 out of 5</div>
-              <div class="sub">Based on 12,400+ verified reviews</div>
-            </div>
+            <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="reviews" data-cards></div>
           </div></section>
 
           <!-- PRESS / FEATURED IN -->
           <section class="press" data-sec="press"><div class="container">
-            <div class="plabel">As featured in</div>
+            <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="press-logos" data-cards></div>
           </div></section>
 
@@ -1782,7 +1778,6 @@ function sunglasses(frame){
 }
 
 function buildHomepage(){
-  document.getElementById('agg-stars').innerHTML = '★★★★★';
   renderBlockSections();   // value props, collections, products, reviews, press, gallery, journal, try-on list
 }
 
@@ -1991,14 +1986,10 @@ const SECTION_SCHEMAS = {
   ]},
   reviews: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
     SCHEME_SETTING,
-    {type:'text', id:'heading', label:'Heading', default:'4.8 out of 5'},
-    {type:'select', id:'layout', label:'Layout', default:'grid', options:[
-      {value:'grid',label:'Grid'},{value:'carousel',label:'Carousel'}]},
     ...PADDING_BLOCK,
   ]},
   press: { name:'Logo list', category:'Layout', settings:[
     SCHEME_SETTING,
-    {type:'text', id:'heading', label:'Heading', default:'As featured in'},
     ...PADDING_BLOCK,
   ]},
   ugc: { name:'Image gallery', category:'Image', settings:[
@@ -2085,7 +2076,7 @@ const SECTION_BLOCK_TYPES = {
   reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'],
 };
 // Grid sections that also host a heading/text block zone above their card grid.
-const HEADER_GRID = new Set(['collections','bestsellers','ugc','journal']);
+const HEADER_GRID = new Set(['collections','bestsellers','ugc','journal','reviews','press']);
 Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
   if(!SECTION_SCHEMAS[k]) return;
   const accept = types.map(t=>({type:t}));
@@ -2121,8 +2112,15 @@ function buildDefaultBlocks(){
       { type:'heading_block', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
       ...PRODUCTS.map(p => ({ type:'product_card', name:p.name, settings:{ show_badge:!!p.badge }, _demo:{ name:p.name, frame:p.frame, frame2:p.frame2, rating:p.rating, reviews:p.reviews, price:p.price, was:p.was, badge:p.badge } })),
     ],
-    reviews:     REVIEWS.map(r => ({ type:'testimonial',       name:r.name,  settings:{ quote:r.text, author:r.name, rating:5 }, _demo:{ initials:r.initials } })),
-    press:       PRESS.map(n => ({ type:'logo',                name:n,       settings:{ name:n } })),
+    reviews: [
+      { type:'heading_block', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
+      { type:'text_block',    name:'Rating', settings:{ text:'4.8 out of 5 · Based on 12,400+ verified reviews' } },
+      ...REVIEWS.map(r => ({ type:'testimonial', name:r.name, settings:{ quote:r.text, author:r.name, rating:5 }, _demo:{ initials:r.initials } })),
+    ],
+    press: [
+      { type:'text_block', name:'As featured in', settings:{ text:'As featured in' } },
+      ...PRESS.map(n => ({ type:'logo', name:n, settings:{ name:n } })),
+    ],
     ugc: [
       { type:'text_block',    name:'#NoirOnYou', settings:{ text:'#NoirOnYou' } },
       { type:'heading_block', name:'As seen on you', settings:{ text:'As seen on you', size:'h2' } },
@@ -2203,14 +2201,14 @@ const CARD_RENDERERS = {
     return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; },
   ugc: (b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; },
   journal: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; },
+  reviews: (b,i)=>{ const s=b.settings||{}, d=b._demo||{};
+    return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; },
+  press: (b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; },
 };
 // Full-list renderers for the remaining (pure-card) sections.
 const SECTION_RENDERERS = {
   valueprops: bs => bs.map((b,i)=>{ const s=b.settings||{};
     return `<div class="vp" data-bpath="${i}"><div class="ic">${svg(SI[s.icon]||SI.star,24)}</div><h5>${s.heading||''}</h5><p>${s.text||''}</p></div>`; }).join(''),
-  reviews: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{};
-    return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; }).join(''),
-  press: bs => bs.map((b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; }).join(''),
 };
 function renderSectionContent(key){
   const secEl = sectionEl(key); if(!secEl) return;
