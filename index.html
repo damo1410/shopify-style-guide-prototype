@@ -130,6 +130,14 @@
   .ph-sec-more, .ph-sec-close { width: 32px; height: 32px; padding: 0; border: none; background: none; cursor: pointer; color: var(--stone-900); display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; flex: 0 0 auto; }
   .ph-sec-more:hover, .ph-sec-close:hover { background: var(--stone-100); }
   .ph-sec-more svg, .ph-sec-close svg { width: 18px; height: 18px; }
+  /* add-picker view of the sheet header: title + close (shown on mobile while adding) */
+  .ph-picker { flex: 1; display: none; align-items: center; gap: 8px; min-height: 28px; }
+  .ph-pk-title { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* the add-section / add-block list that renders into the mobile sheet (desktop uses the modal) */
+  .sheet-picker { display: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
+  .sheet-pk-cat { font-size: 13px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
+  .sheet-pk-item { display: flex; align-items: center; gap: 10px; height: 44px; margin: 1px 8px; padding: 0 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; width: calc(100% - 16px); }
+  .sheet-pk-item:hover, .sheet-pk-item:active { background: var(--stone-100); }
   .brand { display: flex; align-items: center; gap: 8px; }
   .brand .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; }
   .brand .t1 { font-size: 13px; font-weight: 600; line-height: 1.2; }
@@ -217,6 +225,10 @@
   .lyr-act:hover { background: var(--stone-200); color: var(--stone-900); }
   .lyr-act.lyr-del:hover { background: #fee2e2; color: #dc2626; }
   .lyr-row.active .lyr-act { color: rgba(255,255,255,.85); }
+  /* persistent per-row "More options" — mobile only (touch can't hover to reveal hide/delete).
+     Desktop keeps the hover hide/delete actions and hides this. */
+  .lyr-more { display: none; flex: 0 0 auto; }
+  .lyr-row:hover .lyr-act.lyr-more { background: none; }
   .lyr-row.active .lyr-act:hover { background: rgba(255,255,255,.18); color: #fff; }
   .lyr-row.active .lyr-act.lyr-del:hover { background: rgba(255,255,255,.2); color: #fff; }
   .lyr-act svg { width: 16px; height: 16px; }
@@ -502,6 +514,8 @@
   .cmenu-item.danger { color: #b42318; }
   .cmenu-item svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--stone-500); }
   .cmenu-item.danger svg { color: #b42318; }
+  .cmenu-check { margin-left: auto; display: inline-flex; }
+  .cmenu-check svg { color: var(--sel); }
   .cmenu-sep { height: 1px; background: var(--stone-100); margin: 5px 4px; }
 
   /* brand colors modal */
@@ -982,17 +996,40 @@
        (the old left-rail .panel-tabs element stays unused). */
     .panel-tabs { display: none; }
 
+    /* header controls all share one height (36px) so the toggle, page switcher and actions line
+       up; export + reset become compact icon buttons (label hidden) to leave room for the page. */
+    .ph-global .tb-page { height: 36px; flex: 0 1 auto; min-width: 0; }
+    .ph-global .tb-page .pg-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ph-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+    .ph-actions .export-btn { width: 36px; height: 36px; padding: 0; gap: 0; border-radius: 8px; justify-content: center; }
+    .ph-actions .export-btn span { display: none; }
+    .ph-actions .reset { width: 36px; height: 36px; padding: 0; gap: 0; border-radius: 8px; justify-content: center; background: var(--stone-100); color: var(--stone-600); }
+    .ph-actions .reset:hover { background: var(--stone-200); color: var(--stone-900); }
+
+    /* persistent per-row "More options" replaces the desktop hover hide/delete actions */
+    .lyr-actions { display: none !important; }
+    .lyr-more { display: inline-flex !important; }
+
     /* a section / block / scheme is selected: its settings card lives inside the sheet, and
-       both lists hide until the close (X) in the header deselects. */
-    /* the card fills the sheet below the header and scrolls its OWN body, the same way the
-       #layers / #groups lists do — so every control stays reachable at any snap height. */
+       both lists hide until the close (X) in the header deselects. The card fills the sheet
+       below the header and scrolls its OWN body (like #layers / #groups), so every control
+       stays reachable at any snap height. */
     .section-float.in-sheet { position: static; width: 100%; max-height: none; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
+    .section-float.in-sheet[hidden] { display: none; }   /* an empty/hidden card must NOT eat sheet space */
     .section-float.in-sheet .sf-head { display: none; }   /* the sheet header carries icon + name + ⋯ + close */
     .section-float.in-sheet .sf-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
     body.sec-selected #layers, body.sec-selected .groups { display: none; }
     /* swap the panel header to the selection view (type icon + name + ⋯ + close) */
     body.sec-selected .panel-header .ph-global { display: none; }
     body.sec-selected .panel-header .ph-section { display: flex; }
+
+    /* adding a section / block: the picker list renders into the sheet (consistent header +
+       drag-to-collapse), overriding every other view until its close (X) dismisses it. */
+    body.picker-open .panel-header .ph-global,
+    body.picker-open .panel-header .ph-section { display: none !important; }
+    body.picker-open .panel-header .ph-picker { display: flex; }
+    body.picker-open #layers, body.picker-open .groups, body.picker-open #section-float { display: none !important; }
+    body.picker-open .sheet-picker { display: flex; flex-direction: column; }
   }
 </style>
 </head>
@@ -1052,7 +1089,7 @@
       <span class="pane-title">Home page</span>
     </div>
     <div class="panel-header">
-      <!-- global header (default): switch Layers ⇄ Theme settings, plus export / reset -->
+      <!-- global header (default): switch Layers ⇄ Theme settings, page switcher, export / reset -->
       <div class="ph-global">
         <div class="tb-modes">
           <button type="button" class="tb-mode active" data-mode="layers" title="Sections / Layers">
@@ -1062,12 +1099,17 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
         </div>
+        <button type="button" class="tb-page ph-page" id="ph-page-switcher" title="Switch page">
+          <span class="pg-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+          <span class="pg-name">Home page</span>
+          <svg class="pg-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
         <div class="ph-actions">
-          <button class="export-btn" id="export-btn" title="Export Shopify theme files"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Export</button>
-          <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+          <button class="export-btn" id="export-btn" title="Export Shopify theme files"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg><span>Export</span></button>
+          <button class="reset" id="reset-btn" title="Reset theme settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
         </div>
       </div>
-      <!-- selection header (mobile, when a section / block / scheme is selected):
+      <!-- selection view (mobile, when a section / block / scheme is selected):
            type icon + name + ⋯ more menu + close — mirrors the desktop inspector header -->
       <div class="ph-section">
         <span class="ph-sec-ic" id="ph-section-ic"></span>
@@ -1075,9 +1117,15 @@
         <button class="ph-sec-more" id="ph-section-more" title="More options"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
         <button class="ph-sec-close" id="ph-section-close" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
+      <!-- add-picker view (mobile): the Add section / Add block list renders into the sheet -->
+      <div class="ph-picker">
+        <span class="ph-pk-title" id="ph-picker-title">Add</span>
+        <button class="ph-sec-close" id="ph-picker-close" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
     </div>
     <div class="layers" id="layers"><!-- section/block tree injected by JS --></div>
     <div class="groups" id="groups"><!-- accordion groups injected by JS --></div>
+    <div class="sheet-picker" id="sheet-picker"><!-- mobile add-section / add-block list --></div>
   </aside>
 
   <!-- ===================== RIGHT: LIVE PREVIEW ========================== -->
@@ -3040,9 +3088,35 @@ function openBlockPicker(section, parentPath, index){
 
 /* Shopify-style Add picker: searchable categorised list (left) + live preview (right).
    `groups` = { Category: [{ type, name, icon?, desc? }] }; `kind` labels the search box. */
+// Mobile Add picker: a plain categorised list rendered into the bottom sheet. Reuses the sheet's
+// own drag/snap (it's the same .panel), opens at full height, and dismisses from the header close.
+function renderPickerInSheet(title, groups, onPick){
+  const host = document.getElementById('sheet-picker'); if(!host) return;
+  host.innerHTML = '';
+  Object.entries(groups).forEach(([cat, items])=>{
+    if(!items || !items.length) return;
+    host.appendChild(el(`<div class="sheet-pk-cat">${cat}</div>`));
+    items.forEach(it=>{
+      const row = el(`<button type="button" class="sheet-pk-item"><span class="picker-ic">${svg(it.icon || ICONS.box,16)}</span><span class="picker-name"></span></button>`);
+      row.querySelector('.picker-name').textContent = it.name;
+      row.onclick = ()=>{ closePickerSheet(); onPick(it.type); };
+      host.appendChild(row);
+    });
+  });
+  const t = document.getElementById('ph-picker-title'); if(t) t.textContent = title || 'Add';
+  document.body.classList.add('picker-open');
+  if(window.__sheetSnap) window.__sheetSnap('full');   // open full — you don't need the page behind it
+}
+function closePickerSheet(){
+  document.body.classList.remove('picker-open');
+  const host = document.getElementById('sheet-picker'); if(host) host.innerHTML = '';
+}
 function openPicker(title, groups, onPick, kind){
   closePicker();
   kind = kind || 'sections';
+  // Mobile: render the list into the bottom sheet (consistent header + drag-to-collapse) rather
+  // than the desktop master/detail modal — there's no room or pointer for a live preview.
+  if(mqMobile.matches){ renderPickerInSheet(title, groups, onPick); return; }
   const ov = el(`<div class="picker-ov" id="picker-ov">
     <div class="picker">
       <div class="picker-head">
@@ -3283,6 +3357,23 @@ function openMoreMenu(anchor, entries){
     return m;
   });
 }
+// Page switcher. The prototype is single-page (the Home page / index template) for now; the menu
+// gives the Shopify affordance and lists whatever pages exist, with the current one checked.
+const PAGES = [{ id:'index', name:'Home page' }];
+let currentPageId = 'index';
+const PAGE_ICON = '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>';
+function openPageMenu(anchor){
+  popover(anchor, (close)=>{
+    const m = el('<div class="cmenu"></div>');
+    PAGES.forEach(p=>{
+      const b = el(`<button type="button" class="cmenu-item">${svg(PAGE_ICON,16)}<span>${p.name}</span></button>`);
+      if(p.id===currentPageId) b.appendChild(el(`<span class="cmenu-check">${svg('<polyline points="20 6 9 17 4 12"/>',16)}</span>`));
+      b.onclick = ()=>{ close(); currentPageId = p.id; };   // single page today — selecting is a no-op
+      m.appendChild(b);
+    });
+    return m;
+  });
+}
 function openSectionPicker(gid, index){
   gid = gid || 'template';
   const groups = {};
@@ -3350,6 +3441,13 @@ function makeActions(hidden, onHide, onDelete){
   }
   return wrap;
 }
+// Persistent per-row "More options" button (mobile only via CSS) — opens the same context menu
+// the inspector header shows, so hide / delete / add are reachable without a hover.
+function makeMoreBtn(entries){
+  const b = el(`<button type="button" class="lyr-act lyr-more" title="More options">${svg(DOTS_ICON,15)}</button>`);
+  b.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, entries); };
+  return b;
+}
 
 /* ---- hide / show layers (Shopify's eye toggle) ---- */
 const hiddenLayers = new Set();   // section id, or `${section}:${path}` for a block
@@ -3399,6 +3497,7 @@ function buildLayers(){
       row.onmouseleave = ()=> hideCanvasHover();
       row.appendChild(main);
       row.appendChild(makeActions(hidden, ()=>toggleHidden(key), ()=>removeSection(key)));
+      row.appendChild(makeMoreBtn(sectionMoreEntries(key)));   // mobile: persistent ⋯ menu
       // drag to reorder within the same group (sections never cross groups)
       dropTarget(row, ()=>dragState && dragState.kind==='section' && dragState.gid===gid, half=>{
         const ti = sectionIndexInGroup(key); let to = half==='before' ? ti : ti+1;
@@ -3452,6 +3551,7 @@ function renderBlockRows(grp, section, list, parentPath, depth){
     row.onmouseleave = ()=> hideCanvasHover();
     row.appendChild(main);
     row.appendChild(makeActions(hidden, ()=>toggleHidden(blockHideKey(section, path)), ()=>removeBlock(section, path)));
+    row.appendChild(makeMoreBtn(blockMoreEntries(section, path)));   // mobile: persistent ⋯ menu
     // drag-reorder at EVERY depth: dropping before/after a row inserts as a sibling in that
     // row's parent (so re-parenting works across groups).
     dropTarget(row, ()=>dragState && dragState.kind==='block' && dragState.section===section, half=>{
@@ -3698,6 +3798,10 @@ function initSectionSelection(){
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && selectedSection) deselectSection(); });
   // mobile sheet header close button → deselect, back to the global header
   document.getElementById('ph-section-close').addEventListener('click', ()=>deselectSection());
+  // mobile add-picker close → dismiss the picker sheet, back to the underlying view
+  const pkClose = document.getElementById('ph-picker-close'); if(pkClose) pkClose.addEventListener('click', ()=>closePickerSheet());
+  // page switcher (top bar + mobile sheet header) → page menu
+  ['page-switcher','ph-page-switcher'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=(e)=>{ e.stopPropagation(); openPageMenu(e.currentTarget); }; });
   // keep the card on the correct side of the layout when crossing the breakpoint
   const onMq = ()=>renderSectionControls();
   if(mqMobile.addEventListener) mqMobile.addEventListener('change', onMq); else if(mqMobile.addListener) mqMobile.addListener(onMq);
