@@ -163,6 +163,10 @@
   .lyr-add-nested { width: auto; margin-right: 12px; }
   /* generic theme blocks in the canvas */
   .tb-root { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+  /* a block's frame should hug its content — spacing between blocks is the tb-root gap,
+     so zero the heading/paragraph bottom-margins the store adds (which were inflating the
+     selection/hover frame). .store specificity beats section rules like .hero p. */
+  .store .tb > * { margin: 0; }
   /* groups are invisible layout containers; only an EMPTY group shows a drop affordance */
   .tb-group:empty { min-width: 80px; min-height: 44px; border: 1px dashed var(--c-border, #e7e5e4); border-radius: var(--radius, 10px); }
   .tb-img { width: 100%; max-width: 360px; min-height: 120px; border-radius: var(--radius, 10px); background: repeating-conic-gradient(var(--c-surface,#f0efed) 0% 25%, #fff 0% 50%) 50% / 22px 22px; }
@@ -791,13 +795,7 @@
           <!-- GUARANTEE / RISK-FREE -->
           <section class="section guarantee" data-sec="guarantee"><div class="container">
             <div class="gmedia"><img src="https://picsum.photos/seed/noir-tryon/800/600" alt="Home try-on"></div>
-            <div class="gtext">
-              <div class="eyebrow">Risk-free</div>
-              <h2>Try them on at home, on us.</h2>
-              <p>Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.</p>
-              <div class="glist" id="glist"></div>
-              <a class="btn btn-primary">Start your home try-on</a>
-            </div>
+            <div class="gtext tb-root" data-blocks><!-- heading/text/button blocks injected by JS --></div>
           </div></section>
 
           <!-- SOCIAL PROOF / REVIEWS -->
@@ -837,9 +835,7 @@
 
           <!-- NEWSLETTER -->
           <section class="section newsletter" data-sec="newsletter"><div class="container">
-            <div class="eyebrow">Join the club</div>
-            <h2>Get 10% off your first order</h2>
-            <p>Sign up for early access to new drops, styling tips, and members-only offers.</p>
+            <div class="tb-root" data-blocks style="align-items:center"><!-- heading/text blocks injected by JS --></div>
             <form onsubmit="return false">
               <input type="email" placeholder="Enter your email" aria-label="Email">
               <button class="btn btn-primary" type="submit">Get my 10% off</button>
@@ -1995,13 +1991,11 @@ const SECTION_SCHEMAS = {
     {type:'checkbox', id:'show_view_all', label:'Enable "View all"', default:true},
     ...PADDING_BLOCK,
   ]},
-  guarantee: { name:'Image with text', category:'Image', settings:[
+  guarantee: { name:'Image with text', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
     {type:'image_picker', id:'image', label:'Image'},
     {type:'select', id:'image_position', label:'Image position', default:'left', options:[
       {value:'left',label:'Left'},{value:'right',label:'Right'}]},
-    {type:'inline_richtext', id:'heading', label:'Heading', default:'Try at home, risk-free'},
-    {type:'richtext', id:'text', label:'Text', default:'<p>14-day home try-on. Keep what you love.</p>'},
     ...PADDING_BLOCK,
   ]},
   reviews: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
@@ -2029,11 +2023,8 @@ const SECTION_SCHEMAS = {
     {type:'range', id:'post_limit', label:'Posts to show', min:2, max:6, step:1, default:3},
     ...PADDING_BLOCK,
   ]},
-  newsletter: { name:'Email signup', category:'Layout', settings:[
+  newsletter: { name:'Email signup', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
-    {type:'inline_richtext', id:'heading', label:'Heading', default:'Get 10% off'},
-    {type:'textarea', id:'subheading', label:'Subheading', default:'Join the list for early drops.'},
-    {type:'text', id:'button_label', label:'Button label', default:'Subscribe'},
     ...PADDING_BLOCK,
   ]},
   footer: { name:'Footer', category:'Footer', settings:[
@@ -2100,7 +2091,7 @@ const BLOCK_SCHEMAS = {
 // schemas + give a max_blocks so the registry stays the single source of truth.
 const SECTION_BLOCK_TYPES = {
   valueprops:['icon_column'], collections:['collection_card'], bestsellers:['product_card'],
-  reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'], guarantee:['checklist_item'],
+  reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'],
 };
 Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
   if(!SECTION_SCHEMAS[k]) return;
@@ -2113,7 +2104,6 @@ Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
 // that isn't part of the Shopify schema — the block settings stay Shopify-faithful,
 // while _demo lets the hardcoded markup keep rendering. Exports drop _demo.
 function buildDefaultBlocks(){
-  const guarantee = ['Free 14-day home try-on','2-year warranty + lifetime repairs','Free returns &amp; exchanges'];
   return {
     hero: [
       { type:'text_block',    name:"New · Summer '26", settings:{ text:"New · Summer '26" } },
@@ -2131,7 +2121,20 @@ function buildDefaultBlocks(){
     press:       PRESS.map(n => ({ type:'logo',                name:n,       settings:{ name:n } })),
     ugc:         UGC.map((s,i) => ({ type:'gallery_image',     name:'Image '+(i+1), settings:{}, _demo:{ seed:s } })),
     journal:     POSTS.map(p => ({ type:'post_card',           name:p.title, settings:{ title:p.title }, _demo:{ seed:p.seed, cat:p.cat } })),
-    guarantee:   guarantee.map(t => ({ type:'checklist_item',  name:t,       settings:{ text:t } })),
+    guarantee: [
+      { type:'text_block',    name:'Risk-free', settings:{ text:'Risk-free' } },
+      { type:'heading_block', name:'Try them on at home, on us.', settings:{ text:'Try them on at home, on us.', size:'h2' } },
+      { type:'text_block',    name:'Body', settings:{ text:'Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.' } },
+      { type:'text_block',    name:'Free 14-day home try-on', settings:{ text:'✓  Free 14-day home try-on' } },
+      { type:'text_block',    name:'2-year warranty + lifetime repairs', settings:{ text:'✓  2-year warranty + lifetime repairs' } },
+      { type:'text_block',    name:'Free returns & exchanges', settings:{ text:'✓  Free returns & exchanges' } },
+      { type:'button_block',  name:'Start your home try-on', settings:{ label:'Start your home try-on', style:'primary' } },
+    ],
+    newsletter: [
+      { type:'text_block',    name:'Join the club', settings:{ text:'Join the club' } },
+      { type:'heading_block', name:'Get 10% off your first order', settings:{ text:'Get 10% off your first order', size:'h2' } },
+      { type:'text_block',    name:'Body', settings:{ text:'Sign up for early access to new drops, styling tips, and members-only offers.' } },
+    ],
   };
 }
 function seedBlocks(){ if(!STATE.sectionBlocks || !Object.keys(STATE.sectionBlocks).length) STATE.sectionBlocks = buildDefaultBlocks(); }
@@ -2161,7 +2164,7 @@ function acceptsChildren(type){ return (((BLOCK_SCHEMAS[type]||{}).blocks)||[]).
 // Map a block instance → its preview element (for the selection outline).
 const BLOCK_CONTAINERS = {
   valueprops:['#valueprops','.vp'], collections:['#collections','.collection'], bestsellers:['#products','.product'],
-  reviews:['#reviews','.review'], press:['#press','.logo'], ugc:['#ugc','.ugc-tile'], journal:['#journal','.post'], guarantee:['#glist','.gitem'],
+  reviews:['#reviews','.review'], press:['#press','.logo'], ugc:['#ugc','.ugc-tile'], journal:['#journal','.post'],
 };
 function blockEl(section, path){
   const secEl = sectionEl(section);
@@ -2188,7 +2191,6 @@ const SECTION_RENDERERS = {
     return `<a class="collection" data-bpath="${i}"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; }).join(''),
   bestsellers: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
     return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; }).join(''),
-  guarantee: bs => bs.map((b,i)=>{ const s=b.settings||{}; return `<div class="gitem" data-bpath="${i}">${svg(SI.check,20)}${s.text||''}</div>`; }).join(''),
   reviews: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{};
     return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; }).join(''),
   press: bs => bs.map((b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; }).join(''),
@@ -2243,8 +2245,10 @@ function renderThemeBlock(b, path){
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
-SECTION_RENDERERS.groupsec = bs => renderThemeBlocks(bs, []);
-SECTION_RENDERERS.hero     = bs => renderThemeBlocks(bs, []);   // hero content = theme blocks
+SECTION_RENDERERS.groupsec   = bs => renderThemeBlocks(bs, []);
+SECTION_RENDERERS.hero       = bs => renderThemeBlocks(bs, []);   // hero content = theme blocks
+SECTION_RENDERERS.guarantee  = bs => renderThemeBlocks(bs, []);   // image-with-text content = theme blocks
+SECTION_RENDERERS.newsletter = bs => renderThemeBlocks(bs, []);   // email-signup content = theme blocks
 
 // The "Group" section: a generic host for theme blocks (add-only; built fresh on add).
 Object.assign(SECTION_SCHEMAS, {
