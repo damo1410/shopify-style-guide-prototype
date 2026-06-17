@@ -299,13 +299,26 @@
   #store [data-sec] { cursor: pointer; }
   #store [data-sec]:hover { outline: 2px solid var(--sel); outline-offset: -2px; }
   #store [data-sec].sec-selected { outline: 2px solid var(--sel); outline-offset: -2px; }
-  /* a selected BLOCK gets its own ring inside the (also-outlined) section */
+  /* blocks are selectable on the canvas too: dashed ring on hover, solid when selected */
+  #store [data-bpath] { cursor: pointer; }
+  #store [data-bpath]:hover { outline: 2px dashed var(--sel); outline-offset: 1px; }
   #store .block-selected { outline: 2px solid var(--sel); outline-offset: 1px; border-radius: 3px; }
   /* a section with an assigned scheme paints its own background from that scheme */
   #store .sec-themed { background-color: var(--c-bg) !important; }
 
+  /* RIGHT inspector column (desktop): fixed settings rail, like Shopify */
+  .inspector { width: 320px; flex: 0 0 320px; border-left: 1px solid var(--stone-200); background: #fff; display: flex; flex-direction: column; min-height: 0; }
+  .inspector-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 32px 28px; color: var(--stone-400); }
+  .inspector-empty .ie-ic { color: var(--stone-300); }
+  .inspector-empty .ie-t { font-size: 12px; font-weight: 600; color: var(--stone-500); }
+  .inspector-empty .ie-s { font-size: 11px; line-height: 1.5; max-width: 220px; }
+
+  /* the settings card: floats only as a fallback; normally docked in the inspector */
   .section-float { position: fixed; bottom: 24px; right: 24px; width: 280px; max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: #fff; border: 1px solid var(--stone-200); border-radius: 10px; box-shadow: 0 8px 32px -8px rgba(0,0,0,.18); z-index: 40; }
   .section-float[hidden] { display: none; }
+  /* docked in the right inspector: fill the column, no floating chrome */
+  .section-float.in-inspector { position: static; width: 100%; max-height: none; height: 100%; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
+  .section-float.in-inspector .sf-head { padding: 14px 16px; border-bottom: 1px solid var(--stone-200); }
   .sf-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
   .sf-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .sf-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--sel); flex: 0 0 auto; }
@@ -652,6 +665,7 @@
   @media (max-width: 860px) {
     .app { display: block; position: relative; height: 100dvh; }
     .preview { position: absolute; inset: 0; height: 100dvh; }
+    .inspector { display: none; }   /* on mobile the settings card lives in the bottom sheet */
     .preview-pad { padding-bottom: var(--peek); }   /* keep the footer reachable above the peeking sheet */
     .panel {
       position: absolute; left: 0; right: 0; bottom: 0; width: 100%;
@@ -857,6 +871,15 @@
       </div>
     </div>
   </main>
+
+  <!-- ===================== RIGHT: SETTINGS INSPECTOR (fixed) ================ -->
+  <aside class="inspector" id="inspector">
+    <div class="inspector-empty" id="inspector-empty">
+      <div class="ie-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></div>
+      <div class="ie-t">Nothing selected</div>
+      <div class="ie-s">Click a section or block — in the canvas or the Layers panel — to edit its settings.</div>
+    </div>
+  </aside>
 </div>
 
 <script>
@@ -2161,18 +2184,18 @@ function highlightBlockEl(section, path){ clearBlockHighlight(); const e = block
    ---------------------------------------------------------------------------- */
 function initialsOf(name){ return (name||'').split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '★'; }
 const SECTION_RENDERERS = {
-  valueprops: bs => bs.map(b=>{ const s=b.settings||{};
-    return `<div class="vp"><div class="ic">${svg(SI[s.icon]||SI.star,24)}</div><h5>${s.heading||''}</h5><p>${s.text||''}</p></div>`; }).join(''),
-  collections: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
-    return `<a class="collection"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; }).join(''),
-  bestsellers: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
-    return `<article class="product"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; }).join(''),
-  guarantee: bs => bs.map(b=>{ const s=b.settings||{}; return `<div class="gitem">${svg(SI.check,20)}${s.text||''}</div>`; }).join(''),
-  reviews: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{};
-    return `<div class="review">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; }).join(''),
-  press: bs => bs.map(b=>{ const s=b.settings||{}; return `<span class="logo">${s.name||''}</span>`; }).join(''),
-  ugc: bs => bs.map(b=>{ const d=b._demo||{}; return `<a class="ugc-tile"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; }).join(''),
-  journal: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; }).join(''),
+  valueprops: bs => bs.map((b,i)=>{ const s=b.settings||{};
+    return `<div class="vp" data-bpath="${i}"><div class="ic">${svg(SI[s.icon]||SI.star,24)}</div><h5>${s.heading||''}</h5><p>${s.text||''}</p></div>`; }).join(''),
+  collections: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
+    return `<a class="collection" data-bpath="${i}"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; }).join(''),
+  bestsellers: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
+    return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div><div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div><span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span><a class="btn btn-primary">Add to cart</a></div></article>`; }).join(''),
+  guarantee: bs => bs.map((b,i)=>{ const s=b.settings||{}; return `<div class="gitem" data-bpath="${i}">${svg(SI.check,20)}${s.text||''}</div>`; }).join(''),
+  reviews: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{};
+    return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who"><span class="av">${d.initials||initialsOf(s.author)}</span><div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; }).join(''),
+  press: bs => bs.map((b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; }).join(''),
+  ugc: bs => bs.map((b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; }).join(''),
+  journal: bs => bs.map((b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; }).join(''),
 };
 function renderSectionContent(key){
   const r=SECTION_RENDERERS[key]; if(!r) return;
@@ -2671,25 +2694,38 @@ function renderSectionControls(){
   placeCard(card);
 }
 
-// Desktop: card floats over the preview (bottom-right). Mobile: card lives in the sheet.
+// Desktop: card is docked in the fixed right inspector. Mobile: card lives in the sheet.
 function placeCard(card){
+  const empty = document.getElementById('inspector-empty');
   if(mqMobile.matches){
-    card.classList.add('in-sheet');
+    card.classList.add('in-sheet'); card.classList.remove('in-inspector');
     const panel = document.querySelector('.panel');
     const header = panel.querySelector('.panel-header');
     if(card.parentElement !== panel) panel.insertBefore(card, header.nextSibling);
+    if(empty) empty.style.display = 'none';
   } else {
-    card.classList.remove('in-sheet');
-    const preview = document.querySelector('.preview');
-    if(card.parentElement !== preview) preview.appendChild(card);
+    card.classList.add('in-inspector'); card.classList.remove('in-sheet');
+    const insp = document.getElementById('inspector');
+    if(insp && card.parentElement !== insp) insp.appendChild(card);
+    // show the empty placeholder only when nothing is selected
+    if(empty) empty.style.display = card.hidden ? '' : 'none';
   }
 }
 
 function initSectionSelection(){
   const store = document.getElementById('store');
   store.addEventListener('click', e=>{
-    const sec = e.target.closest('[data-sec]');
-    if(sec){ e.stopPropagation(); selectSection(sec.getAttribute('data-sec')); }
+    const sec = e.target.closest('[data-sec]'); if(!sec) return;
+    e.stopPropagation();
+    const key = sec.getAttribute('data-sec');
+    // a block element inside the section (data-bpath) → select that block; else the section
+    const blk = e.target.closest('[data-bpath]');
+    if(blk && sec.contains(blk)){
+      const path = blk.getAttribute('data-bpath').split('.').map(Number);
+      selectBlock(key, path);
+    } else {
+      selectSection(key);
+    }
   });
   // clicking the preview outside any section (or the empty canvas) deselects
   document.querySelector('.preview').addEventListener('click', ()=>{ if(selectedSection) deselectSection(); });
