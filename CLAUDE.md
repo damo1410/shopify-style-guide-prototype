@@ -70,6 +70,20 @@ enforces it); `moveBlockPath` handles reorder + re-parenting + cycle guard.
   children → real nesting. Rendered by the recursive `renderThemeBlock`.
 - *Bespoke card blocks* (collection_card, product_card, testimonial, logo,
   gallery_image, post_card, icon_column). Rendered per-block by `CARD_RENDERERS`.
+- *Header/footer bespoke blocks* (`header_logo`/`header_menu`/`header_icons`,
+  `footer_brand`/`footer_menu`/`footer_bottom`). The **nav and footer are now
+  built entirely from block instances** (no hardcoded chrome): `SECTION_RENDERERS.nav`
+  lays header blocks out in the bar; `SECTION_RENDERERS.footer` renders column
+  blocks into `.cols` + a bottom-bar block. Seeded in `buildDefaultBlocks`; their
+  `SECTION_SCHEMAS.blocks` list only their own types so the picker offers the right
+  set. Per-block icons live in `BLOCK_ICON` (`blockTypeIcon`); section layer icon is
+  one shared glyph (`layerIcon` → `ICONS.section`, Shopify shows one section icon).
+
+**Sections in ALL three groups are editable** (header/template/footer): add /
+remove / duplicate / reorder (drag stays within a group), hide, blocks. Helpers:
+`sectionGroupId(id)`, `sectionIndexInGroup(id)`, `moveSection(gid,from,to)`,
+`placeNewSection(node,id,gid,index)`, `addSection(type,gid,index)`. `reorderSectionDom`
+re-sequences every `[data-sec]` after the `.announce` bar in `allSectionIds()` order.
 
 **Three section render shapes** (`renderSectionContent(id)` picks one by type):
 1. *Generic* (hero, guarantee, newsletter, groupsec, valueprops): a
@@ -87,12 +101,19 @@ every block element (drives canvas selection + `blockEl`); `[data-blocks]`,
 `[data-blocks-head]`, `[data-cards]` are the per-instance render targets (scoped
 via `secEl.querySelector`, never global `#ids`, so duplicates stay isolated).
 
-**Selection:** `selectedSection` (instance id) + `selectedBlock` (`{section, path}`
-or null). Click on canvas (nearest `[data-bpath]` → block, else the section) OR a
-layers-tree row. The right **inspector** (`#section-float`, docked in `#inspector`
-on desktop / bottom sheet on mobile) renders the selection's schema via the
-schema engine (`renderSettingsList` / `renderSetting`, one control per Shopify
-setting type).
+**Selection:** three mutually-exclusive targets — `selectedSection` (instance id) +
+`selectedBlock` (`{section, path}`), or `selectedScheme` (a color scheme being
+edited). Click on canvas (nearest `[data-bpath]` → block, else the section), a
+layers-tree row, or a scheme card. `renderSectionControls()` is the one entry point:
+it branches scheme → block → section and renders the right **inspector**
+(`#section-float`, docked in `#inspector` on desktop / bottom sheet on mobile).
+When nothing is selected the inspector collapses (canvas full-width). Selecting
+auto-scrolls + expands the layers tree to the row (`revealActiveLayer`). The
+inspector header has a type icon + name + a `⋯` menu (`openMoreMenu`:
+sections/blocks = Duplicate/Hide/Remove, schemes = Duplicate/Remove) + close; a
+bottom Remove button mirrors the menu's Remove. Section/block schemas render via
+the schema engine (`renderSettingsList` / `renderSetting`, one control per Shopify
+setting type); the scheme editor renders grouped `colorField`s + a preview hero.
 
 **Live settings wiring.**
 - *Section settings* → `applySectionSettings(id)` sets padding + per-type
@@ -111,6 +132,52 @@ unique id + type + settings + nested block tree with `block_order`),
 (a real `color_scheme_group` from `colorRoles`) + `config/settings_data.json`
 (scheme values resolved to hex + global setting values). Per-section
 `color_scheme` exports as a scheme id (`scheme-1/2/3`).
+
+## Editor UI / chrome (Shopify-faithful — built out in the UI-overhaul session)
+
+The shell is `.app` (column): a **`.topbar`** + `.app-body` (panel | preview |
+inspector). Topbar: black brand mark, a segmented **Layers ⇄ Theme-settings** mode
+toggle (`.tb-mode`, drives `panel[data-mode]`, `setPanelMode`), a centre **page
+switcher**, a segmented **desktop/mobile device** toggle (`.tb-dev`; mobile adds
+`.preview.dev-mobile` and the store's `@container` lives on `.store-frame` so the
+narrow frame triggers real mobile layout), and **Reset + Export** on the right.
+
+**Layers panel** (`buildLayers`/`renderBlockRows`): uniform 34px rows; the *row* is
+the hover/active surface (solid-blue when active) so the highlight spans full width;
+chevron + lead(icon→drag-handle on hover) + name + hover actions (hide/delete) all
+live inside it. Hidden state is a `hiddenLayers` set (`applyHidden` toggles
+`.canvas-hidden`). Drag uses `gripStart`/`dropTarget`/`dragState`.
+
+**Canvas hover** (`initCanvasHover`/`updateCanvasHover`): a blue name-tag chip (icon
++ name, matching the layer) + blue `+` insertion buttons on the hovered element's
+edges (sections: above & below; blocks: below only). `+` → `openSectionPicker`/
+`openBlockPicker` at that index. Hover is **two-way synced** with the layers panel.
+Overlays are fixed-position and live **inside `.preview`** (so moving onto a `+`
+doesn't fire `mouseleave`). Top bar sits above them via `z-index`.
+
+**Add picker** (`openPicker`): master/detail modal — searchable, collapsible
+categorised list (rows mirror layer-row metrics) on the left + a live preview pane
+on the right; no header strip (click-outside / Esc to dismiss). Section/block lists
+carry per-item icons.
+
+**Color system v2.** Brand colors are a *detached* concept: `STATE.palette` is the
+brand list, managed in a **modal** (`openBrandModal`) launched from a button atop
+Theme settings (Shopify has no in-theme palette; themes only *connect* to brand).
+A scheme **role value is `'#hex'` | a brand-color id | `'transparent'`** —
+`swatchHex(v)` resolves all three. The reusable **`colorField`** control: raw-hex
+field (swatch + value) that opens an HSV picker popover (`openColorPicker`), with a
+hover "database" icon → brand-connect popover (`openBrandConnect`); when connected
+it shows a chip (brand name) + `⋯` (Edit brand / Replace / Select color / Remove→white).
+Schemes show as a **3-col card grid** (`renderSchemes`); selecting one edits it in
+the inspector. `popover()`/`closePopover()` is the shared anchored-popover helper;
+`.cmenu` is the shared context-menu style.
+
+**Shared sizing vocabulary** (keep to these): **26px** squares (swatches, db button,
+scheme preview, layer action/chevron/lead buttons), **32px** square icon-buttons
+(top-bar toggles inner buttons, inspector `⋯`/`×`), **34px** control/row height,
+**4px** padding around the 26px squares. Type: body/labels/inputs **12px / weight 400**;
+subheadings (layer group headers, settings `set-header`, picker categories,
+`subgroup-label`) **13px / 600**; pane + accordion headers **14px / 600**.
 
 ## Recipes
 
@@ -132,6 +199,14 @@ so CSS responsive defaults still win otherwise.)
 
 ## Known gaps / future work (the user's roadmap)
 
+- **Next up (separate session): build out the sections & blocks library** — the
+  exact set of section/block types and, critically, the **settings each exposes
+  when selected**, plus tightening how the global style guide connects through to
+  those per-section/block controls. The editor chrome (above) is the stable
+  surface this plugs into: add a type to the registries + a renderer and it's
+  selectable/editable/exportable.
+- The color picker is HSV square + hue + alpha (no eyedropper / recent-colors —
+  intentionally skipped). Brand-color names are derived from hex (`colorName`).
 - Reset only resets theme (style-guide) settings; it does **not** restore
   added/removed/duplicated sections.
 - Reviews aggregate score + a couple of section chromes are intentionally simple.
