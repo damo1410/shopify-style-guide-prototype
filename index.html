@@ -162,9 +162,10 @@
   /* nested Add block: indentation set inline by depth */
   .lyr-add-nested { width: auto; margin-right: 12px; }
   /* generic theme blocks in the canvas */
-  .tb-root { display: flex; flex-direction: column; gap: 20px; }
-  .tb-group { padding: 16px; border: 1px dashed var(--c-border, #e7e5e4); border-radius: var(--radius, 10px); }
-  .tb-img { width: 100%; min-height: 120px; border-radius: var(--radius, 10px); background: repeating-conic-gradient(var(--c-surface,#f0efed) 0% 25%, #fff 0% 50%) 50% / 22px 22px; }
+  .tb-root { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+  /* groups are invisible layout containers; only an EMPTY group shows a drop affordance */
+  .tb-group:empty { min-width: 80px; min-height: 44px; border: 1px dashed var(--c-border, #e7e5e4); border-radius: var(--radius, 10px); }
+  .tb-img { width: 100%; max-width: 360px; min-height: 120px; border-radius: var(--radius, 10px); background: repeating-conic-gradient(var(--c-surface,#f0efed) 0% 25%, #fff 0% 50%) 50% / 22px 22px; }
   /* Remove block button (bottom of the block settings card) */
   .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
   .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
@@ -759,14 +760,7 @@
           <!-- HERO -->
           <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
             <div class="container">
-              <div class="eyebrow" style="margin-bottom:1rem">New · Summer '26</div>
-              <h1>See the world in style.</h1>
-              <p>Premium polarized sunglasses, handcrafted from Italian acetate. Designed to turn heads — built to last a lifetime.</p>
-              <div class="rating" id="hero-rating"><span><strong>4.8</strong>/5 · 12,000+ five-star reviews</span></div>
-              <div class="ctas">
-                <a class="btn btn-primary">Shop best sellers</a>
-                <a class="btn btn-secondary">Explore collections</a>
-              </div>
+              <div class="tb-root hero-blocks" data-blocks><!-- heading/text/button blocks injected by JS --></div>
             </div>
           </header>
 
@@ -1801,7 +1795,6 @@ function sunglasses(frame){
 }
 
 function buildHomepage(){
-  document.getElementById('hero-rating').insertAdjacentHTML('afterbegin', `<span class="stars">${starsGold(5)}</span>`);
   document.getElementById('agg-stars').innerHTML = '★★★★★';
   renderBlockSections();   // value props, collections, products, reviews, press, gallery, journal, try-on list
 }
@@ -1973,15 +1966,11 @@ const SECTION_SCHEMAS = {
     {type:'checkbox', id:'show_search', label:'Show search', default:true},
     {type:'checkbox', id:'sticky', label:'Sticky header', default:false},
   ]},
-  hero: { name:'Image banner', category:'Image', settings:[
+  hero: { name:'Image banner', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
     {type:'image_picker', id:'image', label:'Background image'},
     {type:'select', id:'height', label:'Banner height', default:'large', options:[
       {value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'},{value:'full',label:'Full screen'}]},
-    {type:'header', content:'Content'},
-    {type:'text', id:'eyebrow', label:'Eyebrow', default:"New · Summer '26"},
-    {type:'inline_richtext', id:'heading', label:'Heading', default:'See the world sharper'},
-    {type:'textarea', id:'subheading', label:'Subheading', default:'Premium polarized sunglasses, built to last.'},
     {type:'text_alignment', id:'alignment', label:'Content alignment', default:'left'},
     ...PADDING_BLOCK,
   ]},
@@ -2126,6 +2115,15 @@ Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
 function buildDefaultBlocks(){
   const guarantee = ['Free 14-day home try-on','2-year warranty + lifetime repairs','Free returns &amp; exchanges'];
   return {
+    hero: [
+      { type:'text_block',    name:"New · Summer '26", settings:{ text:"New · Summer '26" } },
+      { type:'heading_block', name:'See the world in style.', settings:{ text:'See the world in style.', size:'h1' } },
+      { type:'text_block',    name:'Subheading', settings:{ text:'Premium polarized sunglasses, handcrafted from Italian acetate — built to last a lifetime.' } },
+      { type:'group', name:'Buttons', settings:{ direction:'horizontal', alignment:'left' }, blocks:[
+        { type:'button_block', name:'Shop best sellers', settings:{ label:'Shop best sellers', style:'primary' } },
+        { type:'button_block', name:'Explore collections', settings:{ label:'Explore collections', style:'secondary' } },
+      ]},
+    ],
     valueprops:  VALUEPROPS.map(v => ({ type:'icon_column',    name:v.h,     settings:{ icon:v.ic, heading:v.h, text:v.p } })),
     collections: COLLECTIONS.map(c => ({ type:'collection_card', name:c.name,  settings:{ title:c.name }, _demo:{ seed:c.seed, seed2:c.seed2 } })),
     bestsellers: PRODUCTS.map(p => ({ type:'product_card',     name:p.name,  settings:{ show_badge:!!p.badge }, _demo:{ name:p.name, frame:p.frame, frame2:p.frame2, rating:p.rating, reviews:p.reviews, price:p.price, was:p.was, badge:p.badge } })),
@@ -2218,7 +2216,7 @@ Object.assign(BLOCK_SCHEMAS, {
     {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
   heading_block:{ name:'Heading', settings:[
     {type:'inline_richtext', id:'text', label:'Heading', default:'Built to last'},
-    {type:'select', id:'size', label:'Size', default:'h3', options:[{value:'h2',label:'Large'},{value:'h3',label:'Medium'},{value:'h4',label:'Small'}]} ]},
+    {type:'select', id:'size', label:'Size', default:'h3', options:[{value:'h1',label:'Display'},{value:'h2',label:'Large'},{value:'h3',label:'Medium'},{value:'h4',label:'Small'}]} ]},
   text_block:   { name:'Text', settings:[ {type:'textarea', id:'text', label:'Text', default:'Add your text here.'} ]},
   button_block: { name:'Button', settings:[
     {type:'text', id:'label', label:'Label', default:'Shop now'}, {type:'url', id:'link', label:'Link'},
@@ -2238,14 +2236,15 @@ function renderThemeBlock(b, path){
       const al  = s.alignment==='center' ? 'center' : (s.alignment==='right' ? 'flex-end' : 'flex-start');
       return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:16px;align-items:${al}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
     }
-    case 'heading_block': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}"><${sz} style="margin:0">${s.text||''}</${sz}></div>`; }
-    case 'text_block':    return `<div class="tb" data-bpath="${bp}"><p style="margin:0;color:var(--c-body)">${s.text||''}</p></div>`;
+    case 'heading_block': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}"><${sz}>${s.text||''}</${sz}></div>`; }
+    case 'text_block':    return `<div class="tb" data-bpath="${bp}"><p>${s.text||''}</p></div>`;
     case 'button_block':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'}">${s.label||'Button'}</a></div>`;
     case 'image_block':   return `<div class="tb" data-bpath="${bp}"><div class="tb-img"></div></div>`;
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
 SECTION_RENDERERS.groupsec = bs => renderThemeBlocks(bs, []);
+SECTION_RENDERERS.hero     = bs => renderThemeBlocks(bs, []);   // hero content = theme blocks
 
 // The "Group" section: a generic host for theme blocks (add-only; built fresh on add).
 Object.assign(SECTION_SCHEMAS, {
