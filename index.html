@@ -108,23 +108,22 @@
   .lyr-tw-spacer { flex: 0 0 18px; width: 18px; }
   .lyr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 8px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 6px; }
   .lyr-main:hover { background: var(--stone-50); }
-  .lyr-row.active .lyr-main, .lyr-block.active { background: var(--stone-100); }
+  .lyr-row.active .lyr-main { background: var(--stone-100); }
   .lyr-ic { color: var(--stone-400); display: inline-flex; flex: 0 0 auto; }
-  .lyr-row.active .lyr-ic, .lyr-block.active .lyr-ic { color: var(--sel); }
+  .lyr-row.active .lyr-ic { color: var(--sel); }
   .lyr-name { flex: 1 1 auto; font-size: 12px; font-weight: 500; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lyr-row.active .lyr-name, .lyr-block.active .lyr-name { color: var(--stone-900); font-weight: 600; }
+  .lyr-row.active .lyr-name { color: var(--stone-900); font-weight: 600; }
   .lyr-count { flex: 0 0 auto; font-size: 10px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; }
-  /* block row: indented under its section, smaller */
-  .lyr-block { width: auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 0 34px; padding: 6px 8px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 6px; }
-  .lyr-block:hover { background: var(--stone-50); }
-  .lyr-block .lyr-name { font-size: 11px; }
+  /* nested block rows: smaller text, indentation set inline by depth */
+  .lyr-blockrow .lyr-name { font-size: 11px; }
+  .lyr-blockrow .lyr-ic { color: var(--stone-300); }
   /* drag-to-reorder: grip handle (on hover) + drop indicator lines */
   .lyr-grip { margin-left: auto; display: none; align-items: center; color: var(--stone-300); cursor: grab; padding: 0 2px; flex: 0 0 auto; }
   .lyr-grip:active { cursor: grabbing; }
-  .lyr-row:hover .lyr-grip, .lyr-block:hover .lyr-grip { display: inline-flex; }
-  .lyr-row.dragging, .lyr-block.dragging { opacity: .45; }
-  .lyr-row.drop-before, .lyr-block.drop-before { box-shadow: inset 0 2px 0 0 var(--sel); }
-  .lyr-row.drop-after, .lyr-block.drop-after { box-shadow: inset 0 -2px 0 0 var(--sel); }
+  .lyr-row:hover .lyr-grip { display: inline-flex; }
+  .lyr-row.dragging { opacity: .45; }
+  .lyr-row.drop-before { box-shadow: inset 0 2px 0 0 var(--sel); }
+  .lyr-row.drop-after { box-shadow: inset 0 -2px 0 0 var(--sel); }
   /* breadcrumb in the block settings card */
   .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
   .sf-crumb:hover { text-decoration: underline; }
@@ -134,6 +133,12 @@
   .lyr-add svg { flex: 0 0 auto; }
   /* section-level Add (less indented than the block-level Add) */
   .lyr-add-sec { margin: 6px 12px 8px 20px; width: calc(100% - 32px); }
+  /* nested Add block: indentation set inline by depth */
+  .lyr-add-nested { width: auto; margin-right: 12px; }
+  /* generic theme blocks in the canvas */
+  .tb-root { display: flex; flex-direction: column; gap: 20px; }
+  .tb-group { padding: 16px; border: 1px dashed var(--c-border, #e7e5e4); border-radius: var(--radius, 10px); }
+  .tb-img { width: 100%; min-height: 120px; border-radius: var(--radius, 10px); background: repeating-conic-gradient(var(--c-surface,#f0efed) 0% 25%, #fff 0% 50%) 50% / 22px 22px; }
   /* Remove block button (bottom of the block settings card) */
   .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
   .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
@@ -2083,18 +2088,41 @@ function seedBlocks(){ if(!STATE.sectionBlocks || !Object.keys(STATE.sectionBloc
 function sectionBlocks(key){ return (STATE.sectionBlocks && STATE.sectionBlocks[key]) || []; }
 function blockName(b, i){ return b.name || (BLOCK_SCHEMAS[b.type] && BLOCK_SCHEMAS[b.type].name) || ('Block '+(i+1)); }
 
+/* PATH-BASED BLOCK ADDRESSING — a block is addressed by [section, path] where path is
+   an array of indices into the nested block tree ([2] = 3rd top-level block; [2,0] = its
+   first child). Theme blocks may nest up to 8 deep (path length ≤ 8). */
+function pathKey(section, path){ return section + '#' + path.join('.'); }
+function blockAt(section, path){
+  let list = sectionBlocks(section), b = null;
+  for(const idx of path){ b = list[idx]; if(!b) return null; list = b.blocks || []; }
+  return b;
+}
+function parentListOf(section, path){
+  let list = STATE.sectionBlocks[section] || [];
+  for(let k=0; k<path.length-1; k++){ const b=list[path[k]]; if(!b) return null; list = b.blocks || []; }
+  return list;
+}
+function childListAt(section, parentPath){
+  if(!parentPath.length) return STATE.sectionBlocks[section] || (STATE.sectionBlocks[section]=[]);
+  const p = blockAt(section, parentPath); if(!p) return null; return p.blocks || (p.blocks=[]);
+}
+function acceptsChildren(type){ return (((BLOCK_SCHEMAS[type]||{}).blocks)||[]).length > 0; }
+
 // Map a block instance → its preview element (for the selection outline).
 const BLOCK_CONTAINERS = {
   valueprops:['#valueprops','.vp'], collections:['#collections','.collection'], bestsellers:['#products','.product'],
   reviews:['#reviews','.review'], press:['#press','.logo'], ugc:['#ugc','.ugc-tile'], journal:['#journal','.post'], guarantee:['#glist','.gitem'],
 };
-function blockEl(section, index){
-  const m = BLOCK_CONTAINERS[section]; if(!m) return null;
-  const c = document.querySelector(m[0]); if(!c) return null;
-  return c.querySelectorAll(m[1])[index] || null;
+function blockEl(section, path){
+  const secEl = sectionEl(section);
+  // generic (theme-block) sections tag each block element with data-bpath
+  if(secEl){ const byPath = secEl.querySelector(`[data-bpath="${path.join('.')}"]`); if(byPath) return byPath; }
+  // flat bespoke sections: index into the known child container (depth-1 only)
+  if(path.length===1){ const m=BLOCK_CONTAINERS[section]; if(m){ const c=document.querySelector(m[0]); if(c) return c.querySelectorAll(m[1])[path[0]]||null; } }
+  return null;
 }
 function clearBlockHighlight(){ document.querySelectorAll('#store .block-selected').forEach(e => e.classList.remove('block-selected')); }
-function highlightBlockEl(section, index){ clearBlockHighlight(); const e = blockEl(section, index); if(e){ e.classList.add('block-selected'); e.scrollIntoView({block:'nearest'}); } }
+function highlightBlockEl(section, path){ clearBlockHighlight(); const e = blockEl(section, path); if(e){ e.classList.add('block-selected'); e.scrollIntoView({block:'nearest'}); } }
 
 /* ----------------------------------------------------------------------------
    MODEL-DRIVEN BLOCK RENDERING  —  each block-bearing section paints its children
@@ -2117,8 +2145,75 @@ const SECTION_RENDERERS = {
   ugc: bs => bs.map(b=>{ const d=b._demo||{}; return `<a class="ugc-tile"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; }).join(''),
   journal: bs => bs.map(b=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; }).join(''),
 };
-function renderSectionContent(key){ const r=SECTION_RENDERERS[key]; if(!r) return; const host=document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]); if(host){ host.innerHTML=r(sectionBlocks(key)); applySectionSchemes(); } }
+function renderSectionContent(key){
+  const r=SECTION_RENDERERS[key]; if(!r) return;
+  const secEl = sectionEl(key);
+  let host = secEl && secEl.querySelector('[data-blocks]');           // generic theme-block sections
+  if(!host) host = document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]);  // flat bespoke sections
+  if(host){ host.innerHTML=r(sectionBlocks(key)); applySectionSchemes(); }
+}
 function renderBlockSections(){ Object.keys(SECTION_RENDERERS).forEach(renderSectionContent); }
+
+/* ----------------------------------------------------------------------------
+   GENERIC THEME BLOCKS  —  reusable, NESTABLE blocks (Shopify /blocks). `group`
+   accepts `@theme` children, so blocks nest (up to 8 deep). A generic recursive
+   renderer paints them, and the new "Group" section hosts them, so nesting is
+   real in the tree AND the canvas — without touching the bespoke sections.
+   ---------------------------------------------------------------------------- */
+Object.assign(BLOCK_SCHEMAS, {
+  group:        { name:'Group', blocks:[{type:'@theme'}], settings:[
+    {type:'select', id:'direction', label:'Direction', default:'horizontal', options:[{value:'horizontal',label:'Horizontal'},{value:'vertical',label:'Vertical'}]},
+    {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
+  heading_block:{ name:'Heading', settings:[
+    {type:'inline_richtext', id:'text', label:'Heading', default:'Built to last'},
+    {type:'select', id:'size', label:'Size', default:'h3', options:[{value:'h2',label:'Large'},{value:'h3',label:'Medium'},{value:'h4',label:'Small'}]} ]},
+  text_block:   { name:'Text', settings:[ {type:'textarea', id:'text', label:'Text', default:'Add your text here.'} ]},
+  button_block: { name:'Button', settings:[
+    {type:'text', id:'label', label:'Label', default:'Shop now'}, {type:'url', id:'link', label:'Link'},
+    {type:'select', id:'style', label:'Style', default:'primary', options:[{value:'primary',label:'Primary'},{value:'secondary',label:'Secondary'}]} ]},
+  image_block:  { name:'Image', settings:[ {type:'image_picker', id:'image', label:'Image'} ]},
+});
+const THEME_BLOCK_TYPES = ['group','heading_block','text_block','button_block','image_block'];
+
+// Generic recursive canvas renderer (threads the block path onto each element so the
+// selection outline can find any nested block).
+function renderThemeBlocks(list, path){ return (list||[]).map((b,i)=> renderThemeBlock(b, path.concat(i))).join(''); }
+function renderThemeBlock(b, path){
+  const s=b.settings||{}, bp=path.join('.');
+  switch(b.type){
+    case 'group': {
+      const dir = s.direction==='vertical' ? 'column' : 'row';
+      const al  = s.alignment==='center' ? 'center' : (s.alignment==='right' ? 'flex-end' : 'flex-start');
+      return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:16px;align-items:${al}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
+    }
+    case 'heading_block': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}"><${sz} style="margin:0">${s.text||''}</${sz}></div>`; }
+    case 'text_block':    return `<div class="tb" data-bpath="${bp}"><p style="margin:0;color:var(--c-body)">${s.text||''}</p></div>`;
+    case 'button_block':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'}">${s.label||'Button'}</a></div>`;
+    case 'image_block':   return `<div class="tb" data-bpath="${bp}"><div class="tb-img"></div></div>`;
+    default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
+  }
+}
+SECTION_RENDERERS.groupsec = bs => renderThemeBlocks(bs, []);
+
+// The "Group" section: a generic host for theme blocks (add-only; built fresh on add).
+Object.assign(SECTION_SCHEMAS, {
+  groupsec: { name:'Group', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50,
+    settings:[ SCHEME_SETTING, {type:'inline_richtext', id:'heading', label:'Heading', default:'Build your layout'}, ...PADDING_BLOCK ] },
+});
+const SECTION_BUILDERS = {
+  groupsec: ()=> el('<section class="section" data-sec="groupsec"><div class="container"><div class="tb-root" data-blocks></div></div></section>'),
+};
+function demoGroupBlocks(){
+  return [
+    { type:'group', name:'Group', settings:{direction:'horizontal', alignment:'left'}, blocks:[
+      { type:'heading_block', name:'Heading', settings:{ text:'Built to last', size:'h3' } },
+      { type:'text_block',    name:'Text',    settings:{ text:'Premium acetate frames, polarized lenses.' } },
+      { type:'button_block',  name:'Button',  settings:{ label:'Shop now', style:'primary' } },
+    ]},
+    { type:'image_block', name:'Image', settings:{} },
+  ];
+}
+const SECTION_SEED = { groupsec: demoGroupBlocks };
 
 /* ----------------------------------------------------------------------------
    ADD / REMOVE BLOCKS  —  Shopify-faithful: blocks are added from a picker (one
@@ -2126,7 +2221,8 @@ function renderBlockSections(){ Object.keys(SECTION_RENDERERS).forEach(renderSec
    at the bottom of the block's settings (Shopify's placement).
    ---------------------------------------------------------------------------- */
 const BLOCK_CATEGORY = { icon_column:'Content', testimonial:'Content', checklist_item:'Content', logo:'Content',
-  collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content' };
+  collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content',
+  group:'Layout', heading_block:'Text', text_block:'Text', button_block:'Text', image_block:'Media' };
 // placeholder _demo for a freshly-added block so media-backed types still render
 const NEW_BLOCK_DEMO = {
   collection_card: ()=>({ seed:'noir-'+Math.random().toString(36).slice(2,7), seed2:'noir-'+Math.random().toString(36).slice(2,7) }),
@@ -2142,18 +2238,32 @@ function newBlockInstance(type){
 }
 function blockCap(section){ const sc=SECTION_SCHEMAS[section]||{}; return Math.min(sc.max_blocks||50, 50); }   // Shopify hard ceiling: 50
 function acceptedBlockTypes(section){ const sc=SECTION_SCHEMAS[section]||{}; return (sc.blocks||[]).map(b=>b.type); }
-function addBlock(section, type){
-  if(!STATE.sectionBlocks[section]) STATE.sectionBlocks[section]=[];
-  const blocks = STATE.sectionBlocks[section];
-  if(blocks.length >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
-  blocks.push(newBlockInstance(type));
+// Accepted child types at a position: a section's `blocks` (parentPath=[]) or a block's
+// `blocks`, expanding `@theme` to the theme-block set (and dropping `@app`).
+function acceptedChildTypes(section, parentPath){
+  const accepts = !parentPath.length
+    ? ((SECTION_SCHEMAS[section]||{}).blocks||[])
+    : (((BLOCK_SCHEMAS[(blockAt(section,parentPath)||{}).type]||{}).blocks)||[]);
+  const out=[];
+  accepts.forEach(a=>{ if(a.type==='@theme') out.push(...THEME_BLOCK_TYPES); else if(a.type!=='@app') out.push(a.type); });
+  return [...new Set(out)];
+}
+function addBlock(section, parentPath, type){
+  parentPath = parentPath || [];
+  const childDepth = parentPath.length + 1;
+  if(childDepth > 8){ toast('Theme blocks can nest up to 8 levels deep.'); return; }
+  const list = childListAt(section, parentPath); if(!list) return;
+  if(!parentPath.length && list.length >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
+  list.push(newBlockInstance(type));
   renderSectionContent(section);
   expandedLayers.add(section);
-  selectBlock(section, blocks.length-1);
+  for(let k=1; k<=parentPath.length; k++) expandedLayers.add(pathKey(section, parentPath.slice(0,k)));
+  selectBlock(section, parentPath.concat(list.length-1));
 }
-function removeBlock(section, index){
-  const blocks = STATE.sectionBlocks[section]; if(!blocks || !blocks[index]) return;
-  blocks.splice(index,1);
+function removeBlock(section, path){
+  const list = parentListOf(section, path); const idx = path[path.length-1];
+  if(!list || !list[idx]) return;
+  list.splice(idx,1);
   selectedBlock = null;
   renderSectionContent(section);
   selectSection(section);
@@ -2166,14 +2276,15 @@ function removeBlock(section, index){
    move updates the model, re-renders the affected canvas, and rebuilds the tree.
    ---------------------------------------------------------------------------- */
 function templateIndex(key){ return SECTION_GROUPS.template.sections.indexOf(key); }
+// Reorders TOP-LEVEL blocks within a section (drag is wired only at depth 1 for now).
 function moveBlock(section, from, to){
   const arr = STATE.sectionBlocks[section]; if(!arr) return;
   to = Math.max(0, Math.min(arr.length-1, to)); if(from<0 || from===to) return;
   const [it] = arr.splice(from,1); arr.splice(to,0,it);
   renderSectionContent(section);
-  if(selectedBlock && selectedBlock.section===section) selectedBlock.index = to;
+  if(selectedBlock && selectedBlock.section===section && selectedBlock.path.length===1) selectedBlock.path = [to];
   buildLayers();
-  if(selectedBlock && selectedBlock.section===section) highlightBlockEl(section, to);
+  if(selectedBlock && selectedBlock.section===section && selectedBlock.path.length===1) highlightBlockEl(section, [to]);
 }
 function moveSection(from, to){
   const arr = SECTION_GROUPS.template.sections;
@@ -2204,13 +2315,17 @@ function dropTarget(row, accepts, onDrop){
   row.addEventListener('drop', e=>{ if(!accepts()) return; e.preventDefault(); onDrop(rowHalf(e,row)); clearDropMarks(); });
 }
 
-// Open the Add-block picker for a section: accepted types → preset entries, grouped by category.
-function openBlockPicker(section){
-  if((sectionBlocks(section).length) >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
-  const types = acceptedBlockTypes(section);
+// Open the Add-block picker at a position (section root, or inside a block at parentPath):
+// accepted child types → preset entries, grouped by category. Enforces max_blocks + 8-deep.
+function openBlockPicker(section, parentPath){
+  parentPath = parentPath || [];
+  if(parentPath.length + 1 > 8){ toast('Theme blocks can nest up to 8 levels deep.'); return; }
+  if(!parentPath.length && sectionBlocks(section).length >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
+  const types = acceptedChildTypes(section, parentPath);
+  if(!types.length){ toast('No blocks can be added here.'); return; }
   const groups = {};
   types.forEach(t=>{ const cat=BLOCK_CATEGORY[t]||'Blocks'; (groups[cat]=groups[cat]||[]).push({ type:t, name:(BLOCK_SCHEMAS[t]||{}).name||t }); });
-  openPicker('Add block', groups, t=>addBlock(section, t));
+  openPicker('Add block', groups, t=>addBlock(section, parentPath, t));
 }
 
 /* Generic Shopify-style picker modal: one grouping level (category) → preset entries. */
@@ -2251,7 +2366,7 @@ function toast(msg){
    re-adding restores its content. (True multi-instance duplication of a section
    type arrives with the model-driven section rewrite that backs export.)
    ---------------------------------------------------------------------------- */
-const TEMPLATE_SECTION_TYPES = ['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter'];
+const TEMPLATE_SECTION_TYPES = ['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter','groupsec'];
 const detachedSections = {};
 function isTemplateSection(key){ return SECTION_GROUPS.template.sections.includes(key); }
 function removeSection(key){
@@ -2266,11 +2381,17 @@ function removeSection(key){
 }
 function addSection(type){
   if(SECTION_GROUPS.template.sections.includes(type)){ toast('That section is already added.'); return; }
-  const store=document.getElementById('store'); const footer=store && store.querySelector('[data-sec="footer"]');
-  const node = detachedSections[type]; if(node) delete detachedSections[type];
-  if(node && footer) store.insertBefore(node, footer);
+  const store=document.getElementById('store'); const footer=store && store.querySelector('[data-sec="footer"]'); if(!store||!footer) return;
+  let node = detachedSections[type]; if(node) delete detachedSections[type];
+  if(!node && SECTION_BUILDERS[type]){   // never-present section type → build a fresh instance + seed
+    node = SECTION_BUILDERS[type]();
+    if(SECTION_SEED[type] && !(STATE.sectionBlocks[type] && STATE.sectionBlocks[type].length)) STATE.sectionBlocks[type] = SECTION_SEED[type]();
+  }
+  if(!node){ toast('That section can\'t be added yet.'); return; }
+  store.insertBefore(node, footer);
   SECTION_GROUPS.template.sections.push(type);
   reorderSectionDom();
+  renderSectionContent(type);
   applySectionSchemes();
   buildLayers(); selectSection(type);
 }
@@ -2307,7 +2428,7 @@ function buildLayers(){
     g.sections.forEach(key=>{
       const schema = SECTION_SCHEMAS[key] || { name: SECTION_TITLES[key] || key };
       const blocks = sectionBlocks(key);
-      const hasBlocks = blocks.length > 0;
+      const hasBlocks = blocks.length > 0 || acceptedChildTypes(key, []).length > 0;
       const expanded = expandedLayers.has(key);
       const row = el(`<div class="lyr-row" data-lyr="${key}"></div>`);
       if(hasBlocks){
@@ -2330,19 +2451,10 @@ function buildLayers(){
       }
       grp.appendChild(row);
       if(expanded){
-        blocks.forEach((b,i)=>{
-          const brow = el(`<button type="button" class="lyr-row lyr-block" data-lyr="${key}" data-blk="${i}"><span class="lyr-ic">${svg(ICONS.box,12)}</span><span class="lyr-name"></span></button>`);
-          brow.querySelector('.lyr-name').textContent = blockName(b,i);
-          brow.onclick = ()=>{ selectBlock(key, i); };
-          const grip = makeGrip(); gripStart(grip, {kind:'block', section:key, index:i}, brow); brow.appendChild(grip);
-          dropTarget(brow, ()=>dragState && dragState.kind==='block' && dragState.section===key, half=>{
-            let to = half==='before' ? i : i+1; if(dragState.index < to) to--; moveBlock(key, dragState.index, to);
-          });
-          grp.appendChild(brow);
-        });
-        if(acceptedBlockTypes(key).length){
+        renderBlockRows(grp, key, blocks, [], 1);
+        if(acceptedChildTypes(key, []).length){
           const add = el(`<button type="button" class="lyr-add">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
-          add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(key); };
+          add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(key, []); };
           grp.appendChild(add);
         }
       }
@@ -2357,12 +2469,50 @@ function buildLayers(){
   refreshLayerHighlight();
   host.scrollTop = sc;
 }
+// Recursively render a block list into the tree (depth 1 = top-level). Container blocks
+// (those that accept children) get a twisty + a nested "Add block"; the 8-deep cap hides
+// the nested add at depth 8. Drag-reorder is wired at the top level only for now.
+function renderBlockRows(grp, section, list, parentPath, depth){
+  list.forEach((b,i)=>{
+    const path = parentPath.concat(i);
+    const canNest = acceptsChildren(b.type);
+    const kids = b.blocks || [];
+    const expanded = expandedLayers.has(pathKey(section, path));
+    const row = el(`<div class="lyr-row lyr-blockrow" data-lyr="${section}" data-bpath="${path.join('.')}"></div>`);
+    row.style.paddingLeft = (8 + depth*16) + 'px';
+    if(canNest){
+      const tw = el(`<button type="button" class="lyr-tw ${expanded?'open':''}">${svg('<polyline points="9 18 15 12 9 6"/>',12)}</button>`);
+      tw.onclick = (e)=>{ e.stopPropagation(); const k=pathKey(section,path); if(expandedLayers.has(k)) expandedLayers.delete(k); else expandedLayers.add(k); buildLayers(); };
+      row.appendChild(tw);
+    } else { row.appendChild(el('<span class="lyr-tw-spacer"></span>')); }
+    const main = el(`<button type="button" class="lyr-main lyr-bmain"><span class="lyr-ic">${svg(ICONS.box,12)}</span><span class="lyr-name"></span>${(canNest && kids.length)?`<span class="lyr-count">${kids.length}</span>`:''}</button>`);
+    main.querySelector('.lyr-name').textContent = blockName(b,i);
+    main.onclick = ()=> selectBlock(section, path);
+    row.appendChild(main);
+    if(!parentPath.length){   // top-level drag-reorder
+      const grip = makeGrip(); gripStart(grip, {kind:'block', section, index:i}, row); row.appendChild(grip);
+      dropTarget(row, ()=>dragState && dragState.kind==='block' && dragState.section===section, half=>{
+        let to = half==='before' ? i : i+1; if(dragState.index < to) to--; moveBlock(section, dragState.index, to);
+      });
+    }
+    grp.appendChild(row);
+    if(canNest && expanded){
+      renderBlockRows(grp, section, kids, path, depth+1);
+      if(depth < 8){
+        const add = el(`<button type="button" class="lyr-add lyr-add-nested">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
+        add.style.marginLeft = (20 + depth*16) + 'px';
+        add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
+        grp.appendChild(add);
+      }
+    }
+  });
+}
 function refreshLayerHighlight(){
   document.querySelectorAll('#layers .lyr-row').forEach(r=>{
-    const k = r.getAttribute('data-lyr'), blk = r.getAttribute('data-blk');
-    const isBlock = r.classList.contains('lyr-block');
+    const k = r.getAttribute('data-lyr'), bp = r.getAttribute('data-bpath');
+    const isBlock = r.classList.contains('lyr-blockrow');
     const active = isBlock
-      ? (selectedBlock && selectedBlock.section===k && String(selectedBlock.index)===blk)
+      ? (selectedBlock && selectedBlock.section===k && selectedBlock.path.join('.')===bp)
       : (k===selectedSection && !selectedBlock);
     r.classList.toggle('active', !!active);
   });
@@ -2381,11 +2531,12 @@ function selectSection(key){
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
 }
-function selectBlock(section, index){
-  selectedSection = section; selectedBlock = { section, index };
+function selectBlock(section, path){
+  selectedSection = section; selectedBlock = { section, path: path.slice() };
   expandedLayers.add(section);
+  for(let k=1; k<path.length; k++) expandedLayers.add(pathKey(section, path.slice(0,k)));   // open ancestors
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===section));
-  highlightBlockEl(section, index);
+  highlightBlockEl(section, path);
   buildLayers();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');
@@ -2415,19 +2566,27 @@ function renderSectionControls(){
   card.hidden = false;
   document.body.classList.add('sec-selected');
 
-  // ---- BLOCK selected: render the block's schema with a Section ▸ Block breadcrumb ----
+  // ---- BLOCK selected: render the block's schema with a full Section ▸ … ▸ Block breadcrumb ----
   if(selectedBlock){
-    const blocks = sectionBlocks(selectedBlock.section);
-    const inst = blocks[selectedBlock.index];
+    const section = selectedBlock.section, path = selectedBlock.path;
+    const inst = blockAt(section, path);
     if(inst){
       const bSchema = BLOCK_SCHEMAS[inst.type] || { name: inst.type, settings:[] };
-      const secName = (SECTION_SCHEMAS[selectedBlock.section]||{}).name || SECTION_TITLES[selectedBlock.section] || 'Section';
-      const phName = document.getElementById('ph-section-name'); if(phName) phName.textContent = blockName(inst, selectedBlock.index);
+      const lastIdx = path[path.length-1];
+      const phName = document.getElementById('ph-section-name'); if(phName) phName.textContent = blockName(inst, lastIdx);
       card.innerHTML = '';
-      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div><div class="sf-sub"><button type="button" class="sf-crumb"></button> ▸ ${bSchema.name}</div></div></div></div>`);
-      head.querySelector('.sf-name').textContent = blockName(inst, selectedBlock.index);
-      head.querySelector('.sf-crumb').textContent = secName;
-      head.querySelector('.sf-crumb').onclick = (e)=>{ e.stopPropagation(); selectSection(selectedBlock.section); };
+      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div><div class="sf-sub"></div></div></div></div>`);
+      head.querySelector('.sf-name').textContent = blockName(inst, lastIdx);
+      // breadcrumb: section ▸ each ancestor block ▸ (current type)
+      const sub = head.querySelector('.sf-sub');
+      const crumbs = [{ label:(SECTION_SCHEMAS[section]||{}).name || SECTION_TITLES[section] || 'Section', go:()=>selectSection(section) }];
+      for(let k=1; k<path.length; k++){ const ap=path.slice(0,k); const ab=blockAt(section,ap); crumbs.push({ label:blockName(ab, ap[ap.length-1]), go:()=>selectBlock(section, ap) }); }
+      crumbs.forEach((c,ci)=>{
+        if(ci) sub.appendChild(document.createTextNode(' ▸ '));
+        const btn = el(`<button type="button" class="sf-crumb"></button>`); btn.textContent=c.label;
+        btn.onclick=(e)=>{ e.stopPropagation(); c.go(); }; sub.appendChild(btn);
+      });
+      sub.appendChild(document.createTextNode(' ▸ ' + bSchema.name));
       const close = el(`<button class="sf-close" title="Deselect">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
       close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
       head.appendChild(close); card.appendChild(head);
@@ -2435,9 +2594,15 @@ function renderSectionControls(){
       const bvals = inst.settings || (inst.settings = {});
       renderSettingsList(bb, bSchema.settings,
         s => (s.id in bvals) ? bvals[s.id] : s.default,
-        (s,v) => { bvals[s.id] = v; });
+        (s,v) => { bvals[s.id] = v; renderSectionContent(section); highlightBlockEl(section, path); });
+      // a container block can hold children → offer "Add block" here too (Shopify shows this)
+      if(acceptsChildren(inst.type) && path.length < 8){
+        const addc = el(`<button type="button" class="lyr-add" style="width:100%;margin:8px 0 0">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
+        addc.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
+        bb.appendChild(addc);
+      }
       const rm = el(`<button type="button" class="sf-remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}<span>Remove block</span></button>`);
-      rm.onclick = (e)=>{ e.stopPropagation(); removeBlock(selectedBlock.section, selectedBlock.index); };
+      rm.onclick = (e)=>{ e.stopPropagation(); removeBlock(section, path); };
       bb.appendChild(rm);
       card.appendChild(bb);
       placeCard(card);
