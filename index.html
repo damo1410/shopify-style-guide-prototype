@@ -131,13 +131,15 @@
   .ph-sec-more:hover, .ph-sec-close:hover { background: var(--stone-100); }
   .ph-sec-more svg, .ph-sec-close svg { width: 18px; height: 18px; }
   /* add-picker view of the sheet header: title + close (shown on mobile while adding) */
-  .ph-picker { flex: 1; display: none; align-items: center; gap: 8px; min-height: 28px; }
-  .ph-pk-title { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* the add-section / add-block list that renders into the mobile sheet (desktop uses the modal) */
-  .sheet-picker { display: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
-  .sheet-pk-cat { font-size: 13px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
-  .sheet-pk-item { display: flex; align-items: center; gap: 10px; height: 44px; margin: 1px 8px; padding: 0 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; width: calc(100% - 16px); }
-  .sheet-pk-item:hover, .sheet-pk-item:active { background: var(--stone-100); }
+  /* generic full-height "sheet modal" view of the header: title + close (Add picker, Brand colors…) */
+  .ph-modal { flex: 1; display: none; align-items: center; gap: 8px; min-height: 28px; }
+  .ph-mod-title { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* the modal body that renders into the mobile sheet (desktop uses its own modal/overlay) */
+  .sheet-modal { display: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
+  .sheet-mod-cat { font-size: 13px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
+  .sheet-mod-item { display: flex; align-items: center; gap: 10px; height: 44px; margin: 1px 8px; padding: 0 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; width: calc(100% - 16px); }
+  .sheet-mod-item:hover, .sheet-mod-item:active { background: var(--stone-100); }
+  .sheet-mod-pad { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
   .brand { display: flex; align-items: center; gap: 8px; }
   .brand .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; }
   .brand .t1 { font-size: 13px; font-weight: 600; line-height: 1.2; }
@@ -1025,11 +1027,15 @@
 
     /* adding a section / block: the picker list renders into the sheet (consistent header +
        drag-to-collapse), overriding every other view until its close (X) dismisses it. */
-    body.picker-open .panel-header .ph-global,
-    body.picker-open .panel-header .ph-section { display: none !important; }
-    body.picker-open .panel-header .ph-picker { display: flex; }
-    body.picker-open #layers, body.picker-open .groups, body.picker-open #section-float { display: none !important; }
-    body.picker-open .sheet-picker { display: flex; flex-direction: column; }
+    body.sheet-modal-open .panel-header .ph-global,
+    body.sheet-modal-open .panel-header .ph-section { display: none !important; }
+    body.sheet-modal-open .panel-header .ph-modal { display: flex; }
+    body.sheet-modal-open #layers, body.sheet-modal-open .groups, body.sheet-modal-open #section-float { display: none !important; }
+    body.sheet-modal-open .sheet-modal { display: flex; flex-direction: column; }
+    /* while reordering a layer by touch, suppress text selection + list scroll-hijacking */
+    body.layer-dragging { user-select: none; -webkit-user-select: none; }
+    body.layer-dragging #layers { touch-action: none; }
+    .panel-header, .panel-header * { touch-action: none; }   /* drag works even when starting on a header button */
   }
 </style>
 </head>
@@ -1117,15 +1123,15 @@
         <button class="ph-sec-more" id="ph-section-more" title="More options"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
         <button class="ph-sec-close" id="ph-section-close" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
-      <!-- add-picker view (mobile): the Add section / Add block list renders into the sheet -->
-      <div class="ph-picker">
-        <span class="ph-pk-title" id="ph-picker-title">Add</span>
-        <button class="ph-sec-close" id="ph-picker-close" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <!-- sheet-modal view (mobile): Add picker / Brand colors etc. render full-height into the sheet -->
+      <div class="ph-modal">
+        <span class="ph-mod-title" id="ph-modal-title">Add</span>
+        <button class="ph-sec-close" id="ph-modal-close" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
     </div>
     <div class="layers" id="layers"><!-- section/block tree injected by JS --></div>
     <div class="groups" id="groups"><!-- accordion groups injected by JS --></div>
-    <div class="sheet-picker" id="sheet-picker"><!-- mobile add-section / add-block list --></div>
+    <div class="sheet-modal" id="sheet-modal"><!-- mobile sheet-modal body (Add picker / Brand colors) --></div>
   </aside>
 
   <!-- ===================== RIGHT: LIVE PREVIEW ========================== -->
@@ -1925,22 +1931,21 @@ function popover(anchor, build){
   let left = Math.min(r.left, window.innerWidth - w - 8);
   let top = r.bottom + 6; if(top + hgt > window.innerHeight - 8) top = Math.max(8, r.top - hgt - 6);
   node.style.left=Math.max(8,left)+'px'; node.style.top=top+'px'; node.style.visibility='';
+  // Dismiss on any press OUTSIDE the popover/anchor — pointerdown covers mouse + touch, so a tap
+  // or the start of a sheet-drag swipe closes it (it used to linger, floating, on touch).
   const onDoc=e=>{ if(__popEl && !__popEl.contains(e.target) && !anchor.contains(e.target)) closePopover(); };
   const onScroll=e=>{ if(__popEl && __popEl.contains(e.target)) return; closePopover(); };
-  setTimeout(()=>{ document.addEventListener('mousedown',onDoc,true); document.addEventListener('scroll',onScroll,true); window.addEventListener('resize',closePopover); },0);
-  __popCleanup=()=>{ document.removeEventListener('mousedown',onDoc,true); document.removeEventListener('scroll',onScroll,true); window.removeEventListener('resize',closePopover); };
+  setTimeout(()=>{ document.addEventListener('pointerdown',onDoc,true); document.addEventListener('scroll',onScroll,true); window.addEventListener('resize',closePopover); },0);
+  __popCleanup=()=>{ document.removeEventListener('pointerdown',onDoc,true); document.removeEventListener('scroll',onScroll,true); window.removeEventListener('resize',closePopover); };
 }
 
 /* Brand colors live in a MODAL (a "detached" Brand area — Shopify manages brand colors
    outside the theme editor; the theme just connects to them). */
-function openBrandModal(){
-  closePopover();
-  const ov = el(`<div class="bm-ov" id="bm-ov"><div class="bm">
-    <div class="bm-hd"><div><div class="bm-t">Brand colors</div><div class="bm-sub">Manage your brand palette. Connect scheme colors to these from any color field.</div></div><button class="bm-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div>
-    <div class="bm-body"></div></div></div>`);
-  const body = ov.querySelector('.bm-body');
+// Brand palette body — rendered into either the desktop modal's .bm-body or, on mobile, the
+// bottom sheet (so brand colors follow the same full-height sheet pattern as everything else).
+function buildBrandBody(host){
   function draw(){
-    body.innerHTML='';
+    host.innerHTML='';
     STATE.palette.forEach((c,i)=>{
       const row = el('<div class="bm-row"></div>');
       row.appendChild(colorField(c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); row.querySelector('.bm-name').textContent=c.name; renderSchemes(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); }));
@@ -1950,13 +1955,25 @@ function openBrandModal(){
         rm.onclick = ()=>{ STATE.palette.splice(i,1); reconcileSchemes(); draw(); renderSchemes(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); };
         row.appendChild(rm);
       }
-      body.appendChild(row);
+      host.appendChild(row);
     });
     const add = el(`<button class="add-btn" style="margin-top:4px">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add brand color</button>`);
     add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'b'+Date.now().toString(36), name:colorName(hex), hex }); draw(); };
-    body.appendChild(add);
+    host.appendChild(add);
   }
   draw();
+}
+function openBrandModal(){
+  closePopover();
+  // Mobile: render into the bottom sheet (full height, consistent header + close).
+  if(mqMobile.matches){
+    openSheetModal('Brand colors', host=>{ const pad=el('<div class="sheet-mod-pad"></div>'); buildBrandBody(pad); host.appendChild(pad); });
+    return;
+  }
+  const ov = el(`<div class="bm-ov" id="bm-ov"><div class="bm">
+    <div class="bm-hd"><div><div class="bm-t">Brand colors</div><div class="bm-sub">Manage your brand palette. Connect scheme colors to these from any color field.</div></div><button class="bm-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div>
+    <div class="bm-body"></div></div></div>`);
+  buildBrandBody(ov.querySelector('.bm-body'));
   ov.querySelector('.bm-x').onclick = ()=>ov.remove();
   ov.addEventListener('mousedown', e=>{ if(e.target===ov) ov.remove(); });
   document.body.appendChild(ov);
@@ -2757,7 +2774,28 @@ function blockEl(section, path){
   return secEl.querySelector(`[data-bpath="${path.join('.')}"]`) || null;
 }
 function clearBlockHighlight(){ document.querySelectorAll('#store .block-selected').forEach(e => e.classList.remove('block-selected')); }
-function highlightBlockEl(section, path){ clearBlockHighlight(); const e = blockEl(section, path); if(e){ e.classList.add('block-selected'); e.scrollIntoView({block:'nearest'}); } }
+function highlightBlockEl(section, path){ clearBlockHighlight(); const e = blockEl(section, path); if(e){ e.classList.add('block-selected'); } }
+// The canvas element for whatever is selected (block beats section).
+function selectedCanvasEl(){
+  if(selectedBlock) return blockEl(selectedBlock.section, selectedBlock.path);
+  if(selectedSection) return sectionEl(selectedSection);
+  return null;
+}
+// Scroll the preview so the selection sits in the MIDDLE of the visible area (clamped at the
+// ends). On mobile the visible area is what's above the sheet, so it re-centres as the sheet moves.
+function scrollPreviewToSelection(){
+  const target = selectedCanvasEl(); const preview = document.querySelector('.preview');
+  if(!target || !preview) return;
+  const pr = preview.getBoundingClientRect(), er = target.getBoundingClientRect();
+  let visTop = pr.top, visBottom = pr.bottom;
+  if(mqMobile.matches){
+    const panel = document.querySelector('.panel');
+    if(panel){ const sr = panel.getBoundingClientRect(); if(sr.top > visTop && sr.top < visBottom) visBottom = sr.top; }
+  }
+  const delta = (er.top + er.height/2) - (visTop + visBottom)/2;
+  if(Math.abs(delta) < 2) return;
+  preview.scrollTo({ top: preview.scrollTop + delta, behavior:'smooth' });
+}
 
 /* ----------------------------------------------------------------------------
    MODEL-DRIVEN BLOCK RENDERING  —  each block-bearing section paints its children
@@ -3060,6 +3098,11 @@ function reorderSectionDom(){
 
 // --- drag-and-drop plumbing (HTML5 DnD initiated from a grip handle) ---
 let dragState=null;
+// After a drag (sheet move or touch reorder) the browser still fires a click on the element the
+// gesture started on — swallow exactly one so it doesn't toggle the sheet or select a layer.
+let __suppressClick=false;
+function suppressNextClick(){ __suppressClick=true; setTimeout(()=>{ __suppressClick=false; }, 400); }
+document.addEventListener('click', e=>{ if(__suppressClick){ e.stopPropagation(); e.preventDefault(); __suppressClick=false; } }, true);
 function makeGrip(){ return el(`<span class="lyr-grip" draggable="true" title="Drag to reorder">${svg('<line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/>',12)}</span>`); }
 function gripStart(grip, payload, ghost){
   grip.addEventListener('click', e=>e.stopPropagation());
@@ -3069,8 +3112,57 @@ function gripStart(grip, payload, ghost){
 function clearDropMarks(){ document.querySelectorAll('#layers .drop-before, #layers .drop-after').forEach(x=>x.classList.remove('drop-before','drop-after')); }
 function rowHalf(e, row){ const r=row.getBoundingClientRect(); return (e.clientY - r.top) < r.height/2 ? 'before' : 'after'; }
 function dropTarget(row, accepts, onDrop){
+  row.__accepts = accepts; row.__drop = onDrop;   // also reused by touch reorder
   row.addEventListener('dragover', e=>{ if(!accepts()) return; e.preventDefault(); clearDropMarks(); row.classList.add(rowHalf(e,row)==='before' ? 'drop-before' : 'drop-after'); });
   row.addEventListener('drop', e=>{ if(!accepts()) return; e.preventDefault(); onDrop(rowHalf(e,row)); clearDropMarks(); });
+}
+// Touch reorder: tap-and-HOLD a layer row to pick it up, then drag up/down to move it. Reuses the
+// same drop markers + __accepts/__drop closures as desktop HTML5 DnD. (Mobile only; desktop drags
+// from the hover grip handle.)
+function attachTouchReorder(row, payload){
+  row.addEventListener('pointerdown', e=>{
+    if(!mqMobile.matches || e.pointerType==='mouse') return;
+    if(e.target.closest('button')) return;               // let ⋯ / hide / twisty taps work
+    const startX=e.clientX, startY=e.clientY, pid=e.pointerId;
+    const host=document.getElementById('layers');
+    let dragging=false, lastTgt=null, lastHalf=null;
+    const hold=setTimeout(begin, 320);                   // long-press threshold
+    function begin(){
+      dragging=true; dragState=payload; row.classList.add('dragging');
+      document.body.classList.add('layer-dragging');
+      try{ row.setPointerCapture(pid); }catch(_){}
+      if(navigator.vibrate) try{ navigator.vibrate(8); }catch(_){}
+    }
+    function move(ev){
+      if(!dragging){
+        if(Math.abs(ev.clientY-startY)>8 || Math.abs(ev.clientX-startX)>8){ clearTimeout(hold); cleanup(); }   // moved first → it's a scroll
+        return;
+      }
+      ev.preventDefault();
+      const hr=host.getBoundingClientRect();              // edge auto-scroll
+      if(ev.clientY < hr.top+40) host.scrollTop -= 10;
+      else if(ev.clientY > hr.bottom-40) host.scrollTop += 10;
+      const under=document.elementFromPoint(ev.clientX, ev.clientY);
+      const tgt=under && under.closest('.lyr-row');
+      clearDropMarks(); lastTgt=null;
+      if(tgt && tgt!==row && tgt.__accepts && tgt.__accepts()){
+        lastHalf=rowHalf(ev,tgt); lastTgt=tgt;
+        tgt.classList.add(lastHalf==='before'?'drop-before':'drop-after');
+      }
+    }
+    function up(){
+      clearTimeout(hold); cleanup();
+      if(dragging){
+        row.classList.remove('dragging'); document.body.classList.remove('layer-dragging');
+        if(lastTgt && lastTgt.__accepts && lastTgt.__accepts() && lastTgt.__drop) lastTgt.__drop(lastHalf);
+        clearDropMarks(); dragState=null; suppressNextClick();
+      }
+    }
+    function cleanup(){ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up); }
+    window.addEventListener('pointermove',move,{passive:false});
+    window.addEventListener('pointerup',up);
+    window.addEventListener('pointercancel',up);
+  });
 }
 
 // Open the Add-block picker at a position (section root, or inside a block at parentPath):
@@ -3086,31 +3178,38 @@ function openBlockPicker(section, parentPath, index){
   openPicker('Add block', groups, t=>addBlock(section, parentPath, t, index), 'blocks');
 }
 
-/* Shopify-style Add picker: searchable categorised list (left) + live preview (right).
-   `groups` = { Category: [{ type, name, icon?, desc? }] }; `kind` labels the search box. */
-// Mobile Add picker: a plain categorised list rendered into the bottom sheet. Reuses the sheet's
-// own drag/snap (it's the same .panel), opens at full height, and dismisses from the header close.
-function renderPickerInSheet(title, groups, onPick){
-  const host = document.getElementById('sheet-picker'); if(!host) return;
+/* Generic mobile "sheet modal": full-screen things (Add picker, Brand colors) reuse the bottom
+   sheet so everything on mobile shares the same draggable/collapsible chrome. `build(host)` fills
+   the body; the sheet opens at full height with a consistent title + top-right close. */
+function openSheetModal(title, build){
+  const host = document.getElementById('sheet-modal'); if(!host) return;
   host.innerHTML = '';
-  Object.entries(groups).forEach(([cat, items])=>{
-    if(!items || !items.length) return;
-    host.appendChild(el(`<div class="sheet-pk-cat">${cat}</div>`));
-    items.forEach(it=>{
-      const row = el(`<button type="button" class="sheet-pk-item"><span class="picker-ic">${svg(it.icon || ICONS.box,16)}</span><span class="picker-name"></span></button>`);
-      row.querySelector('.picker-name').textContent = it.name;
-      row.onclick = ()=>{ closePickerSheet(); onPick(it.type); };
-      host.appendChild(row);
-    });
-  });
-  const t = document.getElementById('ph-picker-title'); if(t) t.textContent = title || 'Add';
-  document.body.classList.add('picker-open');
+  build(host);
+  const t = document.getElementById('ph-modal-title'); if(t) t.textContent = title || '';
+  document.body.classList.add('sheet-modal-open');
   if(window.__sheetSnap) window.__sheetSnap('full');   // open full — you don't need the page behind it
 }
-function closePickerSheet(){
-  document.body.classList.remove('picker-open');
-  const host = document.getElementById('sheet-picker'); if(host) host.innerHTML = '';
+function closeSheetModal(){
+  document.body.classList.remove('sheet-modal-open');
+  const host = document.getElementById('sheet-modal'); if(host) host.innerHTML = '';
 }
+// Mobile Add picker: a plain categorised list rendered into the sheet modal.
+function renderPickerInSheet(title, groups, onPick){
+  openSheetModal(title, host=>{
+    Object.entries(groups).forEach(([cat, items])=>{
+      if(!items || !items.length) return;
+      host.appendChild(el(`<div class="sheet-mod-cat">${cat}</div>`));
+      items.forEach(it=>{
+        const row = el(`<button type="button" class="sheet-mod-item"><span class="picker-ic">${svg(it.icon || ICONS.box,16)}</span><span class="picker-name"></span></button>`);
+        row.querySelector('.picker-name').textContent = it.name;
+        row.onclick = ()=>{ closeSheetModal(); onPick(it.type); };
+        host.appendChild(row);
+      });
+    });
+  });
+}
+/* Shopify-style Add picker: searchable categorised list (left) + live preview (right).
+   `groups` = { Category: [{ type, name, icon?, desc? }] }; `kind` labels the search box. */
 function openPicker(title, groups, onPick, kind){
   closePicker();
   kind = kind || 'sections';
@@ -3503,6 +3602,7 @@ function buildLayers(){
         const ti = sectionIndexInGroup(key); let to = half==='before' ? ti : ti+1;
         const from = sectionIndexInGroup(dragState.key); if(from < to) to--; moveSection(gid, from, to);
       });
+      attachTouchReorder(row, {kind:'section', key, gid});   // mobile: tap-and-hold to reorder
       grp.appendChild(row);
       if(expanded){
         renderBlockRows(grp, key, blocks, [], 1);
@@ -3557,6 +3657,7 @@ function renderBlockRows(grp, section, list, parentPath, depth){
     dropTarget(row, ()=>dragState && dragState.kind==='block' && dragState.section===section, half=>{
       moveBlockPath(section, dragState.path, parentPath, half==='before' ? i : i+1);
     });
+    attachTouchReorder(row, {kind:'block', section, path: path.slice()});   // mobile: tap-and-hold to reorder
     grp.appendChild(row);
     if(canNest && expanded){
       renderBlockRows(grp, section, kids, path, depth+1);
@@ -3592,9 +3693,13 @@ function setPanelMode(m){
 }
 
 // scroll the active layer row into view (call after buildLayers, which restores scrollTop)
+// Centre the active layer row within the layers list (not just nudge it barely into view).
 function revealActiveLayer(){
-  const r = document.querySelector('#layers .lyr-row.active');
-  if(r) r.scrollIntoView({ block:'nearest' });
+  const host = document.getElementById('layers');
+  const r = host && host.querySelector('.lyr-row.active');
+  if(!host || !r) return;
+  const hr = host.getBoundingClientRect(), rr = r.getBoundingClientRect();
+  host.scrollTop += (rr.top - hr.top) - (host.clientHeight/2) + (rr.height/2);
 }
 // select a color scheme for editing in the right inspector (clears any section/block selection)
 function selectScheme(id){
@@ -3613,6 +3718,7 @@ function selectSection(key){
   buildLayers(); revealActiveLayer(); renderSchemes();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
+  requestAnimationFrame(scrollPreviewToSelection);   // centre the selection in the preview
 }
 function selectBlock(section, path){
   selectedSection = section; selectedBlock = { section, path: path.slice() }; selectedScheme = null;
@@ -3623,6 +3729,7 @@ function selectBlock(section, path){
   buildLayers(); revealActiveLayer(); renderSchemes();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');
+  requestAnimationFrame(scrollPreviewToSelection);   // centre the selection in the preview
 }
 function deselectSection(){
   selectedSection = null; selectedBlock = null; selectedScheme = null;
@@ -3799,7 +3906,7 @@ function initSectionSelection(){
   // mobile sheet header close button → deselect, back to the global header
   document.getElementById('ph-section-close').addEventListener('click', ()=>deselectSection());
   // mobile add-picker close → dismiss the picker sheet, back to the underlying view
-  const pkClose = document.getElementById('ph-picker-close'); if(pkClose) pkClose.addEventListener('click', ()=>closePickerSheet());
+  const pkClose = document.getElementById('ph-modal-close'); if(pkClose) pkClose.addEventListener('click', ()=>closeSheetModal());
   // page switcher (top bar + mobile sheet header) → page menu
   ['page-switcher','ph-page-switcher'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=(e)=>{ e.stopPropagation(); openPageMenu(e.currentTarget); }; });
   // keep the card on the correct side of the layout when crossing the breakpoint
@@ -4191,7 +4298,7 @@ document.querySelectorAll('.tb-dev').forEach(t => t.onclick = ()=>{
   const panel = document.querySelector('.panel');
   const handle = document.getElementById('sheet-handle');
   const header = panel.querySelector('.panel-header');
-  let curH = null, dragging = false, moved = false, startPointer = 0, startH = 0;
+  let curH = null, armed = false, dragging = false, startPointer = 0, startH = 0, downTarget = null;
 
   // PEEK = the collapsed height: just the drag handle + the header row, so the header's
   // bottom divider lands at the very bottom of the viewport and you see only that row
@@ -4207,44 +4314,62 @@ document.querySelectorAll('.tb-dev').forEach(t => t.onclick = ()=>{
   function snapTo(name){ setH(snaps()[name]); }
   function nearest(h){ const s = snaps(); let best = 'peek', bd = Infinity; for(const k of ['peek','half','full']){ const d = Math.abs(s[k] - h); if(d < bd){ bd = d; best = k; } } return best; }
 
+  // The WHOLE header (incl. its buttons) is a drag surface, but a button must still receive its
+  // tap. So we ARM on press and only commit to a drag once the finger moves past a threshold; if
+  // it never moves, it's a tap (button acts, or empty header / handle toggles the sheet). A drag
+  // suppresses the trailing click so the button doesn't also fire.
   function onDown(e){
     if(!mq.matches) return;
-    // the whole header is a drag surface — but let real controls (reset, the
-    // section close X, scheme picker) still receive their taps.
-    if(e.currentTarget === header && e.target.closest('button, a, input, select, textarea, .dd-trigger')) return;
-    dragging = true; moved = false; panel.classList.add('dragging');
+    armed = true; dragging = false; downTarget = e.target;
     startPointer = e.clientY; startH = curH != null ? curH : peekH();
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch(_) {}
-    e.preventDefault();
+    // no preventDefault / capture yet — let a tap reach the button underneath
   }
   function onMove(e){
-    if(!dragging) return;
-    const dy = startPointer - e.clientY; if(Math.abs(dy) > 4) moved = true;   // drag up = taller
+    if(!armed) return;
+    const dy = startPointer - e.clientY;   // drag up = taller
+    if(!dragging){
+      if(Math.abs(dy) <= 6) return;        // still might be a tap
+      dragging = true; panel.classList.add('dragging');
+      closePopover();                      // any open menu dismisses as the sheet starts moving
+      try { header.setPointerCapture(e.pointerId); } catch(_) {}
+    }
+    e.preventDefault();
     const s = snaps(); setH(Math.max(s.peek, Math.min(s.full, startH + dy)));
   }
   function onUp(){
-    if(!dragging) return;
-    dragging = false; panel.classList.remove('dragging');
-    if(!moved){ const c = nearest(curH); snapTo(c === 'peek' ? 'half' : 'peek'); return; }
-    // Direction-biased snapping: a small committed drag continues in the direction
-    // you pushed (advance one snap) instead of needing to cross the halfway point.
-    // A larger drag still jumps straight to whatever snap you've landed nearest to.
-    const order = ['peek','half','full'];
-    const startIdx = order.indexOf(nearest(startH));
-    const nearestIdx = order.indexOf(nearest(curH));
-    const delta = curH - startH;          // + = dragged taller (up), − = shorter (down)
-    const THRESH = 24;                     // px: how far before the gesture "commits"
-    let target = startIdx;
-    if(delta > THRESH) target = Math.max(startIdx + 1, nearestIdx);
-    else if(delta < -THRESH) target = Math.min(startIdx - 1, nearestIdx);
-    snapTo(order[Math.max(0, Math.min(order.length - 1, target))]);
+    if(!armed) return;
+    armed = false;
+    if(dragging){
+      dragging = false; panel.classList.remove('dragging');
+      suppressNextClick();                 // swallow the click this press would otherwise fire
+      // Direction-biased snapping: a small committed drag continues in the direction you pushed
+      // (advance one snap); a larger drag jumps to whatever snap you've landed nearest to.
+      const order = ['peek','half','full'];
+      const startIdx = order.indexOf(nearest(startH));
+      const nearestIdx = order.indexOf(nearest(curH));
+      const delta = curH - startH;
+      const THRESH = 24;
+      let target = startIdx;
+      if(delta > THRESH) target = Math.max(startIdx + 1, nearestIdx);
+      else if(delta < -THRESH) target = Math.min(startIdx - 1, nearestIdx);
+      snapTo(order[Math.max(0, Math.min(order.length - 1, target))]);
+      return;
+    }
+    // a tap: the handle or empty header area toggles peek/half; a real control just acts.
+    const onControl = downTarget && downTarget.closest && downTarget.closest('button, a, input, select, textarea, .dd-trigger');
+    const onHandle  = downTarget && downTarget.closest && downTarget.closest('#sheet-handle');
+    if(onHandle || !onControl){ const c = nearest(curH); snapTo(c === 'peek' ? 'half' : 'peek'); }
   }
 
   handle.addEventListener('pointerdown', onDown);
   header.addEventListener('pointerdown', onDown);
-  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointermove', onMove, { passive:false });
   window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
   handle.addEventListener('click', e => e.preventDefault());
+
+  // once the sheet settles at a new height, re-centre the selection in the visible preview above it
+  panel.addEventListener('transitionend', e=>{ if(e.propertyName==='height' && mq.matches && (selectedSection || selectedBlock)) scrollPreviewToSelection(); });
 
   // expose a snap hook so selecting a section on mobile can raise the sheet to reveal the card
   window.__sheetSnap = (name)=>{ if(mq.matches) snapTo(name); };
