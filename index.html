@@ -411,6 +411,108 @@
   .subgroup-hint { font-size: 11px; line-height: 1.45; color: var(--stone-400); font-weight: 400; }
 
   /* ==========================================================================
+     COLOR SYSTEM v2 — brand colors (managed in a modal) + raw-hex scheme fields
+     that can optionally connect to a brand color, plus a scheme card grid.
+     ========================================================================== */
+  /* brand launcher button at the top of theme settings */
+  .brand-launch { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; border: none; border-bottom: 1px solid var(--stone-200); background: none; cursor: pointer; font: inherit; text-align: left; }
+  .brand-launch:hover { background: var(--stone-50); }
+  .brand-launch .bl-sw { display: flex; gap: 3px; flex: 0 0 auto; }
+  .brand-launch .bl-sw span { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+  .brand-launch .bl-t { flex: 1 1 auto; font-size: 13px; font-weight: 600; color: var(--stone-900); }
+  .brand-launch .bl-chev { width: 16px; height: 16px; color: var(--stone-400); }
+
+  /* color field — raw hex variant (swatch + value, db icon on hover) */
+  .cf { width: 100%; position: relative; }
+  .cf-hex { width: 100%; gap: 8px; cursor: pointer; }
+  .cf-sw { width: 20px; height: 20px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); flex: 0 0 auto; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
+  .cf-sw i { display: block; width: 100%; height: 100%; border-radius: 5px; }
+  .cf-val { flex: 1 1 auto; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
+  .cf-db { display: none; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: 5px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
+  .cf-hex:hover .cf-db { display: inline-flex; }
+  .cf-db:hover { background: var(--stone-200); color: var(--stone-900); }
+  .cf-db svg { width: 15px; height: 15px; }
+  /* color field — brand-connected chip variant */
+  .cf-chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 6px 0 10px; border: none; border-radius: 8px; background: var(--stone-100); cursor: default; font: inherit; }
+  .cf-chip .cf-bic { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
+  .cf-chip .cf-bic svg { width: 15px; height: 15px; }
+  .cf-chip .cf-bname { flex: 1 1 auto; font-size: 12px; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cf-more { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; flex: 0 0 auto; }
+  .cf-more:hover { background: var(--stone-200); color: var(--stone-900); }
+  .cf-more svg { width: 16px; height: 16px; }
+
+  /* color picker popover */
+  .cp { width: 248px; background: #fff; border: 1px solid var(--stone-200); border-radius: 12px; box-shadow: 0 12px 40px -8px rgba(0,0,0,.28); padding: 12px; z-index: 1100; }
+  .cp-sv { position: relative; width: 100%; height: 150px; border-radius: 8px; cursor: crosshair; overflow: hidden; touch-action: none; }
+  .cp-sv .cp-white { position: absolute; inset: 0; background: linear-gradient(to right, #fff, rgba(255,255,255,0)); }
+  .cp-sv .cp-black { position: absolute; inset: 0; background: linear-gradient(to top, #000, rgba(0,0,0,0)); }
+  .cp-thumb { position: absolute; width: 14px; height: 14px; border-radius: 999px; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.35); transform: translate(-50%,-50%); pointer-events: none; }
+  .cp-hue { position: relative; height: 12px; border-radius: 999px; margin-top: 12px; cursor: pointer; touch-action: none; background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%); }
+  .cp-hue-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.3); transform: translate(-50%,-50%); pointer-events: none; }
+  .cp-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .cp-hexbox { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--stone-300); }
+  .cp-hexbox span { color: var(--stone-400); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
+  .cp-hexbox input { flex: 1 1 auto; border: none; outline: none; background: transparent; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-800); min-width: 0; }
+  .cp-prev { width: 32px; height: 32px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); flex: 0 0 auto; }
+
+  /* brand-color connect popover */
+  .bc { width: 300px; background: #fff; border: 1px solid var(--stone-200); border-radius: 12px; box-shadow: 0 12px 40px -8px rgba(0,0,0,.28); z-index: 1100; overflow: hidden; }
+  .bc-hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px; font-weight: 600; color: var(--stone-900); border-bottom: 1px solid var(--stone-100); }
+  .bc-back { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-600); cursor: pointer; }
+  .bc-back:hover { background: var(--stone-100); }
+  .bc-search { padding: 10px 12px; }
+  .bc-search .ps-field { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--stone-300); }
+  .bc-search input { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 13px; min-width: 0; }
+  .bc-search svg { color: var(--stone-400); }
+  .bc-list { max-height: 260px; overflow-y: auto; padding: 4px 6px 8px; }
+  .bc-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; color: var(--stone-900); text-align: left; }
+  .bc-item:hover { background: var(--stone-100); }
+  .bc-item .bc-eye { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
+  .bc-item .bc-eye svg { width: 16px; height: 16px; }
+
+  /* shared context menu (the field ⋯ menu) */
+  .cmenu { background: #fff; border: 1px solid var(--stone-200); border-radius: 12px; box-shadow: 0 12px 40px -8px rgba(0,0,0,.28); padding: 6px; z-index: 1200; min-width: 190px; }
+  .cmenu-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; color: var(--stone-800); text-align: left; }
+  .cmenu-item:hover { background: var(--stone-100); }
+  .cmenu-item.danger { color: #b42318; }
+  .cmenu-item svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--stone-500); }
+  .cmenu-item.danger svg { color: #b42318; }
+  .cmenu-sep { height: 1px; background: var(--stone-100); margin: 5px 4px; }
+
+  /* brand colors modal */
+  .bm-ov { position: fixed; inset: 0; background: rgba(12,10,9,.45); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
+  .bm { width: min(460px,100%); max-height: 82vh; display: flex; flex-direction: column; background: #fff; border-radius: 14px; box-shadow: 0 24px 60px -12px rgba(0,0,0,.4); overflow: hidden; }
+  .bm-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--stone-200); }
+  .bm-hd .bm-t { font-size: 15px; font-weight: 600; }
+  .bm-hd .bm-sub { font-size: 12px; color: var(--stone-500); margin-top: 2px; }
+  .bm-x { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 4px; border-radius: 6px; display: inline-flex; }
+  .bm-x:hover { background: var(--stone-100); color: var(--stone-900); }
+  .bm-body { padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .bm-row { display: flex; align-items: center; gap: 10px; }
+  .bm-row .bm-name { flex: 0 0 132px; width: 132px; font-size: 12px; color: var(--stone-600); }
+  .bm-row .cf { flex: 1 1 auto; }
+
+  /* scheme card grid (left panel) */
+  .scheme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .scheme-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .scheme-card { width: 100%; aspect-ratio: 1 / .82; border-radius: 10px; box-shadow: inset 0 0 0 1px var(--stone-200); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; overflow: hidden; border: none; padding: 0; }
+  .scheme-card.active { box-shadow: inset 0 0 0 2px var(--sel); }
+  .scheme-card .sc-aa { font-weight: 700; font-size: 18px; line-height: 1; letter-spacing: -.02em; }
+  .scheme-card .sc-pills { display: flex; gap: 5px; }
+  .scheme-card .sc-pill { width: 20px; height: 8px; border-radius: 999px; }
+  .scheme-card.add { background: none; box-shadow: inset 0 0 0 1px var(--stone-300); color: var(--sel); }
+  .scheme-card.add:hover { box-shadow: inset 0 0 0 1px var(--sel); background: var(--stone-50); }
+  .scheme-add-label { font-size: 11px; font-weight: 500; color: var(--sel); }
+
+  /* scheme editor (right inspector): big preview + hint */
+  .sf-scheme-hero { height: 70px; border-radius: 10px; box-shadow: inset 0 0 0 1px var(--stone-200); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; }
+  .sf-scheme-hero .sc-aa { font-weight: 700; font-size: 22px; line-height: 1; }
+  .sf-scheme-hero .sc-pills { display: flex; gap: 6px; }
+  .sf-scheme-hero .sc-pill { width: 26px; height: 9px; border-radius: 999px; }
+  .sf-scheme-hint { font-size: 11px; line-height: 1.5; color: var(--stone-500); }
+
+
+  /* ==========================================================================
      SECTION SELECTION — blue hover/select frame + contextual floating card.
      Each selectable preview block carries [data-sec]; selecting it opens a
      small card (bottom-right on desktop, inside the sheet on mobile) whose
@@ -1268,7 +1370,14 @@ const POSTS = [
 /* ============================================================================
    RESOLVERS + applyRoles()  — THE HEART OF THE WIRING.
    ============================================================================ */
-function swatchHex(id){ if(id==='transparent') return 'transparent'; const s = STATE.palette.find(p=>p.id===id); return s ? s.hex : '#ff00ff'; }
+// A scheme role value is one of: 'transparent' | a raw hex ('#rrggbb') | a brand-color id.
+function swatchHex(v){
+  if(v==='transparent') return 'transparent';
+  if(typeof v==='string' && v[0]==='#') return v;            // raw hex
+  const s = STATE.palette.find(p=>p.id===v); return s ? s.hex : '#ff00ff';   // brand color id
+}
+function isBrandRef(v){ return typeof v==='string' && v!=='transparent' && v[0]!=='#' && STATE.palette.some(p=>p.id===v); }
+function brandColor(v){ return STATE.palette.find(p=>p.id===v) || null; }
 // CSS checkerboard used to preview the Transparent swatch option in dropdowns.
 const TRANSPARENT_SWATCH = 'repeating-conic-gradient(#cbcbcb 0% 25%, #fff 0% 50%) 50% / 8px 8px';
 function computeHeadingSizes(){
@@ -1603,6 +1712,158 @@ function colorInput(value, onChange){
   return wrap;
 }
 
+/* ----------------------------------------------------------------------------
+   COLOR FIELD (v2) — a Shopify-style color control. Shows a raw-hex field (swatch
+   + value, with a brand-color "database" icon on hover) OR, when connected to a
+   brand color, a grey chip with the brand name + a ⋯ menu (Edit brand / Replace /
+   Select color / Remove). `value` is a hex string or a brand-color id; onChange
+   receives the new value (hex or brand id).
+   ---------------------------------------------------------------------------- */
+const DB_ICON = '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>';
+const EYEDROP_ICON = '<path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/>';
+const DOTS_ICON = '<circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>';
+
+function colorField(value, onChange){
+  const wrap = el('<div class="cf"></div>');
+  function set(v){ value = v; onChange(v); render(); }
+  function render(){
+    wrap.innerHTML='';
+    if(isBrandRef(value)){
+      const bc = brandColor(value);
+      const chip = el(`<div class="cf-chip"><span class="cf-bic">${svg('<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',15)}</span><span class="cf-bname"></span><button type="button" class="cf-more" title="Options">${svg(DOTS_ICON,16)}</button></div>`);
+      chip.querySelector('.cf-bname').textContent = bc ? bc.name : 'Brand color';
+      chip.querySelector('.cf-more').onclick = (e)=>{ e.stopPropagation(); openFieldMenu(e.currentTarget, value, set); };
+      wrap.appendChild(chip);
+    } else {
+      const hex = swatchHex(value);
+      const f = el(`<div class="field cf-hex"><span class="cf-sw"><i style="background:${hex}"></i></span><span class="cf-val"></span><button type="button" class="cf-db" title="Use a brand color">${svg(DB_ICON,15)}</button></div>`);
+      f.querySelector('.cf-val').textContent = (hex||'').toUpperCase();
+      f.onclick = ()=> openColorPicker(f, hex, h=>set(h));
+      f.querySelector('.cf-db').onclick = (e)=>{ e.stopPropagation(); openBrandConnect(e.currentTarget, id=>set(id)); };
+      wrap.appendChild(f);
+    }
+  }
+  render();
+  return wrap;
+}
+// the ⋯ menu on a brand-connected field
+function openFieldMenu(anchor, value, set){
+  popover(anchor, (close)=>{
+    const m = el('<div class="cmenu"></div>');
+    const item = (icon,label,fn,danger)=>{ const b=el(`<button type="button" class="cmenu-item ${danger?'danger':''}">${svg(icon,16)}<span>${label}</span></button>`); b.onclick=()=>{ close(); fn(); }; return b; };
+    m.appendChild(item('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>','Edit brand', ()=>openBrandModal()));
+    m.appendChild(el('<div class="cmenu-sep"></div>'));
+    m.appendChild(item('<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>','Replace', ()=>openBrandConnect(anchor, id=>set(id))));
+    m.appendChild(item('<path d="M12 2.5S5 9.5 5 14.5a7 7 0 0 0 14 0c0-5-7-12-7-12Z"/>','Select color', ()=>openColorPicker(anchor, swatchHex(value), h=>set(h))));
+    m.appendChild(el('<div class="cmenu-sep"></div>'));
+    m.appendChild(item('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>','Remove', ()=>set('#ffffff'), true));
+    return m;
+  });
+}
+// brand-color connect popover (db icon / Replace)
+function openBrandConnect(anchor, onPick){
+  popover(anchor, (close)=>{
+    const p = el(`<div class="bc">
+      <div class="bc-hd"><button type="button" class="bc-back">${svg('<polyline points="15 18 9 12 15 6"/>',16)}</button><span>Brand</span></div>
+      <div class="bc-search"><div class="ps-field">${svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',16)}<input type="text" placeholder="Search" autocomplete="off"></div></div>
+      <div class="bc-list"></div></div>`);
+    p.querySelector('.bc-back').onclick = close;
+    const list = p.querySelector('.bc-list'), input = p.querySelector('input');
+    function draw(q){
+      q=(q||'').trim().toLowerCase(); list.innerHTML='';
+      STATE.palette.filter(c=>!q||c.name.toLowerCase().includes(q)).forEach(c=>{
+        const it = el(`<button type="button" class="bc-item"><span class="bc-eye">${svg(EYEDROP_ICON,16)}</span><span>${c.name}</span></button>`);
+        it.onclick = ()=>{ close(); onPick(c.id); };
+        list.appendChild(it);
+      });
+      if(!list.children.length) list.appendChild(el('<div class="picker-empty">No brand colors.</div>'));
+    }
+    input.addEventListener('input', ()=>draw(input.value));
+    draw(''); setTimeout(()=>input.focus(),0);
+    return p;
+  });
+}
+// HSV color picker popover (SV square + hue slider + hex)
+function hexToHsv(hex){ const {r,g,b}=hexToRgb(hex); const r1=r/255,g1=g/255,b1=b/255; const mx=Math.max(r1,g1,b1),mn=Math.min(r1,g1,b1),d=mx-mn; let h=0; if(d){ if(mx===r1)h=((g1-b1)/d)%6; else if(mx===g1)h=(b1-r1)/d+2; else h=(r1-g1)/d+4; h*=60; if(h<0)h+=360; } return { h, s: mx?d/mx:0, v: mx }; }
+function hsvToHex(h,s,v){ const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c; let r=0,g=0,b=0; if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;} else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;} const to=n=>Math.round((n+m)*255).toString(16).padStart(2,'0'); return ('#'+to(r)+to(g)+to(b)); }
+function openColorPicker(anchor, hex, onChange){
+  popover(anchor, (close)=>{
+    let { h, s, v } = hexToHsv(/^#[0-9a-f]{6}$/i.test(hex)?hex:'#ffffff');
+    const p = el(`<div class="cp">
+      <div class="cp-sv"><div class="cp-white"></div><div class="cp-black"></div><div class="cp-thumb"></div></div>
+      <div class="cp-hue"><div class="cp-hue-thumb"></div></div>
+      <div class="cp-foot"><div class="cp-prev"></div><div class="cp-hexbox"><span>#</span><input type="text" maxlength="6" autocomplete="off"></div></div></div>`);
+    const sv=p.querySelector('.cp-sv'), svThumb=p.querySelector('.cp-thumb'), hue=p.querySelector('.cp-hue'), hueThumb=p.querySelector('.cp-hue-thumb'), prev=p.querySelector('.cp-prev'), input=p.querySelector('input');
+    function paint(emit){
+      const cur = hsvToHex(h,s,v);
+      sv.style.background = hsvToHex(h,1,1);
+      svThumb.style.left=(s*100)+'%'; svThumb.style.top=((1-v)*100)+'%';
+      hueThumb.style.left=(h/360*100)+'%';
+      prev.style.background = cur;
+      if(document.activeElement!==input) input.value = cur.slice(1).toUpperCase();
+      if(emit) onChange(cur);
+    }
+    function svFromEvent(e){ const r=sv.getBoundingClientRect(); s=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); v=Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height)); paint(true); }
+    function hueFromEvent(e){ const r=hue.getBoundingClientRect(); h=Math.min(360,Math.max(0,(e.clientX-r.left)/r.width*360)); paint(true); }
+    drag(sv, svFromEvent); drag(hue, hueFromEvent);
+    input.addEventListener('input', ()=>{ let val=input.value.trim().replace(/[^0-9a-fA-F]/g,''); if(val.length===6){ const o=hexToHsv('#'+val); h=o.h;s=o.s;v=o.v; paint(true); } });
+    paint(false);
+    return p;
+  });
+}
+// pointer-drag helper for the picker
+function drag(elm, onMove){
+  elm.addEventListener('pointerdown', e=>{ e.preventDefault(); onMove(e); const mv=ev=>onMove(ev); const up=()=>{ window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); }; window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up); });
+}
+// generic anchored popover: build(close)->element; positions under the anchor, closes on outside click/scroll
+let __popEl=null, __popCleanup=null;
+function closePopover(){ if(__popEl){ __popEl.remove(); __popEl=null; } if(__popCleanup){ __popCleanup(); __popCleanup=null; } }
+function popover(anchor, build){
+  closePopover();
+  const node = build(closePopover);
+  node.style.position='fixed'; node.style.visibility='hidden';
+  document.body.appendChild(node); __popEl=node;
+  const r = anchor.getBoundingClientRect(); const w=node.offsetWidth||248, hgt=node.offsetHeight||200;
+  let left = Math.min(r.left, window.innerWidth - w - 8);
+  let top = r.bottom + 6; if(top + hgt > window.innerHeight - 8) top = Math.max(8, r.top - hgt - 6);
+  node.style.left=Math.max(8,left)+'px'; node.style.top=top+'px'; node.style.visibility='';
+  const onDoc=e=>{ if(__popEl && !__popEl.contains(e.target) && !anchor.contains(e.target)) closePopover(); };
+  const onScroll=e=>{ if(__popEl && __popEl.contains(e.target)) return; closePopover(); };
+  setTimeout(()=>{ document.addEventListener('mousedown',onDoc,true); document.addEventListener('scroll',onScroll,true); window.addEventListener('resize',closePopover); },0);
+  __popCleanup=()=>{ document.removeEventListener('mousedown',onDoc,true); document.removeEventListener('scroll',onScroll,true); window.removeEventListener('resize',closePopover); };
+}
+
+/* Brand colors live in a MODAL (a "detached" Brand area — Shopify manages brand colors
+   outside the theme editor; the theme just connects to them). */
+function openBrandModal(){
+  closePopover();
+  const ov = el(`<div class="bm-ov" id="bm-ov"><div class="bm">
+    <div class="bm-hd"><div><div class="bm-t">Brand colors</div><div class="bm-sub">Manage your brand palette. Connect scheme colors to these from any color field.</div></div><button class="bm-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div>
+    <div class="bm-body"></div></div></div>`);
+  const body = ov.querySelector('.bm-body');
+  function draw(){
+    body.innerHTML='';
+    STATE.palette.forEach((c,i)=>{
+      const row = el('<div class="bm-row"></div>');
+      row.appendChild(colorField(c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); row.querySelector('.bm-name').textContent=c.name; renderSchemes(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); }));
+      const nm = el(`<span class="bm-name">${c.name}</span>`); row.insertBefore(nm, row.firstChild);
+      if(STATE.palette.length>1){
+        const rm = el(`<button class="icon-btn" title="Remove brand color">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}</button>`);
+        rm.onclick = ()=>{ STATE.palette.splice(i,1); reconcileSchemes(); draw(); renderSchemes(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); };
+        row.appendChild(rm);
+      }
+      body.appendChild(row);
+    });
+    const add = el(`<button class="add-btn" style="margin-top:4px">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add brand color</button>`);
+    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'b'+Date.now().toString(36), name:colorName(hex), hex }); draw(); };
+    body.appendChild(add);
+  }
+  draw();
+  ov.querySelector('.bm-x').onclick = ()=>ov.remove();
+  ov.addEventListener('mousedown', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
 // swatch-token dropdown for scheme roles: lists every palette swatch.
 function swatchDropdown(value, onChange){
   const opts = STATE.palette.map(c => ({ value:c.id, label:c.name, color:c.hex }));
@@ -1649,11 +1910,10 @@ function renderBrandColors(body){
 }
 // COLOR SCHEMES — role→swatch mappings applied per section (this is the real Shopify concept).
 function renderSchemesGroup(body){
-  body.appendChild(el('<p class="subgroup-hint">Edit a scheme’s tokens here. To use a scheme, select a section in the preview and pick it there.</p>'));
-  schemesHost = el('<div></div>');           // renderSchemes() owns this node (hint stays put)
+  body.appendChild(el('<div class="subgroup-label" style="margin-bottom:2px">Schemes</div>'));
+  body.appendChild(el('<p class="subgroup-hint" style="margin-bottom:10px">Color schemes can be applied to sections throughout your online store.</p>'));
+  schemesHost = el('<div></div>');           // renderSchemes() owns this node (label/hint stay put)
   body.appendChild(schemesHost);
-  // null = intentionally all collapsed; only repoint if it points at a now-missing scheme
-  if(expandedScheme !== null && !STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
   renderSchemes();
 }
 
@@ -1678,76 +1938,51 @@ function schemePreview(scheme, small){
 function addScheme(){
   let n = Object.keys(STATE.schemes).length + 1; let name = 'Scheme ' + n;
   while(STATE.schemes[name]){ n++; name = 'Scheme ' + n; }
-  // seed from whichever scheme is open for editing (a sensible starting point), but do
-  // NOT apply it anywhere — a new scheme is only "used" once assigned to a section.
-  STATE.schemes[name] = clone(STATE.schemes[expandedScheme] || Object.values(STATE.schemes)[0]);
-  expandedScheme = name;
-  renderSchemes();
+  // seed from the scheme currently being edited (a sensible starting point), but do NOT
+  // apply it anywhere — a new scheme is only "used" once assigned to a section.
+  STATE.schemes[name] = clone(STATE.schemes[selectedScheme] || Object.values(STATE.schemes)[0]);
+  selectScheme(name);   // open the new scheme in the inspector for editing
 }
 function removeScheme(id){
   if(Object.keys(STATE.schemes).length <= 1) return;
   delete STATE.schemes[id];
   if(STATE.activeScheme === id) STATE.activeScheme = Object.keys(STATE.schemes)[0];
   if(expandedScheme === id) expandedScheme = null;
+  if(selectedScheme === id) selectedScheme = null;
   // drop any section overrides that pointed at the removed scheme (back to baseline)
   Object.keys(STATE.sectionSchemes).forEach(k=>{ if(STATE.sectionSchemes[k]===id) delete STATE.sectionSchemes[k]; });
-  renderSchemes(); applyRoles(); renderSectionControls();
+  renderSchemes(); applyRoles(); applyAllSectionSettings(); renderSectionControls();
 }
 
+// Scheme picker = a 3-column grid of preview cards (Shopify-style). Selecting a card
+// opens that scheme in the right inspector for editing; an "Add Scheme" card sits last.
+function schemeCardEl(scheme){
+  const card = el('<button type="button" class="scheme-card"><span class="sc-aa">Aa</span><span class="sc-pills"><span class="sc-pill"></span><span class="sc-pill"></span></span></button>');
+  card.style.background = swatchHex(scheme.bg);
+  card.querySelector('.sc-aa').style.color = swatchHex(scheme.heading);
+  const p = card.querySelectorAll('.sc-pill'); p[0].style.background = swatchHex(scheme.btnBg); p[1].style.background = swatchHex(scheme.btn2Border);
+  return card;
+}
 function renderSchemes(){
   if(!schemesHost) return;
   schemesHost.innerHTML='';
-  const list = el('<div class="scheme-list"></div>');
+  const grid = el('<div class="scheme-grid"></div>');
   Object.keys(STATE.schemes).forEach(id=>{
-    const scheme = STATE.schemes[id];
-    const expanded = expandedScheme === id;
-    const item = el(`<div class="scheme-item ${expanded?'expanded':''}"></div>`);
-    const head = el('<button type="button" class="scheme-head"></button>');
-    const sq = schemePreview(scheme);
-    head.appendChild(sq);
-    head.appendChild(el(`<span class="scheme-name">${id}</span>`));
-    if(Object.keys(STATE.schemes).length > 1){
-      const rm = el(`<button class="icon-btn" title="Remove scheme">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',12)}</button>`);
-      rm.onclick = (e)=>{ e.stopPropagation(); removeScheme(id); };
-      head.appendChild(rm);
-    }
-    head.appendChild(el('<svg class="scheme-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
-    // clicking ONLY expands / collapses the scheme's token editor — it does NOT apply
-    // the scheme to the site. Schemes are applied per-section from the preview.
-    head.onclick = ()=>{ expandedScheme = (expandedScheme===id) ? null : id; renderSchemes(); };
-    item.appendChild(head);
-    if(expanded){
-      const tokens = el('<div class="scheme-tokens"></div>');
-      // editing anything repaints any section currently using this scheme, live.
-      const onChange = ()=>{ paintSquare(sq, scheme); applyRoles(); renderSectionControls(); };
-      // Bucket roles by their `group`: ungrouped roles are the scheme's top-level tokens;
-      // grouped roles (Primary button / Secondary button) render under a subgroup header.
-      const buckets = [];
-      STATE.colorRoles.forEach(r=>{
-        const g = r.group || '';
-        let b = buckets.find(x=>x.name===g);
-        if(!b){ b = { name:g, roles:[] }; buckets.push(b); }
-        b.roles.push(r);
-      });
-      buckets.forEach(b=>{
-        let host = tokens;
-        if(b.name){
-          const sub = el(`<div class="scheme-subgroup"><div class="subgroup-label">${b.name}</div></div>`);
-          tokens.appendChild(sub);
-          host = sub;
-        }
-        b.roles.forEach(r=>{
-          host.appendChild(controlRow(r.label, swatchDropdown(scheme[r.key], v=>{ scheme[r.key]=v; onChange(); })));
-        });
-      });
-      item.appendChild(tokens);
-    }
-    list.appendChild(item);
+    const cell = el('<div class="scheme-cell"></div>');
+    const card = schemeCardEl(STATE.schemes[id]);
+    card.classList.toggle('active', selectedScheme===id);
+    card.title = id;
+    card.onclick = ()=> selectScheme(id);
+    cell.appendChild(card);
+    grid.appendChild(cell);
   });
-  schemesHost.appendChild(list);
-  const add = el(`<button class="add-btn" style="margin-top:8px">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add scheme</button>`);
-  add.onclick = addScheme;
-  schemesHost.appendChild(add);
+  const addCell = el('<div class="scheme-cell"></div>');
+  const addCard = el(`<button type="button" class="scheme-card add" title="Add scheme">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',20)}</button>`);
+  addCard.onclick = addScheme;
+  addCell.appendChild(addCard);
+  addCell.appendChild(el('<span class="scheme-add-label">Add Scheme</span>'));
+  grid.appendChild(addCell);
+  schemesHost.appendChild(grid);
 }
 
 // Weight dropdown reused by both typography subcategories.
@@ -1979,6 +2214,7 @@ const SECTION_TITLES = {
   ugc:'Instagram', journal:'Journal', newsletter:'Newsletter', footer:'Footer',
 };
 let selectedSection = null;
+let selectedScheme = null;   // a scheme is being edited in the right inspector
 const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 860px)') : { matches:false, addEventListener(){}, addListener(){} };
 
 // The scheme a section currently resolves to: its own override, else the baseline.
@@ -3125,30 +3361,38 @@ function revealActiveLayer(){
   const r = document.querySelector('#layers .lyr-row.active');
   if(r) r.scrollIntoView({ block:'nearest' });
 }
+// select a color scheme for editing in the right inspector (clears any section/block selection)
+function selectScheme(id){
+  selectedScheme = id; selectedSection = null; selectedBlock = null;
+  document.querySelectorAll('#store [data-sec].sec-selected').forEach(e => e.classList.remove('sec-selected'));
+  clearBlockHighlight();
+  renderSchemes();          // refresh the active card in the grid
+  renderSectionControls();  // render the scheme editor in the inspector
+}
 function selectSection(key){
-  selectedSection = key; selectedBlock = null;
+  selectedSection = key; selectedBlock = null; selectedScheme = null;
   if(sectionBlocks(key).length) expandedLayers.add(key);
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
   clearBlockHighlight();
-  buildLayers(); revealActiveLayer();
+  buildLayers(); revealActiveLayer(); renderSchemes();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
 }
 function selectBlock(section, path){
-  selectedSection = section; selectedBlock = { section, path: path.slice() };
+  selectedSection = section; selectedBlock = { section, path: path.slice() }; selectedScheme = null;
   expandedLayers.add(section);
   for(let k=1; k<path.length; k++) expandedLayers.add(pathKey(section, path.slice(0,k)));   // open ancestors
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===section));
   highlightBlockEl(section, path);
-  buildLayers(); revealActiveLayer();
+  buildLayers(); revealActiveLayer(); renderSchemes();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');
 }
 function deselectSection(){
-  selectedSection = null; selectedBlock = null;
+  selectedSection = null; selectedBlock = null; selectedScheme = null;
   document.querySelectorAll('#store [data-sec].sec-selected').forEach(e => e.classList.remove('sec-selected'));
   clearBlockHighlight();
-  buildLayers();
+  buildLayers(); renderSchemes();
   renderSectionControls();
 }
 
@@ -3159,6 +3403,41 @@ function renderSectionControls(){
     card = el('<div id="section-float" class="section-float" hidden></div>');
     card.addEventListener('click', e=>e.stopPropagation());   // clicks inside never deselect
     document.querySelector('.preview').appendChild(card);
+  }
+  // ---- SCHEME selected: edit its colors in the inspector (grouped, with a Remove button) ----
+  if(selectedScheme){
+    const scheme = STATE.schemes[selectedScheme];
+    if(!scheme){ selectedScheme=null; }
+    else {
+      card.hidden = false; document.body.classList.add('sec-selected');
+      card.innerHTML='';
+      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-name"></span></div></div>`);
+      head.querySelector('.sf-name').textContent = 'Editing ' + selectedScheme;
+      const close = el(`<button class="sf-close" title="Done">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
+      close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
+      head.appendChild(close); card.appendChild(head);
+      const b = el('<div class="sf-body"></div>');
+      const hero = el('<div class="sf-scheme-hero"><span class="sc-aa">Aa</span><span class="sc-pills"><span class="sc-pill"></span><span class="sc-pill"></span></span></div>');
+      const paintHero = ()=>{ hero.style.background=swatchHex(scheme.bg); hero.querySelector('.sc-aa').style.color=swatchHex(scheme.heading); const p=hero.querySelectorAll('.sc-pill'); p[0].style.background=swatchHex(scheme.btnBg); p[1].style.background=swatchHex(scheme.btn2Border); };
+      paintHero();
+      b.appendChild(hero);
+      b.appendChild(el('<p class="sf-scheme-hint">Editing this scheme’s colors will affect all sections that use this scheme.</p>'));
+      const buckets=[]; STATE.colorRoles.forEach(r=>{ const g=r.group||''; let bk=buckets.find(x=>x.name===g); if(!bk){bk={name:g,roles:[]};buckets.push(bk);} bk.roles.push(r); });
+      buckets.forEach(bk=>{
+        if(bk.name) b.appendChild(el(`<div class="set-header">${bk.name}</div>`));
+        bk.roles.forEach(r=>{
+          b.appendChild(controlRow(r.label, colorField(scheme[r.key], v=>{ scheme[r.key]=v; applyRoles(); applyAllSectionSettings(); paintHero(); renderSchemes(); })));
+        });
+      });
+      if(Object.keys(STATE.schemes).length > 1){
+        const rm = el(`<button type="button" class="sf-remove">${svg(ICON_TRASH,14)}<span>Remove scheme</span></button>`);
+        rm.onclick = (e)=>{ e.stopPropagation(); removeScheme(selectedScheme); selectedScheme=null; buildLayers(); renderSchemes(); renderSectionControls(); };
+        b.appendChild(rm);
+      }
+      card.appendChild(b);
+      placeCard(card);
+      return;
+    }
   }
   if(!selectedSection){
     card.hidden = true; card.innerHTML = '';
@@ -3616,9 +3895,13 @@ function closeExport(){ const ov=document.getElementById('ex-ov'); if(ov) ov.rem
    ============================================================================ */
 function buildPanel(){
   const host=document.getElementById('groups'); host.innerHTML='';
+  // Brand colors live in a detached modal (Shopify manages brand outside the theme editor).
+  const brandBtn = el(`<button type="button" class="brand-launch"><span class="bl-sw"></span><span class="bl-t">Brand colors</span><span class="bl-chev">${svg('<polyline points="9 18 15 12 9 6"/>',16)}</span></button>`);
+  const sw = brandBtn.querySelector('.bl-sw'); STATE.palette.slice(0,4).forEach(c=>{ const s=el('<span></span>'); s.style.background=c.hex; sw.appendChild(s); });
+  brandBtn.onclick = openBrandModal;
+  host.appendChild(brandBtn);
   [
-    ['Brand colors','palette',false,renderBrandColors],
-    ['Color schemes','palette',false,renderSchemesGroup],
+    ['Colors','palette',false,renderSchemesGroup],
     ['Typography','type',false,renderTypography],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
