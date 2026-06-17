@@ -73,7 +73,7 @@
      TOP BAR — Shopify editor global chrome: brand + mode toggle on the left,
      page switcher in the centre, device + action controls on the right.
      ========================================================================== */
-  .topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px; background: #fff; border-bottom: 1px solid var(--stone-200); }
+  .topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px; background: #fff; border-bottom: 1px solid var(--stone-200); position: relative; z-index: 100; }
   .tb-left, .tb-right { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; }
   .tb-right { justify-content: flex-end; }
   .tb-center { flex: 0 1 auto; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
@@ -244,18 +244,38 @@
   .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
   .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
 
-  /* ---- Add picker modal (Shopify-style: one category level → preset entries) ---- */
+  /* ---- Add picker modal — Shopify-style master/detail: searchable list (left) + preview (right) ---- */
   .picker-ov { position: fixed; inset: 0; background: rgba(12,10,9,.45); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
-  .picker { width: 380px; max-width: 100%; max-height: 80vh; display: flex; flex-direction: column; background: #fff; border-radius: 12px; box-shadow: 0 24px 60px -12px rgba(0,0,0,.4); overflow: hidden; }
-  .picker-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--stone-200); font-size: 13px; font-weight: 600; }
-  .picker-x { border: none; background: none; cursor: pointer; color: var(--stone-400); display: inline-flex; padding: 2px; }
-  .picker-x:hover { color: var(--stone-900); }
-  .picker-body { padding: 8px; overflow-y: auto; }
-  .picker-cat { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone-400); padding: 10px 8px 4px; }
-  .picker-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 8px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; }
-  .picker-item:hover { background: var(--stone-100); }
-  .picker-ic { width: 32px; height: 32px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: var(--stone-100); color: var(--stone-500); }
-  .picker-name { font-size: 12px; font-weight: 600; color: var(--stone-800); }
+  .picker { width: min(880px, 100%); height: min(620px, 100%); display: flex; flex-direction: column; background: #fff; border-radius: 14px; box-shadow: 0 24px 60px -12px rgba(0,0,0,.4); overflow: hidden; }
+  .picker-hd { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--stone-200); font-size: 14px; font-weight: 600; flex: 0 0 auto; }
+  .picker-x { border: none; background: none; cursor: pointer; color: var(--stone-400); display: inline-flex; padding: 4px; border-radius: 6px; }
+  .picker-x:hover { color: var(--stone-900); background: var(--stone-100); }
+  .picker-main { flex: 1 1 auto; min-height: 0; display: flex; }
+  /* left: search + categorised list */
+  .picker-list { flex: 0 0 320px; max-width: 60%; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--stone-200); }
+  .picker-search { flex: 0 0 auto; padding: 12px; border-bottom: 1px solid var(--stone-100); }
+  .picker-search .ps-field { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 8px; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); }
+  .picker-search .ps-field:focus-within { box-shadow: inset 0 0 0 1.5px var(--sel); }
+  .picker-search svg { color: var(--stone-400); flex: 0 0 auto; }
+  .picker-search input { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 13px; color: var(--stone-900); min-width: 0; }
+  .picker-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px; }
+  .picker-cat { font-size: 14px; font-weight: 600; color: var(--stone-900); padding: 12px 10px 6px; }
+  .picker-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; }
+  .picker-item:hover, .picker-item.focus { background: var(--stone-100); }
+  .picker-ic { width: 22px; height: 22px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: var(--stone-600); }
+  .picker-ic svg { width: 20px; height: 20px; }
+  .picker-name { font-size: 14px; font-weight: 450; color: var(--stone-900); }
+  .picker-empty { padding: 24px 14px; text-align: center; font-size: 13px; color: var(--stone-400); }
+  /* right: preview pane */
+  .picker-preview { flex: 1 1 auto; min-width: 0; background: var(--stone-100); display: flex; align-items: center; justify-content: center; padding: 28px; }
+  .pp-card { width: 100%; max-width: 460px; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.2); overflow: hidden; }
+  .pp-vis { aspect-ratio: 16/9; background: linear-gradient(135deg, var(--stone-100), var(--stone-200)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--stone-400); }
+  .pp-vis .pp-ic { width: 52px; height: 52px; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px -2px rgba(0,0,0,.15); display: flex; align-items: center; justify-content: center; color: var(--stone-500); }
+  .pp-vis .pp-ic svg { width: 28px; height: 28px; }
+  .pp-meta { padding: 16px 18px; }
+  .pp-meta .pp-name { font-size: 15px; font-weight: 600; color: var(--stone-900); }
+  .pp-meta .pp-desc { font-size: 12.5px; color: var(--stone-500); margin-top: 4px; line-height: 1.5; }
+  @media (max-width: 720px){ .picker-preview { display: none; } .picker-list { flex-basis: 100%; max-width: 100%; border-right: none; } }
 
   /* ---- toast ---- */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--stone-900); color: #fff; font-size: 12px; font-weight: 500; padding: 10px 16px; border-radius: 8px; box-shadow: 0 8px 24px -6px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 300; }
@@ -379,11 +399,11 @@
      ========================================================================== */
   #store [data-sec] { cursor: pointer; }
   /* hover is drawn by JS (outline + a name tag); selected keeps a solid 2px frame */
-  #store [data-sec].sec-hover { outline: 1.5px solid var(--sel); outline-offset: -1.5px; }
+  #store [data-sec].sec-hover { outline: 2px solid var(--sel); outline-offset: -2px; }
   #store [data-sec].sec-selected { outline: 2px solid var(--sel); outline-offset: -2px; }
   /* blocks are selectable on the canvas too */
   #store [data-bpath] { cursor: pointer; }
-  #store [data-bpath].blk-hover { outline: 1.5px solid var(--sel); outline-offset: 1px; border-radius: 2px; }
+  #store [data-bpath].blk-hover { outline: 2px solid var(--sel); outline-offset: 1px; border-radius: 2px; }
   #store .block-selected { outline: 2px solid var(--sel); outline-offset: 1px; border-radius: 2px; }
   /* hidden layers vanish from the canvas (Shopify hide) */
   #store .canvas-hidden { display: none !important; }
@@ -1443,6 +1463,15 @@ const ICONS = {
   grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
   star:'<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
   input:'<rect width="18" height="13" x="3" y="6" rx="2"/><line x1="7" x2="7" y1="9.5" y2="14.5"/>',
+  // ---- block glyphs (matched to Shopify's basic-block icons) ----
+  heading:'<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="14" y1="12" y2="12"/><line x1="4" x2="18" y1="18" y2="18"/>',
+  text:'<line x1="4" x2="16" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="14" y1="18" y2="18"/>',
+  frame:'<path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2-2v-2"/>',
+  image:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+  mail:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  quote:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
 };
 const svg = (path,w=14)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
@@ -2643,28 +2672,85 @@ function openBlockPicker(section, parentPath, index){
   const types = acceptedChildTypes(section, parentPath);
   if(!types.length){ toast('No blocks can be added here.'); return; }
   const groups = {};
-  types.forEach(t=>{ const cat=BLOCK_CATEGORY[t]||'Blocks'; (groups[cat]=groups[cat]||[]).push({ type:t, name:(BLOCK_SCHEMAS[t]||{}).name||t }); });
-  openPicker('Add block', groups, t=>addBlock(section, parentPath, t, index));
+  types.forEach(t=>{ const cat=BLOCK_CATEGORY[t]||'Blocks'; (groups[cat]=groups[cat]||[]).push({ type:t, name:(BLOCK_SCHEMAS[t]||{}).name||t, icon:blockTypeIcon(t) }); });
+  openPicker('Add block', groups, t=>addBlock(section, parentPath, t, index), 'blocks');
 }
 
-/* Generic Shopify-style picker modal: one grouping level (category) → preset entries. */
-function openPicker(title, groups, onPick){
+/* Shopify-style Add picker: searchable categorised list (left) + live preview (right).
+   `groups` = { Category: [{ type, name, icon?, desc? }] }; `kind` labels the search box. */
+function openPicker(title, groups, onPick, kind){
   closePicker();
-  const ov = el(`<div class="picker-ov" id="picker-ov"><div class="picker"><div class="picker-hd"><span>${title}</span><button class="picker-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div><div class="picker-body"></div></div></div>`);
+  kind = kind || 'sections';
+  const ov = el(`<div class="picker-ov" id="picker-ov">
+    <div class="picker">
+      <div class="picker-hd"><span>${title}</span><button class="picker-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div>
+      <div class="picker-main">
+        <div class="picker-list">
+          <div class="picker-search"><div class="ps-field">${svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',16)}<input type="text" placeholder="Search ${kind}" autocomplete="off"></div></div>
+          <div class="picker-body"></div>
+        </div>
+        <div class="picker-preview"><div class="pp-card"><div class="pp-vis"><span class="pp-ic"></span></div><div class="pp-meta"><div class="pp-name"></div><div class="pp-desc"></div></div></div></div>
+      </div>
+    </div></div>`);
   const body = ov.querySelector('.picker-body');
-  Object.entries(groups).forEach(([cat, items])=>{
-    body.appendChild(el(`<div class="picker-cat">${cat}</div>`));
-    items.forEach(it=>{
-      const row = el(`<button type="button" class="picker-item"><span class="picker-ic">${svg(ICONS.box,16)}</span><span class="picker-name"></span></button>`);
-      row.querySelector('.picker-name').textContent = it.name;
-      row.onclick = ()=>{ closePicker(); onPick(it.type); };
-      body.appendChild(row);
+  const input = ov.querySelector('.picker-search input');
+  const ppIc = ov.querySelector('.pp-ic'), ppName = ov.querySelector('.pp-name'), ppDesc = ov.querySelector('.pp-desc');
+  // flatten for keyboard nav + previews
+  const flat = [];
+  Object.entries(groups).forEach(([cat, items])=> items.forEach(it=> flat.push(Object.assign({cat}, it))));
+  let focusIdx = -1;
+
+  function preview(it){
+    if(!it){ return; }
+    ppIc.innerHTML = svg(it.icon || ICONS.box, 28);
+    ppName.textContent = it.name;
+    ppDesc.textContent = it.desc || `${it.cat} ${kind==='blocks'?'block':'section'}.`;
+  }
+  function setFocus(it){
+    focusIdx = flat.indexOf(it);
+    body.querySelectorAll('.picker-item').forEach(r=> r.classList.toggle('focus', r.__it===it));
+    preview(it);
+  }
+  function render(q){
+    q = (q||'').trim().toLowerCase();
+    body.innerHTML = '';
+    let firstVisible = null;
+    Object.entries(groups).forEach(([cat, items])=>{
+      const matches = items.filter(it=> !q || it.name.toLowerCase().includes(q));
+      if(!matches.length) return;
+      body.appendChild(el(`<div class="picker-cat">${cat}</div>`));
+      matches.forEach(it=>{
+        const row = el(`<button type="button" class="picker-item"><span class="picker-ic">${svg(it.icon || ICONS.box,20)}</span><span class="picker-name"></span></button>`);
+        row.__it = it;
+        row.querySelector('.picker-name').textContent = it.name;
+        row.onmouseenter = ()=> setFocus(it);
+        row.onclick = ()=>{ closePicker(); onPick(it.type); };
+        body.appendChild(row);
+        if(!firstVisible) firstVisible = it;
+      });
     });
+    if(!firstVisible){ body.appendChild(el('<div class="picker-empty">No matches.</div>')); preview(null); ppName.textContent=''; ppDesc.textContent=''; ppIc.innerHTML=''; }
+    else setFocus(firstVisible);
+  }
+  input.addEventListener('input', ()=> render(input.value));
+  input.addEventListener('keydown', e=>{
+    const rows = [...body.querySelectorAll('.picker-item')];
+    if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+      e.preventDefault(); if(!rows.length) return;
+      let i = rows.findIndex(r=>r.__it===flat[focusIdx]);
+      i = e.key==='ArrowDown' ? Math.min(rows.length-1, i+1) : Math.max(0, i-1);
+      const it = rows[i].__it; setFocus(it); rows[i].scrollIntoView({block:'nearest'});
+    } else if(e.key==='Enter'){
+      e.preventDefault(); const it = flat[focusIdx]; if(it){ closePicker(); onPick(it.type); }
+    }
   });
+
   ov.querySelector('.picker-x').onclick = closePicker;
   ov.addEventListener('mousedown', e=>{ if(e.target===ov) closePicker(); });
   document.body.appendChild(ov);
   document.addEventListener('keydown', pickerEsc);
+  render('');
+  setTimeout(()=>input.focus(), 0);
 }
 function pickerEsc(e){ if(e.key==='Escape') closePicker(); }
 function closePicker(){ const ov=document.getElementById('picker-ov'); if(ov) ov.remove(); document.removeEventListener('keydown', pickerEsc); }
@@ -2748,8 +2834,8 @@ function duplicateSection(id){
 }
 function openSectionPicker(index){
   const groups = {};
-  TEMPLATE_SECTION_TYPES.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t }); });
-  openPicker('Add section', groups, t=>addSection(t, index));
+  TEMPLATE_SECTION_TYPES.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t, icon:layerIcon(sc), desc:sc.description }); });
+  openPicker('Add section', groups, t=>addSection(t, index), 'sections');
 }
 
 /* ============================================================================
@@ -2764,6 +2850,16 @@ const SECTION_GROUPS = {
 };
 const CATEGORY_ICON = { Header:'layout', Image:'box', Collections:'tag', Layout:'grid', Reviews:'star', Footer:'layout' };
 function layerIcon(schema){ return ICONS[CATEGORY_ICON[schema && schema.category]] || ICONS.box; }
+// per-block-type glyphs (used in the layers tree, the canvas hover chip, the inspector
+// header, and the Add-block picker) — chosen to echo Shopify's basic-block icons.
+const BLOCK_ICON = {
+  heading_block:'heading', text_block:'text', button_block:'click', image_block:'image',
+  icon_block:'star', email_form:'mail', group:'folder',
+  collection_card:'tag', product_card:'box', testimonial:'quote', logo:'frame',
+  gallery_image:'image', post_card:'file', icon_column:'grid', checklist_item:'text',
+};
+function blockTypeIcon(type){ return ICONS[BLOCK_ICON[type]] || ICONS.box; }
+function blockLayerIcon(b){ return blockTypeIcon(b && b.type); }
 let expandedLayers = new Set();
 let selectedBlock = null;   // { section, index } when a block is selected
 
@@ -2896,7 +2992,7 @@ function renderBlockRows(grp, section, list, parentPath, depth){
       row.appendChild(tw);
     } else { const sp=el('<span class="lyr-tw-spacer"></span>'); sp.style.marginLeft = (depth*16) + 'px'; row.appendChild(sp); }
     const main = el(`<button type="button" class="lyr-main lyr-bmain"><span class="lyr-name"></span>${(canNest && kids.length)?`<span class="lyr-count">${kids.length}</span>`:''}</button>`);
-    main.prepend(makeLead(ICONS.box, 14, {kind:'block', section, path}, row));
+    main.prepend(makeLead(blockLayerIcon(b), 14, {kind:'block', section, path}, row));
     main.querySelector('.lyr-name').textContent = blockName(b,i);
     main.onclick = ()=> selectBlock(section, path);
     row.appendChild(main);
@@ -2990,18 +3086,9 @@ function renderSectionControls(){
       const lastIdx = path[path.length-1];
       const phName = document.getElementById('ph-section-name'); if(phName) phName.textContent = blockName(inst, lastIdx);
       card.innerHTML = '';
-      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(ICONS.box,16)}</span><div style="min-width:0;flex:1 1 auto"><div class="sf-name"></div><div class="sf-sub"></div></div></div></div>`);
+      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(blockLayerIcon(inst),16)}</span><span class="sf-name"></span></div></div>`);
       head.querySelector('.sf-name').textContent = blockName(inst, lastIdx);
-      // breadcrumb: section ▸ each ancestor block ▸ (current type)
-      const sub = head.querySelector('.sf-sub');
-      const crumbs = [{ label:(SECTION_SCHEMAS[secType(section)]||{}).name || SECTION_TITLES[section] || 'Section', go:()=>selectSection(section) }];
-      for(let k=1; k<path.length; k++){ const ap=path.slice(0,k); const ab=blockAt(section,ap); crumbs.push({ label:blockName(ab, ap[ap.length-1]), go:()=>selectBlock(section, ap) }); }
-      crumbs.forEach((c,ci)=>{
-        if(ci) sub.appendChild(document.createTextNode(' ▸ '));
-        const btn = el(`<button type="button" class="sf-crumb"></button>`); btn.textContent=c.label;
-        btn.onclick=(e)=>{ e.stopPropagation(); c.go(); }; sub.appendChild(btn);
-      });
-      sub.appendChild(document.createTextNode(' ▸ ' + bSchema.name));
+      // (no breadcrumb — navigate the nested block tree via the Layers panel)
       const close = el(`<button class="sf-close" title="Deselect">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
       close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
       head.appendChild(close); card.appendChild(head);
@@ -3064,18 +3151,20 @@ function renderSectionControls(){
 // Desktop: card is docked in the fixed right inspector. Mobile: card lives in the sheet.
 function placeCard(card){
   const empty = document.getElementById('inspector-empty');
+  const insp = document.getElementById('inspector');
   if(mqMobile.matches){
     card.classList.add('in-sheet'); card.classList.remove('in-inspector');
     const panel = document.querySelector('.panel');
     const header = panel.querySelector('.panel-header');
     if(card.parentElement !== panel) panel.insertBefore(card, header.nextSibling);
     if(empty) empty.style.display = 'none';
+    if(insp) insp.style.display = '';
   } else {
     card.classList.add('in-inspector'); card.classList.remove('in-sheet');
-    const insp = document.getElementById('inspector');
     if(insp && card.parentElement !== insp) insp.appendChild(card);
-    // show the empty placeholder only when nothing is selected
-    if(empty) empty.style.display = card.hidden ? '' : 'none';
+    // collapse the whole inspector when nothing is selected → canvas goes full-width
+    if(insp) insp.style.display = card.hidden ? 'none' : '';
+    if(empty) empty.style.display = 'none';
   }
 }
 
@@ -3113,10 +3202,14 @@ function initSectionSelection(){
 let hvTag, hvBefore, hvAfter, hvCur=null;
 function ensureHoverEls(){
   if(hvTag) return;
+  // Append the overlays INSIDE .preview (not body) so that moving the cursor onto the
+  // floating "+" doesn't leave .preview and tear down the hover (they're position:fixed,
+  // so they still track viewport coords regardless of parent).
+  const host = document.querySelector('.preview');
   const plus = `<button class="hv-plus" type="button" title="Add">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',14)}</button>`;
-  hvTag = el('<div class="hv-tag" hidden></div>'); document.body.appendChild(hvTag);
-  hvBefore = el(`<div class="hv-add" hidden>${plus}</div>`); document.body.appendChild(hvBefore);
-  hvAfter  = el(`<div class="hv-add" hidden>${plus}</div>`); document.body.appendChild(hvAfter);
+  hvTag = el('<div class="hv-tag" hidden></div>'); host.appendChild(hvTag);
+  hvBefore = el(`<div class="hv-add" hidden>${plus}</div>`); host.appendChild(hvBefore);
+  hvAfter  = el(`<div class="hv-add" hidden>${plus}</div>`); host.appendChild(hvAfter);
   hvBefore.querySelector('.hv-plus').onclick = (e)=>{ e.stopPropagation(); addAtCursor('before'); };
   hvAfter .querySelector('.hv-plus').onclick = (e)=>{ e.stopPropagation(); addAtCursor('after');  };
 }
@@ -3143,13 +3236,13 @@ function updateCanvasHover(target){
   const sec = target.closest('[data-sec]'); if(!sec){ hideCanvasHover(); return; }
   const secId = sec.getAttribute('data-sec');
   const blk = target.closest('[data-bpath]');
-  let kind, path=null, frameEl, name;
+  let kind, path=null, frameEl, name, icon;
   if(blk && sec.contains(blk)){
     kind='block'; frameEl=blk; path = blk.getAttribute('data-bpath').split('.').map(Number);
-    const b = blockAt(secId, path); name = b ? blockName(b, path[path.length-1]) : 'Block';
+    const b = blockAt(secId, path); name = b ? blockName(b, path[path.length-1]) : 'Block'; icon = blockLayerIcon(b);
   } else {
     kind='section'; frameEl=sec;
-    const schema = SECTION_SCHEMAS[secType(secId)] || {}; name = schema.name || SECTION_TITLES[secId] || secId;
+    const schema = SECTION_SCHEMAS[secType(secId)] || {}; name = schema.name || SECTION_TITLES[secId] || secId; icon = layerIcon(schema);
   }
   hvCur = { kind, secId, path, el:frameEl };
   // hover outline (skip when this exact element is already the solid-selected one)
@@ -3158,7 +3251,7 @@ function updateCanvasHover(target){
                                       : (sec.classList.contains('sec-selected') && !selectedBlock);
   if(!isSelected) frameEl.classList.add(kind==='block' ? 'blk-hover' : 'sec-hover');
   const r = frameEl.getBoundingClientRect();
-  hvTag.textContent = name; hvTag.hidden = false;
+  hvTag.innerHTML = svg(icon,13); hvTag.appendChild(document.createTextNode(name)); hvTag.hidden = false;
   hvTag.style.left = Math.max(6, r.left) + 'px';
   hvTag.style.top  = (r.top - 5) + 'px';
   // Sections get a "+" above AND below (a section can be tall / its other edge off-screen);
@@ -3434,6 +3527,7 @@ applyAllSectionSettings();   // re-apply any persisted per-section settings to t
 initSectionSelection();
 initCanvasHover();   // canvas hover name-tag + blue "+" insertion affordances
 buildLayers();   // populate the left-rail layers tree
+renderSectionControls();   // collapse the inspector until something is selected
 // top-bar mode toggle (Layers ⇄ Theme settings) — icons replace the old text tabs
 document.querySelectorAll('.tb-mode').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
 // device toggle: desktop ⇄ mobile preview width (drives the store's @container layout)
