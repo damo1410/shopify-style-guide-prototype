@@ -170,6 +170,12 @@
   /* groups are invisible layout containers; only an EMPTY group shows a drop affordance */
   .tb-group:empty { min-width: 80px; min-height: 44px; border: 1px dashed var(--c-border, #e7e5e4); border-radius: var(--radius, 10px); }
   .tb-img { width: 100%; max-width: 360px; min-height: 120px; border-radius: var(--radius, 10px); background: repeating-conic-gradient(var(--c-surface,#f0efed) 0% 25%, #fff 0% 50%) 50% / 22px 22px; }
+  /* icon block — reuses the global feature-icon geometry (same as the old value-prop icon) */
+  .store .tb-icon { display: inline-flex; padding: var(--icon-pad); border-radius: var(--icon-radius); background: var(--icon-bg); color: var(--icon-fg); box-shadow: inset 0 0 0 var(--icon-bd-w) var(--icon-bd); }
+  .store .tb-icon svg { width: var(--icon-size); height: var(--icon-size); }
+  /* email signup form block */
+  .store .nl-form { display: flex; gap: 10px; width: min(440px, 100%); margin-top: 4px; flex-wrap: wrap; }
+  .store .nl-form input { flex: 1; min-width: 200px; }
   /* Remove block button (bottom of the block settings card) */
   .sf-dup { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-700); }
   .sf-dup:hover { background: var(--stone-50); }
@@ -774,7 +780,7 @@
 
           <!-- VALUE PROPS / TRUST BAR -->
           <section class="section" data-sec="valueprops"><div class="container">
-            <div class="valueprops" data-cards></div>
+            <div class="valueprops" data-blocks data-cards></div>
           </div></section>
 
           <!-- SHOP BY COLLECTION -->
@@ -824,11 +830,7 @@
 
           <!-- NEWSLETTER -->
           <section class="section newsletter" data-sec="newsletter"><div class="container">
-            <div class="tb-root" data-blocks style="align-items:center"><!-- heading/text blocks injected by JS --></div>
-            <form onsubmit="return false">
-              <input type="email" placeholder="Enter your email" aria-label="Email">
-              <button class="btn btn-primary" type="submit">Get my 10% off</button>
-            </form>
+            <div class="tb-root" data-blocks style="align-items:center"><!-- heading/text/form blocks injected by JS --></div>
           </div></section>
 
           <!-- FOOTER -->
@@ -1954,10 +1956,11 @@ const SECTION_SCHEMAS = {
     {type:'range', id:'overlay_opacity', label:'Image overlay', min:0, max:90, step:5, unit:'%', default:55},
     {type:'select', id:'content_width', label:'Content width', default:'medium', options:[
       {value:'narrow',label:'Narrow'},{value:'medium',label:'Medium'},{value:'wide',label:'Wide'}]},
-    {type:'text_alignment', id:'content_alignment', label:'Content alignment', default:'left'},
+    {type:'select', id:'content_alignment', label:'Content alignment', default:'left', options:[
+      {value:'left',label:'Left'},{value:'center',label:'Center'}]},
     ...PADDING_BLOCK,
   ]},
-  valueprops: { name:'Multicolumn', category:'Layout', max_blocks:6, settings:[
+  valueprops: { name:'Multicolumn', category:'Layout', blocks:[{type:'@theme'}], max_blocks:6, settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:4},
     ...PADDING_BLOCK,
@@ -2109,7 +2112,7 @@ const BLOCK_SCHEMAS = {
 // Which block types each section accepts (Shopify: section.blocks). Attach to the
 // schemas + give a max_blocks so the registry stays the single source of truth.
 const SECTION_BLOCK_TYPES = {
-  valueprops:['icon_column'], collections:['collection_card'], bestsellers:['product_card'],
+  collections:['collection_card'], bestsellers:['product_card'],
   reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'],
 };
 // Grid sections that also host a heading/text block zone above their card grid.
@@ -2137,7 +2140,11 @@ function buildDefaultBlocks(){
         { type:'button_block', name:'Explore collections', settings:{ label:'Explore collections', style:'secondary' } },
       ]},
     ],
-    valueprops:  VALUEPROPS.map(v => ({ type:'icon_column',    name:v.h,     settings:{ icon:v.ic, heading:v.h, text:v.p } })),
+    valueprops:  VALUEPROPS.map(v => ({ type:'group', name:v.h, settings:{ direction:'vertical', alignment:'center', gap:10 }, blocks:[
+      { type:'icon_block',    name:'Icon',    settings:{ icon:v.ic } },
+      { type:'heading_block', name:v.h,       settings:{ text:v.h, size:'h4', alignment:'center' } },
+      { type:'text_block',    name:'Text',    settings:{ text:v.p, size:'small', alignment:'center' } },
+    ] })),
     collections: [
       { type:'text_block',    name:'Shop by style', settings:{ text:'Shop by style' } },
       { type:'heading_block', name:'Find your perfect frame', settings:{ text:'Find your perfect frame', size:'h2' } },
@@ -2182,6 +2189,7 @@ function buildDefaultBlocks(){
       { type:'text_block',    name:'Join the club', settings:{ text:'Join the club' } },
       { type:'heading_block', name:'Get 10% off your first order', settings:{ text:'Get 10% off your first order', size:'h2' } },
       { type:'text_block',    name:'Body', settings:{ text:'Sign up for early access to new drops, styling tips, and members-only offers.' } },
+      { type:'email_form',    name:'Email signup form', settings:{ placeholder:'Enter your email', button_label:'Get my 10% off' } },
     ],
   };
 }
@@ -2246,10 +2254,7 @@ const CARD_RENDERERS = {
   press: (b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; },
 };
 // Full-list renderers for the remaining (pure-card) sections.
-const SECTION_RENDERERS = {
-  valueprops: bs => bs.map((b,i)=>{ const s=b.settings||{};
-    return `<div class="vp" data-bpath="${i}"><div class="ic">${svg(SI[s.icon]||SI.star,24)}</div><h5>${s.heading||''}</h5><p>${s.text||''}</p></div>`; }).join(''),
-};
+const SECTION_RENDERERS = {};
 function renderSectionContent(key){
   const secEl = sectionEl(key); if(!secEl) return;
   const type = secType(key);
@@ -2296,8 +2301,14 @@ Object.assign(BLOCK_SCHEMAS, {
     {type:'image_picker', id:'image', label:'Image'},
     {type:'select', id:'ratio', label:'Aspect ratio', default:'landscape', options:[{value:'square',label:'Square'},{value:'portrait',label:'Portrait'},{value:'landscape',label:'Landscape'},{value:'wide',label:'Wide'}]},
     {type:'range', id:'width', label:'Width', min:20, max:100, step:5, unit:'%', default:100} ]},
+  icon_block:   { name:'Icon', settings:[
+    {type:'select', id:'icon', label:'Icon', default:'star', options:[
+      {value:'truck',label:'Truck'},{value:'shield',label:'Shield'},{value:'refresh',label:'Returns'},{value:'sun',label:'Sun'},{value:'star',label:'Star'},{value:'check',label:'Check'}]} ]},
+  email_form:   { name:'Email signup form', settings:[
+    {type:'text', id:'placeholder', label:'Placeholder', default:'Enter your email'},
+    {type:'text', id:'button_label', label:'Button label', default:'Subscribe'} ]},
 });
-const THEME_BLOCK_TYPES = ['group','heading_block','text_block','button_block','image_block'];
+const THEME_BLOCK_TYPES = ['group','heading_block','text_block','button_block','image_block','icon_block','email_form'];
 
 // Generic recursive canvas renderer (threads the block path onto each element so the
 // selection outline can find any nested block).
@@ -2318,10 +2329,13 @@ function renderThemeBlock(b, path){
     case 'text_block':    return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><p style="font-size:${TXT[s.size]||'1em'}">${s.text||''}</p></div>`;
     case 'button_block':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'} btn-${s.size||'medium'}">${s.label||'Button'}</a></div>`;
     case 'image_block':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
+    case 'icon_block':    return `<div class="tb" data-bpath="${bp}"><span class="tb-icon ic">${svg(SI[s.icon]||SI.star,24)}</span></div>`;
+    case 'email_form':    return `<div class="tb" data-bpath="${bp}"><form class="nl-form" onsubmit="return false"><input type="email" placeholder="${s.placeholder||'Enter your email'}" aria-label="Email"><button type="submit" class="btn btn-primary">${s.button_label||'Subscribe'}</button></form></div>`;
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
 SECTION_RENDERERS.groupsec   = bs => renderThemeBlocks(bs, []);
+SECTION_RENDERERS.valueprops = bs => renderThemeBlocks(bs, []);   // multicolumn = generic blocks (group per column)
 SECTION_RENDERERS.hero       = bs => renderThemeBlocks(bs, []);   // hero content = theme blocks
 SECTION_RENDERERS.guarantee  = bs => renderThemeBlocks(bs, []);   // image-with-text content = theme blocks
 SECTION_RENDERERS.newsletter = bs => renderThemeBlocks(bs, []);   // email-signup content = theme blocks
@@ -2353,7 +2367,8 @@ const SECTION_SEED = { groupsec: demoGroupBlocks };
    ---------------------------------------------------------------------------- */
 const BLOCK_CATEGORY = { icon_column:'Content', testimonial:'Content', checklist_item:'Content', logo:'Content',
   collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content',
-  group:'Layout', heading_block:'Text', text_block:'Text', button_block:'Text', image_block:'Media' };
+  group:'Layout', heading_block:'Text', text_block:'Text', button_block:'Text', image_block:'Media',
+  icon_block:'Media', email_form:'Content' };
 // placeholder _demo for a freshly-added block so media-backed types still render
 const NEW_BLOCK_DEMO = {
   collection_card: ()=>({ seed:'noir-'+Math.random().toString(36).slice(2,7), seed2:'noir-'+Math.random().toString(36).slice(2,7) }),
