@@ -121,10 +121,15 @@
   .panel-header { display: none; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--stone-200); }
   /* two interchangeable header views; min-height matches the logo so swapping never
      changes the header's height (the section view replaces brand + reset on mobile). */
-  .ph-global, .ph-section { flex: 1; display: flex; align-items: center; justify-content: space-between; min-height: 28px; }
-  .ph-section { display: none; }
-  .ph-section .sf-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--sel); flex: 0 0 auto; }
-  .ph-section .t1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ph-global { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
+  /* selection view of the sheet header: type icon + name + ⋯ more menu + close (mirrors the
+     desktop inspector's sf-head, which is hidden on mobile). */
+  .ph-section { flex: 1; display: none; align-items: center; gap: 8px; min-height: 28px; }
+  .ph-sec-ic { color: var(--stone-900); display: inline-flex; flex: 0 0 auto; }
+  .ph-sec-name { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ph-sec-more, .ph-sec-close { width: 32px; height: 32px; padding: 0; border: none; background: none; cursor: pointer; color: var(--stone-900); display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; flex: 0 0 auto; }
+  .ph-sec-more:hover, .ph-sec-close:hover { background: var(--stone-100); }
+  .ph-sec-more svg, .ph-sec-close svg { width: 18px; height: 18px; }
   .brand { display: flex; align-items: center; gap: 8px; }
   .brand .logo { width: 28px; height: 28px; border-radius: 6px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; }
   .brand .t1 { font-size: 13px; font-weight: 600; line-height: 1.2; }
@@ -293,7 +298,20 @@
   .pp-meta { padding: 16px 18px; }
   .pp-meta .pp-name { font-size: 15px; font-weight: 600; color: var(--stone-900); }
   .pp-meta .pp-desc { font-size: 12.5px; color: var(--stone-500); margin-top: 4px; line-height: 1.5; }
-  @media (max-width: 720px){ .picker-preview { display: none; } .picker-list { flex-basis: 100%; max-width: 100%; border-right: none; } }
+  /* mobile-only picker header (a title + close); hidden on desktop where click-outside dismisses */
+  .picker-head { display: none; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--stone-200); flex: 0 0 auto; }
+  .picker-head .picker-title { flex: 1 1 auto; font-size: 15px; font-weight: 600; color: var(--stone-900); }
+  .picker-head .picker-back { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--stone-900); display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; flex: 0 0 auto; }
+  .picker-head .picker-back:hover { background: var(--stone-100); }
+  @media (max-width: 860px){
+    /* full-screen, list-only picker: there's no room (or pointer) for a live preview on
+       mobile, and you're adding something new so you don't need to see the page behind it. */
+    .picker-ov { padding: 0; align-items: stretch; }
+    .picker { width: 100%; height: 100%; max-height: 100dvh; border-radius: 0; }
+    .picker-head { display: flex; }
+    .picker-preview { display: none; }
+    .picker-list { flex: 1 1 auto; flex-basis: 100%; max-width: 100%; border-right: none; }
+  }
 
   /* ---- toast ---- */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--stone-900); color: #fff; font-size: 12px; font-weight: 500; padding: 10px 16px; border-radius: 8px; box-shadow: 0 8px 24px -6px rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 300; }
@@ -959,19 +977,20 @@
     .panel.dragging .panel-header { cursor: grabbing; }
     .features { grid-template-columns: 1fr; }
 
-    /* the Layers rail + its tabs are a desktop feature; mobile keeps the existing
-       bottom-sheet UX (theme settings groups + tap-a-section-to-edit). */
+    /* Layers ⇄ Theme settings is switchable on mobile too: the sheet header carries the
+       segmented mode toggle and data-mode drives which list shows, exactly like desktop
+       (the old left-rail .panel-tabs element stays unused). */
     .panel-tabs { display: none; }
-    .panel[data-mode] #layers { display: none; }
-    .panel[data-mode] #groups { display: block; }
 
-    /* section selected: the contextual card lives inside the sheet, and the
-       global style-guide groups hide until the X (in the header) deselects. */
-    .section-float.in-sheet { position: static; width: 100%; max-height: none; display: block; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
-    .section-float.in-sheet .sf-head { display: none; }   /* header now carries the dot + name + X */
-    .section-float.in-sheet .sf-body { overflow: visible; min-height: 0; }   /* the sheet itself scrolls */
-    body.sec-selected .groups { display: none; }
-    /* swap the panel header to the section view (blue dot + name + close) */
+    /* a section / block / scheme is selected: its settings card lives inside the sheet, and
+       both lists hide until the close (X) in the header deselects. */
+    /* the card fills the sheet below the header and scrolls its OWN body, the same way the
+       #layers / #groups lists do — so every control stays reachable at any snap height. */
+    .section-float.in-sheet { position: static; width: 100%; max-height: none; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
+    .section-float.in-sheet .sf-head { display: none; }   /* the sheet header carries icon + name + ⋯ + close */
+    .section-float.in-sheet .sf-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+    body.sec-selected #layers, body.sec-selected .groups { display: none; }
+    /* swap the panel header to the selection view (type icon + name + ⋯ + close) */
     body.sec-selected .panel-header .ph-global { display: none; }
     body.sec-selected .panel-header .ph-section { display: flex; }
   }
@@ -1033,21 +1052,28 @@
       <span class="pane-title">Home page</span>
     </div>
     <div class="panel-header">
-      <!-- global header (default) -->
+      <!-- global header (default): switch Layers ⇄ Theme settings, plus export / reset -->
       <div class="ph-global">
-        <div class="brand">
-          <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
-          <div><div class="t1">NOIR</div><div class="t2">Home page</div></div>
+        <div class="tb-modes">
+          <button type="button" class="tb-mode active" data-mode="layers" title="Sections / Layers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          </button>
+          <button type="button" class="tb-mode" data-mode="theme" title="Theme settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
         </div>
         <div class="ph-actions">
           <button class="export-btn" id="export-btn" title="Export Shopify theme files"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Export</button>
           <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
         </div>
       </div>
-      <!-- section header (mobile, when a section is selected) -->
+      <!-- selection header (mobile, when a section / block / scheme is selected):
+           type icon + name + ⋯ more menu + close — mirrors the desktop inspector header -->
       <div class="ph-section">
-        <div class="brand"><span class="sf-dot"></span><div class="t1" id="ph-section-name">Section</div></div>
-        <button class="reset" id="ph-section-close" title="Deselect section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        <span class="ph-sec-ic" id="ph-section-ic"></span>
+        <span class="ph-sec-name" id="ph-section-name">Section</span>
+        <button class="ph-sec-more" id="ph-section-more" title="More options"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+        <button class="ph-sec-close" id="ph-section-close" title="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
     </div>
     <div class="layers" id="layers"><!-- section/block tree injected by JS --></div>
@@ -3019,6 +3045,10 @@ function openPicker(title, groups, onPick, kind){
   kind = kind || 'sections';
   const ov = el(`<div class="picker-ov" id="picker-ov">
     <div class="picker">
+      <div class="picker-head">
+        <button type="button" class="picker-back" title="Close">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',18)}</button>
+        <span class="picker-title"></span>
+      </div>
       <div class="picker-main">
         <div class="picker-list">
           <div class="picker-search"><div class="ps-field">${svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',16)}<input type="text" placeholder="Search ${kind}" autocomplete="off"></div></div>
@@ -3027,6 +3057,8 @@ function openPicker(title, groups, onPick, kind){
         <div class="picker-preview"><div class="pp-card"><div class="pp-vis"><span class="pp-ic"></span></div><div class="pp-meta"><div class="pp-name"></div><div class="pp-desc"></div></div></div></div>
       </div>
     </div></div>`);
+  ov.querySelector('.picker-title').textContent = title || 'Add';
+  ov.querySelector('.picker-back').onclick = closePicker;
   const body = ov.querySelector('.picker-body');
   const input = ov.querySelector('.picker-search input');
   const ppIc = ov.querySelector('.pp-ic'), ppName = ov.querySelector('.pp-name'), ppDesc = ov.querySelector('.pp-desc');
@@ -3088,7 +3120,9 @@ function openPicker(title, groups, onPick, kind){
   document.body.appendChild(ov);
   document.addEventListener('keydown', pickerEsc);
   render('');
-  setTimeout(()=>input.focus(), 0);
+  // on mobile the picker is full-screen; don't auto-focus the search (it would pop the
+  // keyboard over the list). On desktop, focus so you can type to filter immediately.
+  if(!mqMobile.matches) setTimeout(()=>input.focus(), 0);
 }
 function pickerEsc(e){ if(e.key==='Escape') closePicker(); }
 function closePicker(){ const ov=document.getElementById('picker-ov'); if(ov) ov.remove(); document.removeEventListener('keydown', pickerEsc); }
@@ -3190,6 +3224,53 @@ function duplicateScheme(id){
 }
 // inspector header "⋯" menu — entries: {icon,label,fn,danger} or {sep:true}
 const DUP_ICON = '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
+const PLUS_ICON = '<path d="M5 12h14"/><path d="M12 5v14"/>';
+// Shared "⋯" menu entries for the inspector header (desktop) AND the mobile sheet header.
+// Each includes Add-before / Add-after, which on mobile are the primary way to add a sibling
+// (the canvas "+" affordances are pointer-only). openSectionPicker / openBlockPicker open the
+// Add picker at the right index; on mobile that picker is a full-screen list.
+function sectionMoreEntries(secId){
+  const gid = sectionGroupId(secId), idx = sectionIndexInGroup(secId), hidden = hiddenLayers.has(secId);
+  return [
+    {icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateSection(secId)},
+    {icon:(hidden?ICON_EYE:ICON_EYE_OFF), label:(hidden?'Show':'Hide'), fn:()=>toggleHidden(secId)},
+    {sep:true},
+    {icon:PLUS_ICON, label:'Add section before', fn:()=>openSectionPicker(gid, idx)},
+    {icon:PLUS_ICON, label:'Add section after',  fn:()=>openSectionPicker(gid, idx+1)},
+    {sep:true},
+    {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>removeSection(secId)},
+  ];
+}
+function blockMoreEntries(section, path){
+  const hideKey = blockHideKey(section, path), hidden = hiddenLayers.has(hideKey);
+  const parentPath = path.slice(0,-1), idx = path[path.length-1];
+  return [
+    {icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateBlock(section, path)},
+    {icon:(hidden?ICON_EYE:ICON_EYE_OFF), label:(hidden?'Show':'Hide'), fn:()=>toggleHidden(hideKey)},
+    {sep:true},
+    {icon:PLUS_ICON, label:'Add block before', fn:()=>openBlockPicker(section, parentPath, idx)},
+    {icon:PLUS_ICON, label:'Add block after',  fn:()=>openBlockPicker(section, parentPath, idx+1)},
+    {sep:true},
+    {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>removeBlock(section, path)},
+  ];
+}
+function schemeMoreEntries(schemeId){
+  const entries = [{icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateScheme(schemeId)}];
+  if(Object.keys(STATE.schemes).length > 1)
+    entries.push({sep:true}, {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>{ removeScheme(schemeId); selectedScheme=null; buildLayers(); renderSchemes(); renderSectionControls(); }});
+  return entries;
+}
+// Mobile sheet header: mirror the desktop inspector's sf-head (type icon + name + ⋯ menu).
+// Called from renderSectionControls for whatever is selected; the close (X) and the header's
+// global view are wired once in initSectionSelection.
+function syncMobileHeader(iconSvg, title, moreEntries){
+  const ic = document.getElementById('ph-section-ic');
+  const nm = document.getElementById('ph-section-name');
+  const more = document.getElementById('ph-section-more');
+  if(ic) ic.innerHTML = svg(iconSvg, 16);
+  if(nm) nm.textContent = title;
+  if(more) more.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, moreEntries); };
+}
 function openMoreMenu(anchor, entries){
   popover(anchor, (close)=>{
     const m = el('<div class="cmenu"></div>');
@@ -3422,6 +3503,7 @@ function selectScheme(id){
   clearBlockHighlight();
   renderSchemes();          // refresh the active card in the grid
   renderSectionControls();  // render the scheme editor in the inspector
+  if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // raise the sheet to reveal the editor
 }
 function selectSection(key){
   selectedSection = key; selectedBlock = null; selectedScheme = null;
@@ -3468,10 +3550,9 @@ function renderSectionControls(){
       const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-name"></span></div></div>`);
       head.querySelector('.sf-name').textContent = 'Editing ' + selectedScheme;
       const schemeId = selectedScheme;
+      syncMobileHeader(ICONS.palette, 'Editing ' + selectedScheme, schemeMoreEntries(schemeId));
       const more = el(`<button class="sf-more" title="More options">${svg(DOTS_ICON,16)}</button>`);
-      more.onclick = (e)=>{ e.stopPropagation(); const entries=[{icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateScheme(schemeId)}];
-        if(Object.keys(STATE.schemes).length > 1) entries.push({sep:true},{icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>{ removeScheme(schemeId); selectedScheme=null; buildLayers(); renderSchemes(); renderSectionControls(); }});
-        openMoreMenu(e.currentTarget, entries); };
+      more.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, schemeMoreEntries(schemeId)); };
       const close = el(`<button class="sf-close" title="Done">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
       close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
       head.appendChild(more); head.appendChild(close); card.appendChild(head);
@@ -3514,19 +3595,13 @@ function renderSectionControls(){
     if(inst){
       const bSchema = BLOCK_SCHEMAS[inst.type] || { name: inst.type, settings:[] };
       const lastIdx = path[path.length-1];
-      const phName = document.getElementById('ph-section-name'); if(phName) phName.textContent = blockName(inst, lastIdx);
+      syncMobileHeader(blockLayerIcon(inst), blockName(inst, lastIdx), blockMoreEntries(section, path));
       card.innerHTML = '';
       const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(blockLayerIcon(inst),16)}</span><span class="sf-name"></span></div></div>`);
       head.querySelector('.sf-name').textContent = blockName(inst, lastIdx);
       // (no breadcrumb — navigate the nested block tree via the Layers panel)
-      const bHideKey = blockHideKey(section, path), bHidden = hiddenLayers.has(bHideKey);
       const bMore = el(`<button class="sf-more" title="More options">${svg(DOTS_ICON,16)}</button>`);
-      bMore.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, [
-        {icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateBlock(section, path)},
-        {icon:(bHidden?ICON_EYE:ICON_EYE_OFF), label:(bHidden?'Show':'Hide'), fn:()=>toggleHidden(bHideKey)},
-        {sep:true},
-        {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>removeBlock(section, path)},
-      ]); };
+      bMore.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, blockMoreEntries(section, path)); };
       const close = el(`<button class="sf-close" title="Deselect">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
       close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
       head.appendChild(bMore); head.appendChild(close); card.appendChild(head);
@@ -3552,19 +3627,13 @@ function renderSectionControls(){
 
   const schema = SECTION_SCHEMAS[secType(selectedSection)] || { name: SECTION_TITLES[selectedSection]||'Section', settings:[SCHEME_SETTING] };
   const title = schema.name;
-  const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
-  if(phName) phName.textContent = title;
+  const secId = selectedSection;
+  syncMobileHeader(layerIcon(schema), title, sectionMoreEntries(secId));
   card.innerHTML = '';
   const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(layerIcon(schema),16)}</span><span class="sf-name"></span></div></div>`);
   head.querySelector('.sf-name').textContent = title;
-  const secId = selectedSection, secHidden = hiddenLayers.has(secId);
   const sMore = el(`<button class="sf-more" title="More options">${svg(DOTS_ICON,16)}</button>`);
-  sMore.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, [
-    {icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateSection(secId)},
-    {icon:(secHidden?ICON_EYE:ICON_EYE_OFF), label:(secHidden?'Show':'Hide'), fn:()=>toggleHidden(secId)},
-    {sep:true},
-    {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>removeSection(secId)},
-  ]); };
+  sMore.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, sectionMoreEntries(secId)); };
   const close = el(`<button class="sf-close" title="Deselect section">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
   close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
   head.appendChild(sMore); head.appendChild(close); card.appendChild(head);
