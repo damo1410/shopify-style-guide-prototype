@@ -2781,17 +2781,15 @@ function selectedCanvasEl(){
   if(selectedSection) return sectionEl(selectedSection);
   return null;
 }
-// Scroll the preview so the selection sits in the MIDDLE of the visible area (clamped at the
-// ends). On mobile the visible area is what's above the sheet, so it re-centres as the sheet moves.
+// Scroll the preview so the selection sits in the MIDDLE of the visible area (clamped at the ends).
+// On mobile the visible area is the part ABOVE the half-height sheet (innerHeight*0.5), computed
+// from the snap target rather than the live panel rect so it doesn't depend on the slide animation.
 function scrollPreviewToSelection(){
   const target = selectedCanvasEl(); const preview = document.querySelector('.preview');
   if(!target || !preview) return;
   const pr = preview.getBoundingClientRect(), er = target.getBoundingClientRect();
   let visTop = pr.top, visBottom = pr.bottom;
-  if(mqMobile.matches){
-    const panel = document.querySelector('.panel');
-    if(panel){ const sr = panel.getBoundingClientRect(); if(sr.top > visTop && sr.top < visBottom) visBottom = sr.top; }
-  }
+  if(mqMobile.matches) visBottom = Math.min(visBottom, window.innerHeight * 0.5);   // above the half-sheet
   const delta = (er.top + er.height/2) - (visTop + visBottom)/2;
   if(Math.abs(delta) < 2) return;
   preview.scrollTo({ top: preview.scrollTop + delta, behavior:'smooth' });
@@ -3119,38 +3117,45 @@ function dropTarget(row, accepts, onDrop){
 // Touch reorder: tap-and-HOLD a layer row to pick it up, then drag up/down to move it. Reuses the
 // same drop markers + __accepts/__drop closures as desktop HTML5 DnD. (Mobile only; desktop drags
 // from the hover grip handle.)
+// Uses TOUCH events with a non-passive touchmove: before the long-press fires we don't preventDefault
+// (so the list scrolls normally); once it fires we preventDefault every move (so the list stops
+// scrolling and the row follows the finger). pointermove.preventDefault can't stop touch scrolling,
+// which is why the previous pointer-based version never moved.
 function attachTouchReorder(row, payload){
-  row.addEventListener('pointerdown', e=>{
-    if(!mqMobile.matches || e.pointerType==='mouse') return;
-    if(e.target.closest('button')) return;               // let ⋯ / hide / twisty taps work
-    const startX=e.clientX, startY=e.clientY, pid=e.pointerId;
+  row.addEventListener('touchstart', e=>{
+    if(!mqMobile.matches) return;
+    // skip only the action buttons (twisty / hide / delete / ⋯) — the row name (.lyr-main) is itself
+    // a <button>, so a blanket button check would wrongly cancel a hold started on the name.
+    if(e.target.closest('.lyr-tw, .lyr-act')) return;
+    if(e.touches.length > 1) return;
+    const t=e.touches[0], startX=t.clientX, startY=t.clientY;
     const host=document.getElementById('layers');
     let dragging=false, lastTgt=null, lastHalf=null;
-    const hold=setTimeout(begin, 320);                   // long-press threshold
+    const hold=setTimeout(begin, 300);                     // long-press threshold
     function begin(){
       dragging=true; dragState=payload; row.classList.add('dragging');
       document.body.classList.add('layer-dragging');
-      try{ row.setPointerCapture(pid); }catch(_){}
-      if(navigator.vibrate) try{ navigator.vibrate(8); }catch(_){}
+      if(navigator.vibrate){ try{ navigator.vibrate(10); }catch(_){} }
     }
     function move(ev){
+      const tt=ev.touches[0]; if(!tt) return;
       if(!dragging){
-        if(Math.abs(ev.clientY-startY)>8 || Math.abs(ev.clientX-startX)>8){ clearTimeout(hold); cleanup(); }   // moved first → it's a scroll
+        if(Math.abs(tt.clientY-startY)>8 || Math.abs(tt.clientX-startX)>8){ clearTimeout(hold); cleanup(); }   // moved first → it's a scroll, bail
         return;
       }
-      ev.preventDefault();
-      const hr=host.getBoundingClientRect();              // edge auto-scroll
-      if(ev.clientY < hr.top+40) host.scrollTop -= 10;
-      else if(ev.clientY > hr.bottom-40) host.scrollTop += 10;
-      const under=document.elementFromPoint(ev.clientX, ev.clientY);
+      ev.preventDefault();                                  // hold the list still while dragging
+      const hr=host.getBoundingClientRect();                // edge auto-scroll
+      if(tt.clientY < hr.top+44) host.scrollTop -= 12;
+      else if(tt.clientY > hr.bottom-44) host.scrollTop += 12;
+      const under=document.elementFromPoint(tt.clientX, tt.clientY);
       const tgt=under && under.closest('.lyr-row');
       clearDropMarks(); lastTgt=null;
       if(tgt && tgt!==row && tgt.__accepts && tgt.__accepts()){
-        lastHalf=rowHalf(ev,tgt); lastTgt=tgt;
+        lastHalf=rowHalf({clientY:tt.clientY}, tgt); lastTgt=tgt;
         tgt.classList.add(lastHalf==='before'?'drop-before':'drop-after');
       }
     }
-    function up(){
+    function end(){
       clearTimeout(hold); cleanup();
       if(dragging){
         row.classList.remove('dragging'); document.body.classList.remove('layer-dragging');
@@ -3158,11 +3163,11 @@ function attachTouchReorder(row, payload){
         clearDropMarks(); dragState=null; suppressNextClick();
       }
     }
-    function cleanup(){ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up); }
-    window.addEventListener('pointermove',move,{passive:false});
-    window.addEventListener('pointerup',up);
-    window.addEventListener('pointercancel',up);
-  });
+    function cleanup(){ document.removeEventListener('touchmove',move); document.removeEventListener('touchend',end); document.removeEventListener('touchcancel',end); }
+    document.addEventListener('touchmove',move,{passive:false});
+    document.addEventListener('touchend',end);
+    document.addEventListener('touchcancel',end);
+  }, {passive:true});
 }
 
 // Open the Add-block picker at a position (section root, or inside a block at parentPath):
@@ -3710,7 +3715,11 @@ function selectScheme(id){
   renderSectionControls();  // render the scheme editor in the inspector
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // raise the sheet to reveal the editor
 }
-function selectSection(key){
+// `fromCanvas` = the selection came from a tap on the preview. We auto-scroll the preview to centre
+// the selection on desktop (any selection) and on mobile ONLY for canvas taps — where the sheet then
+// rises to half and would otherwise cover what you tapped. Selecting from the layers list on mobile
+// leaves the preview where it is (you're looking at the list, not the canvas).
+function selectSection(key, fromCanvas){
   selectedSection = key; selectedBlock = null; selectedScheme = null;
   if(sectionBlocks(key).length) expandedLayers.add(key);
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
@@ -3718,9 +3727,9 @@ function selectSection(key){
   buildLayers(); revealActiveLayer(); renderSchemes();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
-  requestAnimationFrame(scrollPreviewToSelection);   // centre the selection in the preview
+  if(!mqMobile.matches || fromCanvas) requestAnimationFrame(scrollPreviewToSelection);
 }
-function selectBlock(section, path){
+function selectBlock(section, path, fromCanvas){
   selectedSection = section; selectedBlock = { section, path: path.slice() }; selectedScheme = null;
   expandedLayers.add(section);
   for(let k=1; k<path.length; k++) expandedLayers.add(pathKey(section, path.slice(0,k)));   // open ancestors
@@ -3729,7 +3738,7 @@ function selectBlock(section, path){
   buildLayers(); revealActiveLayer(); renderSchemes();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');
-  requestAnimationFrame(scrollPreviewToSelection);   // centre the selection in the preview
+  if(!mqMobile.matches || fromCanvas) requestAnimationFrame(scrollPreviewToSelection);
 }
 function deselectSection(){
   selectedSection = null; selectedBlock = null; selectedScheme = null;
@@ -3895,9 +3904,9 @@ function initSectionSelection(){
     const blk = e.target.closest('[data-bpath]');
     if(blk && sec.contains(blk)){
       const path = blk.getAttribute('data-bpath').split('.').map(Number);
-      selectBlock(key, path);
+      selectBlock(key, path, true);   // fromCanvas → centre the preview on the tapped element
     } else {
-      selectSection(key);
+      selectSection(key, true);
     }
   });
   // clicking the preview outside any section (or the empty canvas) deselects
@@ -4367,9 +4376,6 @@ document.querySelectorAll('.tb-dev').forEach(t => t.onclick = ()=>{
   window.addEventListener('pointerup', onUp);
   window.addEventListener('pointercancel', onUp);
   handle.addEventListener('click', e => e.preventDefault());
-
-  // once the sheet settles at a new height, re-centre the selection in the visible preview above it
-  panel.addEventListener('transitionend', e=>{ if(e.propertyName==='height' && mq.matches && (selectedSection || selectedBlock)) scrollPreviewToSelection(); });
 
   // expose a snap hook so selecting a section on mobile can raise the sheet to reveal the card
   window.__sheetSnap = (name)=>{ if(mq.matches) snapTo(name); };
