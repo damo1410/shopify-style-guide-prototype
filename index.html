@@ -66,14 +66,55 @@
     font-size: 16px;   /* pins the editor chrome; the store's rem text scales off <html> (base size) */
     overflow: hidden; overscroll-behavior: none;   /* lock the outer page so inner scrolls can't push it */
   }
-  .app { display: flex; height: 100vh; height: 100dvh; width: 100%; }
+  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; width: 100%; }
+  .app-body { flex: 1 1 auto; min-height: 0; display: flex; width: 100%; }
+
+  /* ==========================================================================
+     TOP BAR — Shopify editor global chrome: brand + mode toggle on the left,
+     page switcher in the centre, device + action controls on the right.
+     ========================================================================== */
+  .topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px; background: #fff; border-bottom: 1px solid var(--stone-200); }
+  .tb-left, .tb-right { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; }
+  .tb-right { justify-content: flex-end; }
+  .tb-center { flex: 0 1 auto; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+  /* brand (replaces Shopify's exit/home control in the very top-left) */
+  .tb-brand { display: flex; align-items: center; gap: 9px; padding: 4px 8px 4px 4px; border-radius: 8px; }
+  .tb-brand .logo { width: 30px; height: 30px; border-radius: 7px; background: var(--stone-900); display: flex; align-items: center; justify-content: center; color: #fff; flex: 0 0 auto; }
+  .tb-brand .t1 { font-size: 13px; font-weight: 600; line-height: 1.15; color: var(--stone-900); }
+  .tb-brand .t2 { font-size: 11px; color: var(--stone-500); line-height: 1.15; }
+  .tb-div { width: 1px; height: 22px; background: var(--stone-200); margin: 0 4px; flex: 0 0 auto; }
+  /* square icon buttons used across the top bar */
+  .tb-ico { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 8px; color: var(--stone-600); cursor: pointer; flex: 0 0 auto; transition: background .12s, color .12s; }
+  .tb-ico:hover { background: var(--stone-100); color: var(--stone-900); }
+  .tb-ico.active { background: var(--stone-900); color: #fff; }
+  .tb-ico svg { width: 18px; height: 18px; }
+  /* mode toggle group (Layers ⇄ Theme settings) */
+  .tb-modes { display: flex; align-items: center; gap: 2px; }
+  /* page switcher pill in the centre */
+  .tb-page { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; color: var(--stone-900); }
+  .tb-page:hover { background: var(--stone-100); }
+  .tb-page .pg-ic { color: var(--stone-500); display: inline-flex; }
+  .tb-page .pg-name { font-size: 13px; font-weight: 600; }
+  .tb-page .pg-chev { width: 14px; height: 14px; color: var(--stone-400); }
+  /* device toggle (desktop ⇄ mobile preview) */
+  .tb-devices { display: flex; align-items: center; gap: 2px; background: var(--stone-100); border-radius: 9px; padding: 3px; }
+  .tb-dev { width: 30px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; transition: all .12s; }
+  .tb-dev:hover { color: var(--stone-900); }
+  .tb-dev.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
+  .tb-dev svg { width: 16px; height: 16px; }
+  /* action buttons */
+  .tb-reset { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--stone-200); background: #fff; border-radius: 8px; font: inherit; font-size: 12px; font-weight: 600; color: var(--stone-700); cursor: pointer; }
+  .tb-reset:hover { background: var(--stone-50); }
+  .tb-export { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border: none; border-radius: 8px; background: var(--stone-900); color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .tb-export:hover { background: var(--stone-700); }
 
   /* ---------------- LEFT: settings panel (320px) -------------------------- */
   .panel { display: flex; flex-direction: column; width: 320px; flex-shrink: 0; border-right: 1px solid var(--stone-200); background: #fff; }
   .sheet-handle { display: none; align-items: center; justify-content: center; padding: 8px 0 5px; cursor: grab; touch-action: none; flex: 0 0 auto; }
   .sheet-handle .grip { width: 36px; height: 4px; border-radius: 999px; background: var(--stone-300); }
   .panel.dragging .sheet-handle { cursor: grabbing; }
-  .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--stone-200); }
+  /* the panel header is a mobile-only sheet header now; desktop chrome lives in the top bar */
+  .panel-header { display: none; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--stone-200); }
   /* two interchangeable header views; min-height matches the logo so swapping never
      changes the header's height (the section view replaces brand + reset on mobile). */
   .ph-global, .ph-section { flex: 1; display: flex; align-items: center; justify-content: space-between; min-height: 28px; }
@@ -125,42 +166,61 @@
   /* ---- layers tree (the Shopify section/block hierarchy) ---- */
   .layers { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
   .lyr-group { padding: 2px 0; }
-  .lyr-grouphd { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone-400); padding: 10px 20px 4px; }
-  /* a section row = [twisty][main]; a block row is a single indented button */
-  .lyr-row { width: 100%; display: flex; align-items: center; padding: 0 12px 0 8px; }
-  .lyr-tw { flex: 0 0 18px; width: 18px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; }
+  .lyr-grouphd { font-size: 11px; font-weight: 600; color: var(--stone-500); padding: 12px 16px 6px; }
+  /* divider line between the Header / Template / Footer groups (Shopify section groups) */
+  .lyr-group + .lyr-group { border-top: 1px solid var(--stone-200); }
+  /* EVERY row — section or block, any nesting depth — is the same fixed height.
+     The row is the hover/select surface; indentation is applied to .lyr-main via padding-left. */
+  .lyr-row { width: 100%; display: flex; align-items: center; height: 36px; padding: 0 8px; position: relative; }
+  .lyr-tw { flex: 0 0 20px; width: 20px; height: 100%; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; }
   .lyr-tw svg { transition: transform .12s; }
   .lyr-tw.open svg { transform: rotate(90deg); }
-  .lyr-tw-spacer { flex: 0 0 18px; width: 18px; }
-  .lyr-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 8px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 6px; }
-  .lyr-main:hover { background: var(--stone-50); }
-  .lyr-row.active .lyr-main { background: var(--stone-100); }
-  .lyr-ic { color: var(--stone-400); display: inline-flex; flex: 0 0 auto; }
-  .lyr-row.active .lyr-ic { color: var(--sel); }
-  .lyr-name { flex: 1 1 auto; font-size: 12px; font-weight: 500; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lyr-row.active .lyr-name { color: var(--stone-900); font-weight: 600; }
-  .lyr-count { flex: 0 0 auto; font-size: 10px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; }
-  /* nested block rows: smaller text, indentation set inline by depth */
-  .lyr-blockrow .lyr-name { font-size: 11px; }
-  .lyr-blockrow .lyr-ic { color: var(--stone-300); }
-  /* drag-to-reorder: grip handle (on hover) + drop indicator lines */
-  .lyr-grip { margin-left: auto; display: none; align-items: center; color: var(--stone-300); cursor: grab; padding: 0 2px; flex: 0 0 auto; }
-  .lyr-grip:active { cursor: grabbing; }
-  .lyr-row:hover .lyr-grip { display: inline-flex; }
+  .lyr-tw-spacer { flex: 0 0 20px; width: 20px; }
+  .lyr-main { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 6px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 8px; }
+  .lyr-row:hover .lyr-main { background: var(--stone-100); }
+  .lyr-row.active .lyr-main { background: var(--sel); }
+  /* lead slot holds the type icon, swapped for a drag handle on hover */
+  .lyr-lead { position: relative; width: 16px; height: 16px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+  .lyr-ic { color: var(--stone-500); display: inline-flex; }
+  .lyr-handle { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--stone-500); cursor: grab; }
+  .lyr-handle:active { cursor: grabbing; }
+  .lyr-row:hover .lyr-ic { display: none; }
+  .lyr-row:hover .lyr-handle { display: inline-flex; }
+  .lyr-row.active .lyr-ic, .lyr-row.active .lyr-handle { color: #fff; }
+  .lyr-name { flex: 1 1 auto; font-size: 13px; font-weight: 450; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lyr-row.active .lyr-name { color: #fff; font-weight: 550; }
+  .lyr-count { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; padding-right: 2px; }
+  .lyr-row.active .lyr-count { color: rgba(255,255,255,.8); }
+  /* row hover actions (hide / delete) on the right edge */
+  .lyr-actions { display: none; align-items: center; gap: 1px; flex: 0 0 auto; padding-left: 2px; }
+  .lyr-row:hover .lyr-actions { display: flex; }
+  .lyr-act { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; }
+  .lyr-act:hover { background: var(--stone-200); color: var(--stone-900); }
+  .lyr-act.lyr-del:hover { background: #fee2e2; color: #dc2626; }
+  .lyr-row.active .lyr-act { color: rgba(255,255,255,.85); }
+  .lyr-row.active .lyr-act:hover { background: rgba(255,255,255,.18); color: #fff; }
+  .lyr-row.active .lyr-act.lyr-del:hover { background: rgba(255,255,255,.2); color: #fff; }
+  .lyr-act svg { width: 15px; height: 15px; }
+  /* hidden (eye-off) layers: dimmed name; the eye action stays lit to show state */
+  .lyr-row.lyr-hidden .lyr-name { color: var(--stone-400); font-style: italic; }
+  .lyr-row.active.lyr-hidden .lyr-name { color: rgba(255,255,255,.7); }
+  .lyr-row.lyr-hidden .lyr-actions { display: flex; }
+  .lyr-row.lyr-hidden .lyr-act.lyr-hide { color: var(--stone-600); }
+  /* drag-to-reorder visuals */
   .lyr-row.dragging { opacity: .45; }
-  .lyr-row.drop-before { box-shadow: inset 0 2px 0 0 var(--sel); }
-  .lyr-row.drop-after { box-shadow: inset 0 -2px 0 0 var(--sel); }
+  .lyr-row.drop-before::before { content:""; position: absolute; left: 8px; right: 8px; top: -1px; height: 2px; background: var(--sel); border-radius: 2px; }
+  .lyr-row.drop-after::after { content:""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; background: var(--sel); border-radius: 2px; }
   /* breadcrumb in the block settings card */
   .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
   .sf-crumb:hover { text-decoration: underline; }
-  /* + Add block row in the tree */
-  .lyr-add { display: flex; align-items: center; gap: 8px; margin: 2px 12px 6px 34px; padding: 7px 8px; border: 1px dashed var(--stone-300); background: none; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-500); width: calc(100% - 46px); }
-  .lyr-add:hover { color: var(--sel); border-color: var(--sel); }
+  /* + Add block / + Add section row — flush blue-text row, same height as a layer row */
+  .lyr-add { display: flex; align-items: center; gap: 10px; height: 34px; margin: 0; padding: 0 14px 0 34px; border: none; background: none; cursor: pointer; font: inherit; font-size: 13px; font-weight: 550; color: var(--sel); width: 100%; border-radius: 8px; }
+  .lyr-add:hover { background: var(--stone-100); }
   .lyr-add svg { flex: 0 0 auto; }
   /* section-level Add (less indented than the block-level Add) */
-  .lyr-add-sec { margin: 6px 12px 8px 20px; width: calc(100% - 32px); }
+  .lyr-add-sec { padding-left: 18px; }
   /* nested Add block: indentation set inline by depth */
-  .lyr-add-nested { width: auto; margin-right: 12px; }
+  .lyr-add-nested { padding-left: 0; }
   /* generic theme blocks in the canvas */
   .tb-root { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
   /* a block's frame should hug its content — spacing between blocks is the tb-root gap,
@@ -228,24 +288,27 @@
      alignment — stays identical across every slider row regardless of the value's length. */
   .slider-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .slider-wrap .slider-field { flex: 1 1 auto; min-width: 0; }
-  .val-field { flex: 0 0 80px; width: 80px; gap: 2px; padding: 0 8px; }
-  .val-field:focus-within { background: var(--stone-200); }
-  .val-input { flex: 1 1 auto; width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-700); text-align: right; font-variant-numeric: tabular-nums; padding: 0; }
-  .val-unit { flex: 0 0 auto; font-size: 11px; color: var(--stone-400); font-weight: 500; }
+  /* the rail floats — no boxed surface around it (only the value input is boxed) */
+  .field.slider-field, .field.slider-field:hover, .field.slider-field:focus-within { background: transparent; box-shadow: none; padding: 0 6px; }
+  .val-field { flex: 0 0 80px; width: 80px; gap: 2px; padding: 0 10px; }
+  .val-input { flex: 1 1 auto; width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-700); text-align: right; font-variant-numeric: tabular-nums; padding: 0; }
+  .val-unit { flex: 0 0 auto; font-size: 12px; color: var(--stone-400); font-weight: 500; }
 
-  /* ---- shared 32px field surface ---- */
-  .field { min-height: 32px; border-radius: 6px; background: var(--stone-100); display: flex; align-items: center; padding: 0 12px; transition: background .12s; }
-  .field:hover { background: var(--stone-200); }
+  /* ---- shared field surface — Shopify uses white fields with a hairline border ---- */
+  .field { min-height: 34px; border-radius: 8px; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); display: flex; align-items: center; padding: 0 12px; transition: box-shadow .12s; }
+  .field:hover { box-shadow: inset 0 0 0 1px var(--stone-400); }
+  .field:focus-within { box-shadow: inset 0 0 0 1.5px var(--sel); }
 
   /* ---- text inputs ---- */
-  input.txt { width: 100%; min-height: 32px; border: none; background: var(--stone-100); border-radius: 6px; padding: 0 12px; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-900); transition: background .12s; outline: none; }
-  input.txt:hover, input.txt:focus { background: var(--stone-200); }
+  input.txt { width: 100%; min-height: 34px; border: none; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); border-radius: 8px; padding: 0 12px; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-900); transition: box-shadow .12s; outline: none; }
+  input.txt:hover { box-shadow: inset 0 0 0 1px var(--stone-400); }
+  input.txt:focus { box-shadow: inset 0 0 0 1.5px var(--sel); }
 
-  /* ---- segmented toggle group (kept as buttons, styled like the fields) ---- */
-  .seg { display: flex; gap: 2px; background: var(--stone-100); border-radius: 6px; padding: 3px; min-height: 32px; }
-  .seg button { flex: 1; border: none; background: transparent; border-radius: 4px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-500); padding: 0 6px; transition: all .12s; white-space: nowrap; text-transform: capitalize; }
+  /* ---- segmented toggle group (pill track, white selected, like Shopify) ---- */
+  .seg { display: flex; gap: 2px; background: var(--stone-100); border-radius: 8px; padding: 3px; min-height: 34px; box-shadow: inset 0 0 0 1px var(--stone-200); }
+  .seg button { flex: 1; border: none; background: transparent; border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-500); padding: 0 6px; transition: all .12s; white-space: nowrap; text-transform: capitalize; }
   .seg button:hover { color: var(--stone-900); }
-  .seg button.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
+  .seg button.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.06); }
   /* glyph variant (case control): show labels verbatim — no capitalize transform */
   .seg.seg-glyph button { text-transform: none; letter-spacing: .01em; }
 
@@ -259,7 +322,7 @@
   .dd { width: 100%; }
   .dd-trigger { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; }
   .dd-cur { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-  .dd-label { font-size: 11px; font-weight: 500; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+  .dd-label { font-size: 12px; font-weight: 500; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
   .dd-sw { width: 18px; height: 18px; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.10); flex: 0 0 auto; }
   .dd-chev { width: 12px; height: 12px; color: var(--stone-500); flex: 0 0 auto; transition: transform .15s; }
   .dd-trigger.open .dd-chev { transform: rotate(180deg); }
@@ -310,14 +373,29 @@
      scheme picker assigns a color scheme to THAT section only.
      ========================================================================== */
   #store [data-sec] { cursor: pointer; }
-  #store [data-sec]:hover { outline: 2px solid var(--sel); outline-offset: -2px; }
+  /* hover is drawn by JS (outline + a name tag); selected keeps a solid 2px frame */
+  #store [data-sec].sec-hover { outline: 1.5px solid var(--sel); outline-offset: -1.5px; }
   #store [data-sec].sec-selected { outline: 2px solid var(--sel); outline-offset: -2px; }
-  /* blocks are selectable on the canvas too: dashed ring on hover, solid when selected */
+  /* blocks are selectable on the canvas too */
   #store [data-bpath] { cursor: pointer; }
-  #store [data-bpath]:hover { outline: 2px dashed var(--sel); outline-offset: 1px; }
-  #store .block-selected { outline: 2px solid var(--sel); outline-offset: 1px; border-radius: 3px; }
+  #store [data-bpath].blk-hover { outline: 1.5px solid var(--sel); outline-offset: 1px; border-radius: 2px; }
+  #store .block-selected { outline: 2px solid var(--sel); outline-offset: 1px; border-radius: 2px; }
+  /* hidden layers vanish from the canvas (Shopify hide) */
+  #store .canvas-hidden { display: none !important; }
   /* a section with an assigned scheme paints its own background from that scheme */
   #store .sec-themed { background-color: var(--c-bg) !important; }
+
+  /* ---- canvas hover name tag (matches the layer name, sits above the element) ---- */
+  .hv-tag { position: fixed; z-index: 60; pointer-events: none; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; background: var(--sel); color: #fff; font-size: 12px; font-weight: 600; border-radius: 6px; white-space: nowrap; box-shadow: 0 2px 8px -2px rgba(37,99,235,.5); transform: translateY(-100%); }
+  .hv-tag[hidden] { display: none; }
+  .hv-tag svg { width: 13px; height: 13px; }
+  /* ---- canvas insertion affordance: a full-width line with a centred blue + ---- */
+  .hv-add { position: fixed; z-index: 58; height: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .hv-add[hidden] { display: none; }
+  .hv-add::before { content:""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--sel); transform: translateY(-50%); border-radius: 2px; }
+  .hv-add .hv-plus { position: relative; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 999px; background: var(--sel); color: #fff; cursor: pointer; pointer-events: auto; box-shadow: 0 2px 6px -1px rgba(37,99,235,.5); }
+  .hv-add .hv-plus:hover { background: #1d4ed8; transform: scale(1.08); }
+  .hv-add .hv-plus svg { width: 14px; height: 14px; }
 
   /* RIGHT inspector column (desktop): fixed settings rail, like Shopify */
   .inspector { width: 320px; flex: 0 0 320px; border-left: 1px solid var(--stone-200); background: #fff; display: flex; flex-direction: column; min-height: 0; }
@@ -344,7 +422,7 @@
   .sf-sub { font-size: 10px; color: var(--stone-400); font-weight: 500; margin-top: 1px; }
 
   /* ---- schema-engine controls (Shopify setting types) ---- */
-  .text-input { width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 11px; font-weight: 500; color: var(--stone-900); padding: 0; }
+  .text-input { width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-900); padding: 0; }
   .text-input.ta { resize: vertical; min-height: 52px; padding: 7px 0; line-height: 1.45; }
   .field.field-ta { align-items: stretch; }
   .ctl-inline { display: flex; align-items: center; }
@@ -353,7 +431,7 @@
   .switch.on { background: var(--sel); }
   .switch.on .knob { transform: translateX(16px); }
   .picker-field { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; color: var(--stone-500); }
-  .picker-field .pf-label { font-size: 11px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picker-field .pf-label { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .picker-field svg { color: var(--stone-400); flex: 0 0 auto; }
   /* header / paragraph — the ONLY grouping Shopify allows inside a section's settings */
   .set-header { font-size: 11px; font-weight: 600; color: var(--stone-700); letter-spacing: .01em; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--stone-100); }
@@ -368,9 +446,16 @@
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
      ========================================================================== */
-  .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; container-type: inline-size; container-name: store; }
+  .preview { flex: 1; position: relative; background: var(--stone-100); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .preview-pad { min-height: 100%; padding: 0; }            /* full-bleed: store extends to the edges */
-  .store-frame { border-radius: 0; overflow: hidden; box-shadow: none; }
+  /* the store-frame is the responsive container — so a narrow (mobile) frame triggers the
+     store's own @container breakpoints, giving a true device preview. */
+  .store-frame { border-radius: 0; overflow: hidden; box-shadow: none; container-type: inline-size; container-name: store; }
+  /* DEVICE = MOBILE: centre a phone-width frame with side gutters; the container query
+     above then switches the store into its mobile layout. */
+  .preview.dev-mobile { padding: 28px 0; }
+  .preview.dev-mobile .preview-pad { padding: 0; }
+  .preview.dev-mobile .store-frame { max-width: 420px; margin: 0 auto; border-radius: 16px; box-shadow: 0 12px 48px -12px rgba(0,0,0,.28); border: 1px solid var(--stone-300); }
 
   /* ROLE DEFAULTS — overwritten at runtime by applyRoles(). */
   .store {
@@ -679,6 +764,9 @@
   /* mobile: preview fills the screen; controls become a draggable bottom sheet */
   @media (max-width: 860px) {
     .app { display: block; position: relative; height: 100dvh; }
+    .app-body { display: block; }
+    .topbar { display: none; }   /* mobile keeps the bottom-sheet header instead of the top bar */
+    .panel-header { display: flex; }   /* re-show the sheet header (hidden on desktop) */
     .preview { position: absolute; inset: 0; height: 100dvh; }
     .inspector { display: none; }   /* on mobile the settings card lives in the bottom sheet */
     .preview-pad { padding-bottom: var(--peek); }   /* keep the footer reachable above the peeking sheet */
@@ -718,6 +806,51 @@
 <body>
 <div class="app">
 
+  <!-- ===================== TOP BAR (desktop chrome) ===================== -->
+  <header class="topbar">
+    <div class="tb-left">
+      <!-- brand sits where Shopify's exit/home control is, in the very top-left -->
+      <div class="tb-brand">
+        <div class="logo"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
+        <div><div class="t1">NOIR</div><div class="t2">Theme prototype</div></div>
+      </div>
+      <div class="tb-div"></div>
+      <!-- mode toggle: Layers ⇄ Theme settings (icons only, like Shopify) -->
+      <div class="tb-modes">
+        <button type="button" class="tb-ico tb-mode active" data-mode="layers" title="Sections / Layers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </button>
+        <button type="button" class="tb-ico tb-mode" data-mode="theme" title="Theme settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+    <!-- centre: page switcher (only Home page today; built to grow) -->
+    <div class="tb-center">
+      <button type="button" class="tb-page" id="page-switcher" title="Switch page">
+        <span class="pg-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+        <span class="pg-name">Home page</span>
+        <svg class="pg-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+    <div class="tb-right">
+      <!-- device toggle: desktop ⇄ mobile preview -->
+      <div class="tb-devices">
+        <button type="button" class="tb-dev active" data-device="desktop" title="Desktop preview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+        </button>
+        <button type="button" class="tb-dev" data-device="mobile" title="Mobile preview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
+        </button>
+      </div>
+      <div class="tb-div"></div>
+      <button class="tb-reset" id="tb-reset" title="Reset theme settings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+      <button class="tb-export" id="tb-export" title="Export Shopify theme files"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Export</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+
   <!-- ===================== LEFT: SETTINGS PANEL ========================= -->
   <aside class="panel" data-mode="layers">
     <div class="sheet-handle" id="sheet-handle"><span class="grip"></span></div>
@@ -738,11 +871,6 @@
         <div class="brand"><span class="sf-dot"></span><div class="t1" id="ph-section-name">Section</div></div>
         <button class="reset" id="ph-section-close" title="Deselect section"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
-    </div>
-    <!-- left-rail mode switch: Layers tree (default) ⇄ Theme settings (the gear panel) -->
-    <div class="panel-tabs">
-      <button type="button" class="ptab active" data-mode="layers">Layers</button>
-      <button type="button" class="ptab" data-mode="theme">Theme settings</button>
     </div>
     <div class="layers" id="layers"><!-- section/block tree injected by JS --></div>
     <div class="groups" id="groups"><!-- accordion groups injected by JS --></div>
@@ -861,6 +989,7 @@
       <div class="ie-s">Click a section or block — in the canvas or the Layers panel — to edit its settings.</div>
     </div>
   </aside>
+  </div><!-- /.app-body -->
 </div>
 
 <script>
@@ -2265,12 +2394,12 @@ function renderSectionContent(key){
     const cardHost = secEl.querySelector('[data-cards]');
     let h='', c='';
     list.forEach((b,i)=>{ if(THEME_BLOCK_TYPES.includes(b.type)) h+=renderThemeBlock(b,[i]); else c+=cardFn(b,i); });
-    head.innerHTML=h; if(cardHost) cardHost.innerHTML=c; applySectionSchemes(); return;
+    head.innerHTML=h; if(cardHost) cardHost.innerHTML=c; applySectionSchemes(); applyHidden(); return;
   }
   const gen = secEl.querySelector('[data-blocks]'); const r = SECTION_RENDERERS[type];
-  if(gen){ gen.innerHTML = r ? r(list) : renderThemeBlocks(list,[]); applySectionSchemes(); return; }  // generic sections
+  if(gen){ gen.innerHTML = r ? r(list) : renderThemeBlocks(list,[]); applySectionSchemes(); applyHidden(); return; }  // generic sections
   const cardHost = secEl.querySelector('[data-cards]');
-  if(r && cardHost){ cardHost.innerHTML=r(list); applySectionSchemes(); }                              // pure-card sections
+  if(r && cardHost){ cardHost.innerHTML=r(list); applySectionSchemes(); applyHidden(); }                              // pure-card sections
 }
 function renderBlockSections(){ allSectionIds().forEach(renderSectionContent); }
 
@@ -2394,17 +2523,18 @@ function acceptedChildTypes(section, parentPath){
   accepts.forEach(a=>{ if(a.type==='@theme') out.push(...THEME_BLOCK_TYPES); else if(a.type!=='@app') out.push(a.type); });
   return [...new Set(out)];
 }
-function addBlock(section, parentPath, type){
+function addBlock(section, parentPath, type, index){
   parentPath = parentPath || [];
   const childDepth = parentPath.length + 1;
   if(childDepth > 8){ toast('Theme blocks can nest up to 8 levels deep.'); return; }
   const list = childListAt(section, parentPath); if(!list) return;
   if(!parentPath.length && list.length >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
-  list.push(newBlockInstance(type));
+  const at = (index==null) ? list.length : Math.max(0, Math.min(list.length, index));
+  list.splice(at, 0, newBlockInstance(type));
   renderSectionContent(section);
   expandedLayers.add(section);
   for(let k=1; k<=parentPath.length; k++) expandedLayers.add(pathKey(section, parentPath.slice(0,k)));
-  selectBlock(section, parentPath.concat(list.length-1));
+  selectBlock(section, parentPath.concat(at));
 }
 function removeBlock(section, path){
   const list = parentListOf(section, path); const idx = path[path.length-1];
@@ -2485,7 +2615,7 @@ function dropTarget(row, accepts, onDrop){
 
 // Open the Add-block picker at a position (section root, or inside a block at parentPath):
 // accepted child types → preset entries, grouped by category. Enforces max_blocks + 8-deep.
-function openBlockPicker(section, parentPath){
+function openBlockPicker(section, parentPath, index){
   parentPath = parentPath || [];
   if(parentPath.length + 1 > 8){ toast('Theme blocks can nest up to 8 levels deep.'); return; }
   if(!parentPath.length && sectionBlocks(section).length >= blockCap(section)){ toast(`This section is limited to ${blockCap(section)} blocks.`); return; }
@@ -2493,7 +2623,7 @@ function openBlockPicker(section, parentPath){
   if(!types.length){ toast('No blocks can be added here.'); return; }
   const groups = {};
   types.forEach(t=>{ const cat=BLOCK_CATEGORY[t]||'Blocks'; (groups[cat]=groups[cat]||[]).push({ type:t, name:(BLOCK_SCHEMAS[t]||{}).name||t }); });
-  openPicker('Add block', groups, t=>addBlock(section, parentPath, t));
+  openPicker('Add block', groups, t=>addBlock(section, parentPath, t, index));
 }
 
 /* Generic Shopify-style picker modal: one grouping level (category) → preset entries. */
@@ -2564,23 +2694,26 @@ function removeSection(id){
   clearBlockHighlight(); buildLayers(); renderSectionControls();
   toast(`Removed ${(SECTION_SCHEMAS[secType(id)]||{}).name||'section'}.`);
 }
-function placeNewSection(node, id, afterId){
+// Place a new/cloned section node at a position in the template (index = slot in the
+// template.sections array; null = append at the end, just before the footer).
+function placeNewSection(node, id, index){
   const store=document.getElementById('store'); const footer=store.querySelector('[data-sec="footer"]');
+  const tmpl = SECTION_GROUPS.template.sections;
+  if(index==null) index = tmpl.length;
+  index = Math.max(0, Math.min(tmpl.length, index));
   node.setAttribute('data-sec', id); node.classList.remove('sec-selected');
   node.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));   // avoid duplicate ids in clones
-  const afterNode = afterId && sectionEl(afterId);
-  if(afterNode) afterNode.after(node); else store.insertBefore(node, footer);
-  const at = afterId ? SECTION_GROUPS.template.sections.indexOf(afterId)+1 : SECTION_GROUPS.template.sections.length;
-  SECTION_GROUPS.template.sections.splice(at, 0, id);
+  store.insertBefore(node, footer);   // attach first so reorderSectionDom can find + place it
+  tmpl.splice(index, 0, id);
   reorderSectionDom(); renderSectionContent(id); applySectionSchemes(); applyAllSectionSettings();
   buildLayers(); selectSection(id);
 }
-function addSection(type){
+function addSection(type, index){
   const node = makeSectionNode(type); if(!node){ toast('Can\'t add that section yet.'); return; }
   const id = uniqueSectionId(type);
   if(id!==type) sectionTypes[id] = type;
   STATE.sectionBlocks[id] = seedFor(type);
-  placeNewSection(node, id, null);
+  placeNewSection(node, id, index);
 }
 function duplicateSection(id){
   const orig = sectionEl(id); if(!orig) return;
@@ -2589,13 +2722,13 @@ function duplicateSection(id){
   STATE.sectionBlocks[newId]   = clone(STATE.sectionBlocks[id] || []);
   if(STATE.sectionSettings[id]) STATE.sectionSettings[newId] = clone(STATE.sectionSettings[id]);
   if(STATE.sectionSchemes[id])  STATE.sectionSchemes[newId]  = STATE.sectionSchemes[id];
-  placeNewSection(orig.cloneNode(true), newId, id);
+  placeNewSection(orig.cloneNode(true), newId, templateIndex(id)+1);
   toast('Section duplicated.');
 }
-function openSectionPicker(){
+function openSectionPicker(index){
   const groups = {};
   TEMPLATE_SECTION_TYPES.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t }); });
-  openPicker('Add section', groups, t=>addSection(t));
+  openPicker('Add section', groups, t=>addSection(t, index));
 }
 
 /* ============================================================================
@@ -2613,6 +2746,55 @@ function layerIcon(schema){ return ICONS[CATEGORY_ICON[schema && schema.category
 let expandedLayers = new Set();
 let selectedBlock = null;   // { section, index } when a block is selected
 
+/* ---- row-level icons + builders shared by section and block rows ---- */
+const ICON_EYE     = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+const ICON_EYE_OFF = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
+const ICON_TRASH   = '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>';
+const ICON_DRAG    = '<line x1="8" y1="6" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="18"/>';
+
+// the lead slot: a type icon that swaps to a drag handle on row hover (when draggable)
+function makeLead(iconSvg, iconSize, dragPayload, ghostRow){
+  const lead = el(`<span class="lyr-lead"><span class="lyr-ic">${svg(iconSvg, iconSize)}</span></span>`);
+  if(dragPayload){
+    const handle = el(`<span class="lyr-handle" draggable="true" title="Drag to reorder">${svg(ICON_DRAG, iconSize)}</span>`);
+    gripStart(handle, dragPayload, ghostRow);
+    lead.appendChild(handle);
+  }
+  return lead;
+}
+// right-edge hover actions: hide (eye) always, delete (trash) when removable
+function makeActions(hidden, onHide, onDelete){
+  const wrap = el('<span class="lyr-actions"></span>');
+  const hide = el(`<button type="button" class="lyr-act lyr-hide" title="${hidden?'Show':'Hide'}">${svg(hidden?ICON_EYE_OFF:ICON_EYE,15)}</button>`);
+  hide.onclick = (e)=>{ e.stopPropagation(); onHide(); };
+  wrap.appendChild(hide);
+  if(onDelete){
+    const del = el(`<button type="button" class="lyr-act lyr-del" title="Delete">${svg(ICON_TRASH,15)}</button>`);
+    del.onclick = (e)=>{ e.stopPropagation(); onDelete(); };
+    wrap.appendChild(del);
+  }
+  return wrap;
+}
+
+/* ---- hide / show layers (Shopify's eye toggle) ---- */
+const hiddenLayers = new Set();   // section id, or `${section}:${path}` for a block
+function blockHideKey(section, path){ return section + ':' + path.join('.'); }
+function isHidden(key){ return hiddenLayers.has(key); }
+function toggleHidden(key){
+  if(hiddenLayers.has(key)) hiddenLayers.delete(key); else hiddenLayers.add(key);
+  applyHidden(); buildLayers();
+}
+// reflect the hidden set onto the canvas (re-run after any section re-render)
+function applyHidden(){
+  document.querySelectorAll('#store [data-sec]').forEach(e=>{
+    e.classList.toggle('canvas-hidden', hiddenLayers.has(e.getAttribute('data-sec')));
+  });
+  document.querySelectorAll('#store [data-bpath]').forEach(e=>{
+    const sec = e.closest('[data-sec]'); if(!sec) return;
+    e.classList.toggle('canvas-hidden', hiddenLayers.has(sec.getAttribute('data-sec') + ':' + e.getAttribute('data-bpath')));
+  });
+}
+
 function buildLayers(){
   const host = document.getElementById('layers'); if(!host) return;
   const sc = host.scrollTop;
@@ -2625,20 +2807,23 @@ function buildLayers(){
       const blocks = sectionBlocks(key);
       const hasBlocks = blocks.length > 0 || acceptedChildTypes(key, []).length > 0;
       const expanded = expandedLayers.has(key);
-      const row = el(`<div class="lyr-row" data-lyr="${key}"></div>`);
+      const isTemplate = gid==='template';
+      const hidden = hiddenLayers.has(key);
+      const row = el(`<div class="lyr-row ${hidden?'lyr-hidden':''}" data-lyr="${key}"></div>`);
       if(hasBlocks){
         const tw = el(`<button type="button" class="lyr-tw ${expanded?'open':''}" title="Expand">${svg('<polyline points="9 18 15 12 9 6"/>',12)}</button>`);
         tw.onclick = (e)=>{ e.stopPropagation(); if(expandedLayers.has(key)) expandedLayers.delete(key); else expandedLayers.add(key); buildLayers(); };
         row.appendChild(tw);
       } else { row.appendChild(el('<span class="lyr-tw-spacer"></span>')); }
-      const main = el(`<button type="button" class="lyr-main"><span class="lyr-ic">${svg(layerIcon(schema),14)}</span><span class="lyr-name"></span><span class="lyr-count"></span></button>`);
+      const main = el(`<button type="button" class="lyr-main"><span class="lyr-name"></span><span class="lyr-count"></span></button>`);
+      main.prepend(makeLead(layerIcon(schema), 15, isTemplate ? {kind:'section', key} : null, row));
       main.querySelector('.lyr-name').textContent = schema.name;
       if(hasBlocks) main.querySelector('.lyr-count').textContent = blocks.length;
       main.onclick = ()=>{ selectSection(key); };
       row.appendChild(main);
+      row.appendChild(makeActions(hidden, ()=>toggleHidden(key), isTemplate ? ()=>removeSection(key) : null));
       // Template sections drag to reorder (Header/Footer groups stay fixed).
-      if(gid==='template'){
-        const grip = makeGrip(); gripStart(grip, {kind:'section', key}, row); row.appendChild(grip);
+      if(isTemplate){
         dropTarget(row, ()=>dragState && dragState.kind==='section', half=>{
           const ti = templateIndex(key); let to = half==='before' ? ti : ti+1;
           const from = templateIndex(dragState.key); if(from < to) to--; moveSection(from, to);
@@ -2677,20 +2862,22 @@ function renderBlockRows(grp, section, list, parentPath, depth){
     const canNest = acceptsChildren(b.type);
     const kids = b.blocks || [];
     const expanded = expandedLayers.has(pathKey(section, path));
-    const row = el(`<div class="lyr-row lyr-blockrow" data-lyr="${section}" data-bpath="${path.join('.')}"></div>`);
-    row.style.paddingLeft = (8 + depth*16) + 'px';
+    const hidden = hiddenLayers.has(blockHideKey(section, path));
+    const row = el(`<div class="lyr-row lyr-blockrow ${hidden?'lyr-hidden':''}" data-lyr="${section}" data-bpath="${path.join('.')}"></div>`);
     if(canNest){
       const tw = el(`<button type="button" class="lyr-tw ${expanded?'open':''}">${svg('<polyline points="9 18 15 12 9 6"/>',12)}</button>`);
       tw.onclick = (e)=>{ e.stopPropagation(); const k=pathKey(section,path); if(expandedLayers.has(k)) expandedLayers.delete(k); else expandedLayers.add(k); buildLayers(); };
+      tw.style.marginLeft = (depth*16) + 'px';
       row.appendChild(tw);
-    } else { row.appendChild(el('<span class="lyr-tw-spacer"></span>')); }
-    const main = el(`<button type="button" class="lyr-main lyr-bmain"><span class="lyr-ic">${svg(ICONS.box,12)}</span><span class="lyr-name"></span>${(canNest && kids.length)?`<span class="lyr-count">${kids.length}</span>`:''}</button>`);
+    } else { const sp=el('<span class="lyr-tw-spacer"></span>'); sp.style.marginLeft = (depth*16) + 'px'; row.appendChild(sp); }
+    const main = el(`<button type="button" class="lyr-main lyr-bmain"><span class="lyr-name"></span>${(canNest && kids.length)?`<span class="lyr-count">${kids.length}</span>`:''}</button>`);
+    main.prepend(makeLead(ICONS.box, 14, {kind:'block', section, path}, row));
     main.querySelector('.lyr-name').textContent = blockName(b,i);
     main.onclick = ()=> selectBlock(section, path);
     row.appendChild(main);
-    // drag-reorder at EVERY depth: grip carries the full source path; dropping before/after
-    // a row inserts as a sibling in that row's parent (so re-parenting works across groups).
-    const grip = makeGrip(); gripStart(grip, {kind:'block', section, path}, row); row.appendChild(grip);
+    row.appendChild(makeActions(hidden, ()=>toggleHidden(blockHideKey(section, path)), ()=>removeBlock(section, path)));
+    // drag-reorder at EVERY depth: dropping before/after a row inserts as a sibling in that
+    // row's parent (so re-parenting works across groups).
     dropTarget(row, ()=>dragState && dragState.kind==='block' && dragState.section===section, half=>{
       moveBlockPath(section, dragState.path, parentPath, half==='before' ? i : i+1);
     });
@@ -2699,7 +2886,7 @@ function renderBlockRows(grp, section, list, parentPath, depth){
       renderBlockRows(grp, section, kids, path, depth+1);
       if(depth < 8){
         const add = el(`<button type="button" class="lyr-add lyr-add-nested">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
-        add.style.marginLeft = (20 + depth*16) + 'px';
+        add.style.paddingLeft = (34 + depth*16) + 'px';
         add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
         // dropping on a group's "Add block" appends the dragged block INTO that group
         dropTarget(add, ()=>dragState && dragState.kind==='block' && dragState.section===section, ()=>{
@@ -2722,7 +2909,7 @@ function refreshLayerHighlight(){
 }
 function setPanelMode(m){
   const panel = document.querySelector('.panel'); if(panel) panel.setAttribute('data-mode', m);
-  document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.dataset.mode===m));
+  document.querySelectorAll('.tb-mode').forEach(t => t.classList.toggle('active', t.dataset.mode===m));
 }
 
 function selectSection(key){
@@ -2890,6 +3077,80 @@ function initSectionSelection(){
   // keep the card on the correct side of the layout when crossing the breakpoint
   const onMq = ()=>renderSectionControls();
   if(mqMobile.addEventListener) mqMobile.addEventListener('change', onMq); else if(mqMobile.addListener) mqMobile.addListener(onMq);
+}
+
+/* ============================================================================
+   CANVAS HOVER — a Shopify-style name tag above the hovered section/block, plus
+   blue "+" insertion affordances (a full-width line + a centred plus) on the
+   element's top and bottom edges. All three are fixed-position overlays whose
+   coordinates track the hovered element via getBoundingClientRect.
+   ============================================================================ */
+let hvTag, hvBefore, hvAfter, hvCur=null;
+function ensureHoverEls(){
+  if(hvTag) return;
+  const plus = `<button class="hv-plus" type="button" title="Add">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',14)}</button>`;
+  hvTag = el('<div class="hv-tag" hidden></div>'); document.body.appendChild(hvTag);
+  hvBefore = el(`<div class="hv-add" hidden>${plus}</div>`); document.body.appendChild(hvBefore);
+  hvAfter  = el(`<div class="hv-add" hidden>${plus}</div>`); document.body.appendChild(hvAfter);
+  hvBefore.querySelector('.hv-plus').onclick = (e)=>{ e.stopPropagation(); addAtCursor('before'); };
+  hvAfter .querySelector('.hv-plus').onclick = (e)=>{ e.stopPropagation(); addAtCursor('after');  };
+}
+function clearCanvasHoverClasses(){ document.querySelectorAll('#store .sec-hover, #store .blk-hover').forEach(e=>e.classList.remove('sec-hover','blk-hover')); }
+function hideCanvasHover(){ if(hvTag) hvTag.hidden=true; if(hvBefore) hvBefore.hidden=true; if(hvAfter) hvAfter.hidden=true; hvCur=null; clearCanvasHoverClasses(); }
+function addAtCursor(side){
+  if(!hvCur) return;
+  if(hvCur.kind==='section'){
+    if(!isTemplateSection(hvCur.secId)) return;
+    openSectionPicker(templateIndex(hvCur.secId) + (side==='after'?1:0));
+  } else {
+    const path = hvCur.path, parentPath = path.slice(0,-1), i = path[path.length-1];
+    openBlockPicker(hvCur.secId, parentPath, side==='after' ? i+1 : i);
+  }
+  hideCanvasHover();
+}
+function positionAdd(addEl, r, y, show){
+  if(!show){ addEl.hidden = true; return; }
+  addEl.hidden = false;
+  addEl.style.left = r.left + 'px'; addEl.style.width = r.width + 'px'; addEl.style.top = y + 'px';
+}
+function updateCanvasHover(target){
+  ensureHoverEls();
+  const sec = target.closest('[data-sec]'); if(!sec){ hideCanvasHover(); return; }
+  const secId = sec.getAttribute('data-sec');
+  const blk = target.closest('[data-bpath]');
+  let kind, path=null, frameEl, name;
+  if(blk && sec.contains(blk)){
+    kind='block'; frameEl=blk; path = blk.getAttribute('data-bpath').split('.').map(Number);
+    const b = blockAt(secId, path); name = b ? blockName(b, path[path.length-1]) : 'Block';
+  } else {
+    kind='section'; frameEl=sec;
+    const schema = SECTION_SCHEMAS[secType(secId)] || {}; name = schema.name || SECTION_TITLES[secId] || secId;
+  }
+  hvCur = { kind, secId, path, el:frameEl };
+  // hover outline (skip when this exact element is already the solid-selected one)
+  clearCanvasHoverClasses();
+  const isSelected = (kind==='block') ? frameEl.classList.contains('block-selected')
+                                      : (sec.classList.contains('sec-selected') && !selectedBlock);
+  if(!isSelected) frameEl.classList.add(kind==='block' ? 'blk-hover' : 'sec-hover');
+  const r = frameEl.getBoundingClientRect();
+  hvTag.textContent = name; hvTag.hidden = false;
+  hvTag.style.left = Math.max(6, r.left) + 'px';
+  hvTag.style.top  = (r.top - 5) + 'px';
+  const showAdd = (kind==='block') || isTemplateSection(secId);
+  positionAdd(hvBefore, r, r.top,    showAdd);
+  positionAdd(hvAfter,  r, r.bottom, showAdd);
+}
+function initCanvasHover(){
+  const preview = document.querySelector('.preview');
+  preview.addEventListener('mousemove', e=>{
+    if(e.target.closest('.hv-add') || e.target.closest('.hv-tag')) return;   // keep state over our overlays
+    const t = e.target.closest('[data-sec]');
+    if(!t){ hideCanvasHover(); return; }
+    updateCanvasHover(e.target);
+  });
+  preview.addEventListener('mouseleave', hideCanvasHover);
+  preview.addEventListener('scroll', hideCanvasHover, true);
+  window.addEventListener('resize', hideCanvasHover);
 }
 
 /* ============================================================================
@@ -3128,7 +3389,8 @@ function buildPanel(){
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); renderBlockSections(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
+function doReset(){ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); renderBlockSections(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); }
+['reset-btn','tb-reset'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=doReset; });
 
 refreshNames();   // derive palette names from their hex values
 captureSectionTemplates();   // snapshot each section's empty shell for Add/Duplicate (before content fills it)
@@ -3138,9 +3400,17 @@ buildHomepage();
 applyRoles();   // initial paint: TOKENS -> ROLES -> PREVIEW (incl. per-section schemes)
 applyAllSectionSettings();   // re-apply any persisted per-section settings to the preview
 initSectionSelection();
+initCanvasHover();   // canvas hover name-tag + blue "+" insertion affordances
 buildLayers();   // populate the left-rail layers tree
-document.querySelectorAll('.ptab').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
-document.getElementById('export-btn').onclick = openExport;
+// top-bar mode toggle (Layers ⇄ Theme settings) — icons replace the old text tabs
+document.querySelectorAll('.tb-mode').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
+// device toggle: desktop ⇄ mobile preview width (drives the store's @container layout)
+document.querySelectorAll('.tb-dev').forEach(t => t.onclick = ()=>{
+  document.querySelectorAll('.tb-dev').forEach(d=>d.classList.toggle('active', d===t));
+  document.querySelector('.preview').classList.toggle('dev-mobile', t.dataset.device==='mobile');
+  hideCanvasHover();
+});
+['export-btn','tb-export'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=openExport; });
 
 /* ============================================================================
    MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
