@@ -86,7 +86,33 @@
   .brand .t2 { font-size: 11px; color: var(--stone-500); line-height: 1.2; }
   .reset { display: flex; align-items: center; gap: 6px; border: none; background: none; font-size: 11px; color: var(--stone-500); cursor: pointer; font-family: inherit; }
   .reset:hover { color: var(--stone-900); }
-  .groups { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .ph-actions { display: flex; align-items: center; gap: 6px; }
+  .export-btn { display: flex; align-items: center; gap: 6px; border: none; border-radius: 6px; background: var(--stone-900); color: #fff; font-size: 11px; font-weight: 600; padding: 6px 10px; cursor: pointer; font-family: inherit; }
+  .export-btn:hover { background: var(--stone-700); }
+  /* export modal */
+  .ex-ov { position: fixed; inset: 0; background: rgba(12,10,9,.5); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
+  .ex { width: min(960px, 100%); height: min(640px, 100%); background: #fff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 64px -16px rgba(0,0,0,.4); }
+  .ex-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--stone-200); }
+  .ex-hd .t { font-size: 13px; font-weight: 700; }
+  .ex-hd .t span { font-weight: 500; color: var(--stone-500); margin-left: 8px; font-size: 11px; }
+  .ex-actions { display: flex; gap: 8px; align-items: center; }
+  .ex-dl { display: flex; align-items: center; gap: 6px; border: none; border-radius: 6px; background: var(--stone-900); color: #fff; font-size: 12px; font-weight: 600; padding: 8px 12px; cursor: pointer; font-family: inherit; }
+  .ex-dl:hover { background: var(--stone-700); }
+  .ex-x { border: none; background: none; cursor: pointer; color: var(--stone-400); display: inline-flex; padding: 4px; }
+  .ex-x:hover { color: var(--stone-900); }
+  .ex-body { flex: 1; min-height: 0; display: flex; }
+  .ex-files { flex: 0 0 240px; border-right: 1px solid var(--stone-200); overflow-y: auto; padding: 8px; }
+  .ex-fhd { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone-400); padding: 8px 10px 4px; }
+  .ex-file { width: 100%; text-align: left; border: none; background: none; cursor: pointer; font: inherit; font-size: 11.5px; color: var(--stone-700); padding: 6px 10px; border-radius: 6px; font-family: "JetBrains Mono", ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ex-file:hover { background: var(--stone-50); }
+  .ex-file.active { background: var(--stone-100); color: var(--stone-900); font-weight: 600; }
+  .ex-view { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .ex-vhd { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--stone-100); }
+  .ex-vhd .nm { font-size: 11.5px; font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--stone-600); }
+  .ex-copy { border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-700); padding: 5px 10px; cursor: pointer; }
+  .ex-copy:hover { background: var(--stone-50); }
+  .ex-pre { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 14px 16px; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 11.5px; line-height: 1.55; color: var(--stone-800); white-space: pre; background: var(--stone-50); }
+  @media (max-width: 860px){ .ex-files { flex-basis: 150px; } .export-btn span, .export-btn { font-size: 10px; } }
 
   /* ---- left-rail mode tabs (Layers ⇄ Theme settings) ---- */
   .panel-tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--stone-200); flex: 0 0 auto; }
@@ -673,7 +699,10 @@
           <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
           <div><div class="t1">NOIR</div><div class="t2">Home page</div></div>
         </div>
-        <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+        <div class="ph-actions">
+          <button class="export-btn" id="export-btn" title="Export Shopify theme files"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Export</button>
+          <button class="reset" id="reset-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+        </div>
       </div>
       <!-- section header (mobile, when a section is selected) -->
       <div class="ph-section">
@@ -2673,6 +2702,189 @@ function initSectionSelection(){
 }
 
 /* ============================================================================
+   EXPORT  —  serialize the live model into REAL Shopify theme files:
+   sections/*.liquid + blocks/*.liquid (with {% schema %}), templates/index.json
+   (instances + order + nested block tree), sections/header.json|footer.json
+   (section groups), and config/settings_schema.json. Because SECTION_SCHEMAS /
+   BLOCK_SCHEMAS are already Shopify-shaped, the {% schema %} is a near-direct
+   serialization — that's the whole "does it port?" payoff.
+   ============================================================================ */
+function hasSetting(schema, id){ return (schema.settings||[]).some(s=>s.id===id); }
+function acceptsTheme(schema){ return (schema.blocks||[]).some(b=>b.type==='@theme'); }
+// A schema entry → the Shopify {% schema %} object (adds presets so it's editor-addable).
+function shopifySchema(schema){
+  const out = { name: schema.name };
+  if(schema.settings && schema.settings.length) out.settings = schema.settings;
+  if(schema.blocks && schema.blocks.length)     out.blocks   = schema.blocks;
+  if(schema.max_blocks)                          out.max_blocks = schema.max_blocks;
+  out.presets = [{ name: schema.name }];
+  return out;
+}
+function sectionLiquid(type){
+  const schema = SECTION_SCHEMAS[type]; const pad = hasSetting(schema,'padding_top')
+    ? ` style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px"` : '';
+  let inner = '';
+  if(hasSetting(schema,'heading')) inner += `\n    <h2>{{ section.settings.heading }}</h2>`;
+  if(schema.blocks && schema.blocks.length){
+    inner += acceptsTheme(schema)
+      ? `\n    {% content_for 'blocks' %}`
+      : `\n    {%- for block in section.blocks -%}\n      <div {{ block.shopify_attributes }}>{{ block.settings.heading | default: block.settings.title | default: block.settings.text }}</div>\n    {%- endfor -%}`;
+  }
+  return `{%- comment -%} Generated by the style-guide prototype {%- endcomment -%}\n`
+    + `<section class="sg-${type}"${pad}>\n  <div class="page-width">${inner}\n  </div>\n</section>\n\n`
+    + `{% schema %}\n${JSON.stringify(shopifySchema(schema), null, 2)}\n{% endschema %}\n`;
+}
+function blockLiquid(type){
+  const schema = BLOCK_SCHEMAS[type];
+  const body = acceptsChildren(type)
+    ? `<div {{ block.shopify_attributes }}>\n  {% content_for 'blocks' %}\n</div>`
+    : `<div {{ block.shopify_attributes }}>\n  {%- comment -%} render ${type} from block.settings {%- endcomment -%}\n</div>`;
+  return `${body}\n\n{% schema %}\n${JSON.stringify(shopifySchema(schema), null, 2)}\n{% endschema %}\n`;
+}
+// Nested block tree → JSON-template { blocks:{id:{type,settings,blocks?,block_order?}}, block_order:[...] }
+function blocksToJson(list, counter){
+  const blocks = {}, order = [];
+  (list||[]).forEach(b=>{
+    const id = b.type + '_' + (counter.n++);
+    order.push(id);
+    const entry = { type: b.type };
+    if(b.settings && Object.keys(b.settings).length) entry.settings = b.settings;
+    if(b.blocks && b.blocks.length){ const sub = blocksToJson(b.blocks, counter); entry.blocks = sub.blocks; entry.block_order = sub.order; }
+    blocks[id] = entry;
+  });
+  return { blocks, order };
+}
+function sectionInstanceJson(key){
+  const obj = { type: key };
+  const settings = Object.assign({}, STATE.sectionSettings[key] || {});
+  if(STATE.sectionSchemes[key]) settings.color_scheme = STATE.sectionSchemes[key];
+  if(Object.keys(settings).length) obj.settings = settings;
+  const list = STATE.sectionBlocks[key] || [];
+  if(list.length){ const j = blocksToJson(list, { n:1 }); obj.blocks = j.blocks; obj.block_order = j.order; }
+  return obj;
+}
+function templateJson(){
+  const sections = {}, order = [];
+  SECTION_GROUPS.template.sections.forEach(key=>{ order.push(key); sections[key] = sectionInstanceJson(key); });
+  return JSON.stringify({ sections, order }, null, 2) + '\n';
+}
+function groupJson(gid){
+  const g = SECTION_GROUPS[gid]; const sections = {};
+  g.sections.forEach(key=>{ sections[key] = sectionInstanceJson(key); });
+  return JSON.stringify({ type: gid, name: g.name, sections, order: g.sections.slice() }, null, 2) + '\n';
+}
+// config/settings_schema.json — the global controls as Shopify theme settings.
+function settingsSchemaJson(){
+  const t = STATE.typography, sp = STATE.spacing, bt = STATE.buttons, inp = STATE.inputs, ic = STATE.icons;
+  const fontOpt = { Inter:'assistant_n4' };  // demo handle; map to your real fonts on import
+  const schema = [
+    { name:'theme_info', theme_name:'NOIR (prototype)', theme_version:'1.0.0', theme_author:'Style-guide prototype', theme_documentation_url:'', theme_support_url:'' },
+    { name:'Colors', settings: [
+      { type:'paragraph', content:'Palette swatches. In a full theme these feed a color_scheme_group; schemes are stored in settings_data.json.' },
+      ...STATE.palette.map(c=>({ type:'color', id:'color_'+c.id, label:c.name, default:c.hex })),
+    ]},
+    { name:'Typography', settings: [
+      { type:'font_picker', id:'heading_font', label:'Heading font', default: fontOpt[t.headingFont]||'assistant_n4' },
+      { type:'font_picker', id:'body_font',    label:'Body font',    default: fontOpt[t.bodyFont]||'assistant_n4' },
+      { type:'range', id:'base_size', label:'Base size', min:12, max:20, step:1, unit:'px', default: t.baseSize },
+      { type:'range', id:'type_scale', label:'Heading scale', min:1.1, max:1.5, step:0.05, default: t.ratio },
+    ]},
+    { name:'Layout', settings: [
+      { type:'range', id:'page_width', label:'Page width', min:1000, max:1600, step:20, unit:'px', default: sp.containerMax },
+      { type:'range', id:'section_padding', label:'Section padding', min:0, max:160, step:4, unit:'px', default: sp.sectionPadding },
+      { type:'range', id:'grid_gutter', label:'Grid spacing', min:8, max:48, step:2, unit:'px', default: sp.gutter },
+      { type:'range', id:'corner_radius', label:'Corner radius', min:0, max:40, step:1, unit:'px', default: STATE.radius },
+    ]},
+    { name:'Buttons', settings: [
+      { type:'range', id:'button_border', label:'Border thickness', min:0, max:4, step:1, unit:'px', default: bt.borderWidth },
+      { type:'range', id:'button_radius', label:'Corner radius', min:0, max:40, step:1, unit:'px', default: bt.radius },
+    ]},
+    { name:'Inputs', settings: [
+      { type:'range', id:'input_border', label:'Border thickness', min:0, max:4, step:1, unit:'px', default: inp.borderWidth },
+      { type:'range', id:'input_radius', label:'Corner radius', min:0, max:40, step:1, unit:'px', default: inp.radius },
+    ]},
+    { name:'Icons', settings: [
+      { type:'range', id:'icon_size', label:'Feature icon size', min:16, max:48, step:2, unit:'px', default: ic.size },
+      { type:'select', id:'icon_style', label:'Icon container', default: ic.container, options:[
+        {value:'off',label:'None'},{value:'filled',label:'Filled'},{value:'outline',label:'Outline'}] },
+    ]},
+  ];
+  return JSON.stringify(schema, null, 2) + '\n';
+}
+function buildThemeFiles(){
+  const files = [];
+  const secTypes = new Set([...SECTION_GROUPS.header.sections, ...SECTION_GROUPS.template.sections, ...SECTION_GROUPS.footer.sections]);
+  [...secTypes].sort().forEach(t=>{ if(SECTION_SCHEMAS[t]) files.push({ name:`sections/${t}.liquid`, content: sectionLiquid(t) }); });
+  const blockTypes = new Set(); const collect = l => (l||[]).forEach(b=>{ blockTypes.add(b.type); collect(b.blocks); });
+  Object.values(STATE.sectionBlocks).forEach(collect);
+  [...blockTypes].sort().forEach(t=>{ if(BLOCK_SCHEMAS[t]) files.push({ name:`blocks/${t}.liquid`, content: blockLiquid(t) }); });
+  files.push({ name:'templates/index.json', content: templateJson() });
+  files.push({ name:'sections/header.json', content: groupJson('header') });
+  files.push({ name:'sections/footer.json', content: groupJson('footer') });
+  files.push({ name:'config/settings_schema.json', content: settingsSchemaJson() });
+  return files;
+}
+
+/* --- minimal ZIP writer (store / no compression, dependency-free) --- */
+const _CRC = (()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=_CRC[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipFiles(files){
+  const enc=new TextEncoder(); const u16=v=>[v&255,(v>>8)&255]; const u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];
+  const parts=[], central=[]; let offset=0;
+  files.forEach(f=>{
+    const name=enc.encode(f.name), data=enc.encode(f.content), crc=crc32(data);
+    const local=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    parts.push(Uint8Array.from(local), name, data);
+    central.push(Uint8Array.from([].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset))), name);
+    offset += local.length + name.length + data.length;
+  });
+  let cenLen=0; central.forEach(c=>cenLen+=c.length);
+  const end=Uint8Array.from([].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),u16(files.length),u16(files.length),u32(cenLen),u32(offset),u16(0)));
+  const all=[...parts,...central,end]; let total=0; all.forEach(a=>total+=a.length);
+  const out=new Uint8Array(total); let p=0; all.forEach(a=>{ out.set(a,p); p+=a.length; });
+  return out;
+}
+function downloadBlob(name, data, mime){
+  const blob=new Blob([data],{type:mime||'application/octet-stream'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+/* --- export modal: inspect each file + download theme.zip --- */
+function openExport(){
+  closeExport();
+  const files = buildThemeFiles();
+  const ov = el(`<div class="ex-ov" id="ex-ov"><div class="ex">
+    <div class="ex-hd"><div class="t">Export theme <span>${files.length} files · drop into a Shopify theme</span></div>
+      <div class="ex-actions"><button class="ex-dl" id="ex-dl">${svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',13)}Download theme.zip</button>
+        <button class="ex-x" id="ex-x">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',18)}</button></div></div>
+    <div class="ex-body"><div class="ex-files" id="ex-files"></div>
+      <div class="ex-view"><div class="ex-vhd"><span class="nm" id="ex-nm"></span><button class="ex-copy" id="ex-copy">Copy</button></div>
+        <pre class="ex-pre" id="ex-pre"></pre></div></div></div></div>`);
+  const listHost = ov.querySelector('#ex-files'), pre = ov.querySelector('#ex-pre'), nm = ov.querySelector('#ex-nm');
+  const groups = { 'sections':[], 'blocks':[], 'templates':[], 'config':[] };
+  files.forEach((f,i)=>{ const dir=f.name.split('/')[0]; (groups[dir]=groups[dir]||[]).push(i); });
+  let activeBtn=null;
+  function show(i){ const f=files[i]; pre.textContent=f.content; nm.textContent=f.name; }
+  Object.entries(groups).forEach(([dir,idxs])=>{
+    if(!idxs.length) return;
+    listHost.appendChild(el(`<div class="ex-fhd">${dir}/</div>`));
+    idxs.forEach(i=>{ const b=el(`<button class="ex-file"></button>`); b.textContent=files[i].name.split('/').slice(1).join('/');
+      b.onclick=()=>{ if(activeBtn) activeBtn.classList.remove('active'); b.classList.add('active'); activeBtn=b; show(i); };
+      listHost.appendChild(b); });
+  });
+  ov.querySelector('#ex-copy').onclick=()=>{ navigator.clipboard && navigator.clipboard.writeText(pre.textContent); toast('Copied to clipboard.'); };
+  ov.querySelector('#ex-dl').onclick=()=>{ downloadBlob('theme.zip', zipFiles(files), 'application/zip'); };
+  ov.querySelector('#ex-x').onclick=closeExport;
+  ov.addEventListener('mousedown', e=>{ if(e.target===ov) closeExport(); });
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', exportEsc);
+  listHost.querySelector('.ex-file').click();   // select the first file
+}
+function exportEsc(e){ if(e.key==='Escape') closeExport(); }
+function closeExport(){ const ov=document.getElementById('ex-ov'); if(ov) ov.remove(); document.removeEventListener('keydown', exportEsc); }
+
+/* ============================================================================
    BOOT
    ============================================================================ */
 function buildPanel(){
@@ -2701,6 +2913,7 @@ applyAllSectionSettings();   // re-apply any persisted per-section settings to t
 initSectionSelection();
 buildLayers();   // populate the left-rail layers tree
 document.querySelectorAll('.ptab').forEach(t => t.onclick = ()=> setPanelMode(t.dataset.mode));
+document.getElementById('export-btn').onclick = openExport;
 
 /* ============================================================================
    MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
