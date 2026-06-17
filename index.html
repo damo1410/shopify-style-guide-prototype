@@ -2882,7 +2882,7 @@ function blocksToJson(list, counter){
 function sectionInstanceJson(key){
   const obj = { type: secType(key) };
   const settings = Object.assign({}, STATE.sectionSettings[key] || {});
-  if(STATE.sectionSchemes[key]) settings.color_scheme = STATE.sectionSchemes[key];
+  if(STATE.sectionSchemes[key]) settings.color_scheme = schemeId(STATE.sectionSchemes[key]);
   if(Object.keys(settings).length) obj.settings = settings;
   const list = STATE.sectionBlocks[key] || [];
   if(list.length){ const j = blocksToJson(list, { n:1 }); obj.blocks = j.blocks; obj.block_order = j.order; }
@@ -2899,15 +2899,29 @@ function groupJson(gid){
   return JSON.stringify({ type: gid, name: g.name, sections, order: g.sections.slice() }, null, 2) + '\n';
 }
 // config/settings_schema.json — the global controls as Shopify theme settings.
+// ---- color schemes: faithful Shopify color_scheme_group + settings_data values ----
+function schemeId(name){ const i=Object.keys(STATE.schemes).indexOf(name); return i>=0 ? 'scheme-'+(i+1) : name; }
+function colorHex(schemeName, roleKey){ const h = swatchHex((STATE.schemes[schemeName]||{})[roleKey]); return h==='transparent' ? 'rgba(0,0,0,0)' : h; }
+// Maps Shopify's fixed semantic roles → our scheme slot ids (extra slots stay editable colors).
+const SCHEME_ROLE_MAP = {
+  background:'bg', text:'body', primary_button:'btnBg', on_primary_button:'btnText', primary_button_border:'btnBorder',
+  secondary_button:'btn2Bg', on_secondary_button:'btn2Text', secondary_button_border:'btn2Border', links:'link', icons:'icon',
+};
+function colorSchemeGroup(){
+  const base = STATE.activeScheme; const definition = []; let lastGroup = null;
+  STATE.colorRoles.forEach(r=>{
+    if(r.group && r.group!==lastGroup){ definition.push({ type:'header', content:r.group }); lastGroup=r.group; }
+    if(!r.group) lastGroup=null;
+    definition.push({ type:'color', id:r.key, label:r.label, default: colorHex(base, r.key) });
+  });
+  return { type:'color_scheme_group', id:'color_schemes', definition, role: SCHEME_ROLE_MAP };
+}
 function settingsSchemaJson(){
   const t = STATE.typography, sp = STATE.spacing, bt = STATE.buttons, inp = STATE.inputs, ic = STATE.icons;
   const fontOpt = { Inter:'assistant_n4' };  // demo handle; map to your real fonts on import
   const schema = [
     { name:'theme_info', theme_name:'NOIR (prototype)', theme_version:'1.0.0', theme_author:'Style-guide prototype', theme_documentation_url:'', theme_support_url:'' },
-    { name:'Colors', settings: [
-      { type:'paragraph', content:'Palette swatches. In a full theme these feed a color_scheme_group; schemes are stored in settings_data.json.' },
-      ...STATE.palette.map(c=>({ type:'color', id:'color_'+c.id, label:c.name, default:c.hex })),
-    ]},
+    { name:'Colors', settings: [ colorSchemeGroup() ]},
     { name:'Typography', settings: [
       { type:'font_picker', id:'heading_font', label:'Heading font', default: fontOpt[t.headingFont]||'assistant_n4' },
       { type:'font_picker', id:'body_font',    label:'Body font',    default: fontOpt[t.bodyFont]||'assistant_n4' },
@@ -2936,6 +2950,26 @@ function settingsSchemaJson(){
   ];
   return JSON.stringify(schema, null, 2) + '\n';
 }
+// config/settings_data.json — the actual scheme VALUES + global setting values (the round-trip
+// half of settings_schema.json).
+function settingsDataJson(){
+  const t = STATE.typography, sp = STATE.spacing, bt = STATE.buttons, inp = STATE.inputs, ic = STATE.icons;
+  const color_schemes = {};
+  Object.keys(STATE.schemes).forEach(name=>{
+    const settings = {}; STATE.colorRoles.forEach(r=>{ settings[r.key] = colorHex(name, r.key); });
+    color_schemes[schemeId(name)] = { settings };
+  });
+  const current = {
+    color_schemes,
+    heading_font:'assistant_n4', body_font:'assistant_n4',
+    base_size: t.baseSize, type_scale: t.ratio,
+    page_width: sp.containerMax, section_padding: sp.sectionPadding, grid_gutter: sp.gutter, corner_radius: STATE.radius,
+    button_border: bt.borderWidth, button_radius: bt.radius,
+    input_border: inp.borderWidth, input_radius: inp.radius,
+    icon_size: ic.size, icon_style: ic.container,
+  };
+  return JSON.stringify({ current }, null, 2) + '\n';
+}
 function buildThemeFiles(){
   const files = [];
   const secTypes = new Set(allSectionIds().map(secType));   // one section file per TYPE (instances share it)
@@ -2947,6 +2981,7 @@ function buildThemeFiles(){
   files.push({ name:'sections/header.json', content: groupJson('header') });
   files.push({ name:'sections/footer.json', content: groupJson('footer') });
   files.push({ name:'config/settings_schema.json', content: settingsSchemaJson() });
+  files.push({ name:'config/settings_data.json', content: settingsDataJson() });
   return files;
 }
 
