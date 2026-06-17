@@ -177,26 +177,30 @@
      the hover/select surface (chevron + actions live INSIDE it), so the highlight always
      spans full width and never narrows when the hover actions appear. */
   .lyr-row { display: flex; align-items: center; height: 34px; margin: 1px 8px; padding: 0 4px 0 2px; position: relative; border-radius: 8px; }
-  .lyr-row:hover { background: var(--stone-100); }
+  /* hover OR cross-hover from the canvas; .active (selected) keeps the solid blue fill */
+  .lyr-row:hover:not(.active), .lyr-row.lyr-hover:not(.active) { background: var(--stone-100); }
   .lyr-row.active { background: var(--sel); }
-  .lyr-tw { flex: 0 0 20px; width: 20px; height: 100%; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; }
+  .lyr-tw { flex: 0 0 22px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; border-radius: 6px; }
+  .lyr-tw:hover { background: var(--stone-200); color: var(--stone-700); }
   .lyr-row.active .lyr-tw { color: rgba(255,255,255,.85); }
+  .lyr-row.active .lyr-tw:hover { background: rgba(255,255,255,.18); color: #fff; }
   .lyr-tw svg { transition: transform .12s; }
   .lyr-tw.open svg { transform: rotate(90deg); }
-  .lyr-tw-spacer { flex: 0 0 20px; width: 20px; }
+  .lyr-tw-spacer { flex: 0 0 22px; width: 22px; }
   .lyr-main { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 4px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; }
   /* lead slot holds the type icon, swapped for a drag handle on hover */
-  .lyr-lead { position: relative; width: 16px; height: 16px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+  .lyr-lead { position: relative; width: 22px; height: 22px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
   .lyr-ic { color: var(--stone-500); display: inline-flex; }
-  .lyr-handle { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--stone-500); cursor: grab; }
+  .lyr-handle { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--stone-500); cursor: grab; border-radius: 6px; }
+  .lyr-handle:hover { background: var(--stone-200); color: var(--stone-700); }
+  .lyr-row.active .lyr-handle:hover { background: rgba(255,255,255,.18); color: #fff; }
   .lyr-handle:active { cursor: grabbing; }
   .lyr-row:hover .lyr-ic { display: none; }
   .lyr-row:hover .lyr-handle { display: inline-flex; }
   .lyr-row.active .lyr-ic, .lyr-row.active .lyr-handle { color: #fff; }
   .lyr-name { flex: 1 1 auto; font-size: 12px; font-weight: 400; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lyr-row.active .lyr-name { color: #fff; font-weight: 400; }
-  .lyr-count { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; padding-right: 2px; }
-  .lyr-row.active .lyr-count { color: rgba(255,255,255,.8); }
+  .lyr-count { display: none; }   /* Shopify doesn't show a nested-block count */
   /* row hover actions (hide / delete) — inside the row, revealed on hover */
   .lyr-actions { display: none; align-items: center; gap: 1px; flex: 0 0 auto; }
   .lyr-row:hover .lyr-actions { display: flex; }
@@ -220,7 +224,7 @@
   .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
   .sf-crumb:hover { text-decoration: underline; }
   /* + Add block / + Add section row — flush blue-text row, same height as a layer row */
-  .lyr-add { display: flex; align-items: center; gap: 10px; height: 32px; margin: 1px 8px; padding: 0 14px 0 36px; border: none; background: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 550; color: var(--sel); width: auto; border-radius: 8px; }
+  .lyr-add { display: flex; align-items: center; gap: 10px; height: 32px; margin: 1px 8px; padding: 0 14px 0 36px; border: none; background: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 550; color: var(--sel); width: calc(100% - 16px); border-radius: 8px; }
   .lyr-add:hover { background: var(--stone-100); }
   .lyr-add svg { flex: 0 0 auto; }
   /* section-level Add (less indented than the block-level Add) */
@@ -263,10 +267,14 @@
   .picker-search svg { color: var(--stone-400); flex: 0 0 auto; }
   .picker-search input { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 13px; color: var(--stone-900); min-width: 0; }
   .picker-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0; }
-  /* subcategory heading — same as the layers Header/Template/Footer style */
-  .picker-cat { font-size: 13px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
+  /* collapsible category — reuses the accordion idea at the picker's (smaller) text size */
+  .picker-cat-group { }
+  .picker-cat { display: flex; align-items: center; justify-content: space-between; gap: 8px; list-style: none; cursor: pointer; user-select: none; font-size: 13px; font-weight: 600; color: var(--stone-900); padding: 12px 16px 6px; }
+  .picker-cat::-webkit-details-marker { display: none; }
+  .picker-cat .pc-chev { width: 16px; height: 16px; color: var(--stone-400); transition: transform .15s; flex: 0 0 auto; }
+  .picker-cat-group[open] .pc-chev { transform: rotate(180deg); }
   /* item row mirrors .lyr-row: 34px height, 8px side margins, 16px icon, 13px name */
-  .picker-item { display: flex; align-items: center; gap: 10px; height: 34px; margin: 1px 8px; padding: 0 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; width: auto; }
+  .picker-item { display: flex; align-items: center; gap: 10px; height: 34px; margin: 1px 8px; padding: 0 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; width: calc(100% - 16px); }
   .picker-item:hover, .picker-item.focus { background: var(--stone-100); }
   .picker-ic { width: 16px; height: 16px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: var(--stone-500); }
   .picker-ic svg { width: 16px; height: 16px; }
@@ -663,7 +671,9 @@
   /* products carousel */
   .rowhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 2rem; }
   .rowhead .ey { display: flex; flex-direction: column; gap: .75rem; }
-  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--product-gutter); overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory; }
+  /* padding + matching negative margin so a card's hover/select outline isn't clipped by
+     the horizontal scroll container (outlines draw outside the border box). */
+  .carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: var(--product-gutter); overflow-x: auto; padding: 4px 4px 12px; margin: -4px -4px 0; scroll-snap-type: x mandatory; }
   /* products mirror the collection card model: STYLE via classes on .store
      (.pcard-standard / .pcard-card / .pcard-overlay) plus the same RATIO/RADIUS/ALIGN/
      PADDING/OVERLAY/HOVER custom properties, so both card types share one set of controls. */
@@ -2743,6 +2753,7 @@ function openPicker(title, groups, onPick, kind){
     body.querySelectorAll('.picker-item').forEach(r=> r.classList.toggle('focus', r.__it===it));
     preview(it);
   }
+  const chev = '<svg class="pc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
   function render(q){
     q = (q||'').trim().toLowerCase();
     body.innerHTML = '';
@@ -2750,16 +2761,19 @@ function openPicker(title, groups, onPick, kind){
     Object.entries(groups).forEach(([cat, items])=>{
       const matches = items.filter(it=> !q || it.name.toLowerCase().includes(q));
       if(!matches.length) return;
-      body.appendChild(el(`<div class="picker-cat">${cat}</div>`));
+      // each category is a collapsible accordion (open by default, like Shopify)
+      const det = el(`<details class="picker-cat-group" open><summary class="picker-cat"><span>${cat}</span>${chev}</summary><div class="picker-cat-items"></div></details>`);
+      const list = det.querySelector('.picker-cat-items');
       matches.forEach(it=>{
         const row = el(`<button type="button" class="picker-item"><span class="picker-ic">${svg(it.icon || ICONS.box,16)}</span><span class="picker-name"></span></button>`);
         row.__it = it;
         row.querySelector('.picker-name').textContent = it.name;
         row.onmouseenter = ()=> setFocus(it);
         row.onclick = ()=>{ closePicker(); onPick(it.type); };
-        body.appendChild(row);
+        list.appendChild(row);
         if(!firstVisible) firstVisible = it;
       });
+      body.appendChild(det);
     });
     if(!firstVisible){ body.appendChild(el('<div class="picker-empty">No matches.</div>')); preview(null); ppName.textContent=''; ppDesc.textContent=''; ppIc.innerHTML=''; }
     else setFocus(firstVisible);
@@ -2976,6 +2990,8 @@ function buildLayers(){
       main.querySelector('.lyr-name').textContent = schema.name;
       if(hasBlocks) main.querySelector('.lyr-count').textContent = blocks.length;
       main.onclick = ()=>{ selectSection(key); };
+      row.onmouseenter = ()=> previewCanvasHover(key, null);   // layers → canvas hover
+      row.onmouseleave = ()=> hideCanvasHover();
       row.appendChild(main);
       row.appendChild(makeActions(hidden, ()=>toggleHidden(key), ()=>removeSection(key)));
       // drag to reorder within the same group (sections never cross groups)
@@ -3027,6 +3043,8 @@ function renderBlockRows(grp, section, list, parentPath, depth){
     main.prepend(makeLead(blockLayerIcon(b), 14, {kind:'block', section, path}, row));
     main.querySelector('.lyr-name').textContent = blockName(b,i);
     main.onclick = ()=> selectBlock(section, path);
+    row.onmouseenter = ()=> previewCanvasHover(section, path);   // layers → canvas hover
+    row.onmouseleave = ()=> hideCanvasHover();
     row.appendChild(main);
     row.appendChild(makeActions(hidden, ()=>toggleHidden(blockHideKey(section, path)), ()=>removeBlock(section, path)));
     // drag-reorder at EVERY depth: dropping before/after a row inserts as a sibling in that
@@ -3068,12 +3086,17 @@ function setPanelMode(m){
   if(title) title.textContent = (m==='theme') ? 'Theme settings' : 'Home page';
 }
 
+// scroll the active layer row into view (call after buildLayers, which restores scrollTop)
+function revealActiveLayer(){
+  const r = document.querySelector('#layers .lyr-row.active');
+  if(r) r.scrollIntoView({ block:'nearest' });
+}
 function selectSection(key){
   selectedSection = key; selectedBlock = null;
   if(sectionBlocks(key).length) expandedLayers.add(key);
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
   clearBlockHighlight();
-  buildLayers();
+  buildLayers(); revealActiveLayer();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');   // reveal the card in the sheet
 }
@@ -3083,7 +3106,7 @@ function selectBlock(section, path){
   for(let k=1; k<path.length; k++) expandedLayers.add(pathKey(section, path.slice(0,k)));   // open ancestors
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===section));
   highlightBlockEl(section, path);
-  buildLayers();
+  buildLayers(); revealActiveLayer();
   renderSectionControls();
   if(mqMobile.matches && window.__sheetSnap) window.__sheetSnap('half');
 }
@@ -3249,7 +3272,31 @@ function ensureHoverEls(){
   hvAfter .querySelector('.hv-plus').onclick = (e)=>{ e.stopPropagation(); addAtCursor('after');  };
 }
 function clearCanvasHoverClasses(){ document.querySelectorAll('#store .sec-hover, #store .blk-hover').forEach(e=>e.classList.remove('sec-hover','blk-hover')); }
-function hideCanvasHover(){ if(hvTag) hvTag.hidden=true; if(hvBefore) hvBefore.hidden=true; if(hvAfter) hvAfter.hidden=true; hvCur=null; clearCanvasHoverClasses(); }
+function clearLayerRowHover(){ document.querySelectorAll('#layers .lyr-row.lyr-hover').forEach(r=>r.classList.remove('lyr-hover')); }
+function hideCanvasHover(){ if(hvTag) hvTag.hidden=true; if(hvBefore) hvBefore.hidden=true; if(hvAfter) hvAfter.hidden=true; hvCur=null; clearCanvasHoverClasses(); clearLayerRowHover(); }
+// canvas → layers: mirror the canvas hover onto the matching layer row
+function highlightLayerRowFor(section, path){
+  clearLayerRowHover();
+  const sel = path ? `#layers .lyr-row[data-lyr="${section}"][data-bpath="${path.join('.')}"]`
+                   : `#layers .lyr-row[data-lyr="${section}"]:not(.lyr-blockrow)`;
+  const r = document.querySelector(sel); if(r) r.classList.add('lyr-hover');
+}
+// layers → canvas: mirror a layer-row hover onto the canvas (outline + name tag, no + buttons)
+function canvasElFor(section, path){ return path ? blockEl(section, path) : sectionEl(section); }
+function previewCanvasHover(section, path){
+  const elc = canvasElFor(section, path); if(!elc) return;
+  ensureHoverEls(); clearCanvasHoverClasses();
+  const isSel = path ? elc.classList.contains('block-selected')
+                     : (elc.classList.contains('sec-selected') && !selectedBlock);
+  if(!isSel) elc.classList.add(path ? 'blk-hover' : 'sec-hover');
+  const r = elc.getBoundingClientRect();
+  const name = path ? blockName(blockAt(section,path), path[path.length-1])
+                    : ((SECTION_SCHEMAS[secType(section)]||{}).name || SECTION_TITLES[section] || section);
+  const icon = path ? blockLayerIcon(blockAt(section,path)) : layerIcon();
+  hvTag.innerHTML = svg(icon,13); hvTag.appendChild(document.createTextNode(name)); hvTag.hidden=false;
+  hvTag.style.left = Math.max(6, r.left)+'px'; hvTag.style.top = (r.top-5)+'px';
+  if(hvBefore) hvBefore.hidden=true; if(hvAfter) hvAfter.hidden=true;
+}
 function addAtCursor(side){
   if(!hvCur) return;
   if(hvCur.kind==='section'){
@@ -3279,6 +3326,7 @@ function updateCanvasHover(target){
     const schema = SECTION_SCHEMAS[secType(secId)] || {}; name = schema.name || SECTION_TITLES[secId] || secId; icon = layerIcon(schema);
   }
   hvCur = { kind, secId, path, el:frameEl };
+  highlightLayerRowFor(secId, kind==='block' ? path : null);   // mirror onto the layers panel
   // hover outline (skip when this exact element is already the solid-selected one)
   clearCanvasHoverClasses();
   const isSelected = (kind==='block') ? frameEl.classList.contains('block-selected')
