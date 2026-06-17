@@ -166,19 +166,21 @@
   /* ---- layers tree (the Shopify section/block hierarchy) ---- */
   .layers { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
   .lyr-group { padding: 2px 0; }
-  .lyr-grouphd { font-size: 11px; font-weight: 600; color: var(--stone-500); padding: 12px 16px 6px; }
+  .lyr-grouphd { font-size: 14px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
   /* divider line between the Header / Template / Footer groups (Shopify section groups) */
   .lyr-group + .lyr-group { border-top: 1px solid var(--stone-200); }
-  /* EVERY row — section or block, any nesting depth — is the same fixed height.
-     The row is the hover/select surface; indentation is applied to .lyr-main via padding-left. */
-  .lyr-row { width: 100%; display: flex; align-items: center; height: 36px; padding: 0 8px; position: relative; }
+  /* EVERY row — section or block, any nesting depth — is the same fixed height. The ROW is
+     the hover/select surface (chevron + actions live INSIDE it), so the highlight always
+     spans full width and never narrows when the hover actions appear. */
+  .lyr-row { display: flex; align-items: center; height: 34px; margin: 1px 8px; padding: 0 4px 0 2px; position: relative; border-radius: 8px; }
+  .lyr-row:hover { background: var(--stone-100); }
+  .lyr-row.active { background: var(--sel); }
   .lyr-tw { flex: 0 0 20px; width: 20px; height: 100%; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; }
+  .lyr-row.active .lyr-tw { color: rgba(255,255,255,.85); }
   .lyr-tw svg { transition: transform .12s; }
   .lyr-tw.open svg { transform: rotate(90deg); }
   .lyr-tw-spacer { flex: 0 0 20px; width: 20px; }
-  .lyr-main { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 6px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; border-radius: 8px; }
-  .lyr-row:hover .lyr-main { background: var(--stone-100); }
-  .lyr-row.active .lyr-main { background: var(--sel); }
+  .lyr-main { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 4px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; }
   /* lead slot holds the type icon, swapped for a drag handle on hover */
   .lyr-lead { position: relative; width: 16px; height: 16px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
   .lyr-ic { color: var(--stone-500); display: inline-flex; }
@@ -187,20 +189,20 @@
   .lyr-row:hover .lyr-ic { display: none; }
   .lyr-row:hover .lyr-handle { display: inline-flex; }
   .lyr-row.active .lyr-ic, .lyr-row.active .lyr-handle { color: #fff; }
-  .lyr-name { flex: 1 1 auto; font-size: 13px; font-weight: 450; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lyr-name { flex: 1 1 auto; font-size: 12px; font-weight: 450; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lyr-row.active .lyr-name { color: #fff; font-weight: 550; }
   .lyr-count { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; padding-right: 2px; }
   .lyr-row.active .lyr-count { color: rgba(255,255,255,.8); }
-  /* row hover actions (hide / delete) on the right edge */
-  .lyr-actions { display: none; align-items: center; gap: 1px; flex: 0 0 auto; padding-left: 2px; }
+  /* row hover actions (hide / delete) — inside the row, revealed on hover */
+  .lyr-actions { display: none; align-items: center; gap: 1px; flex: 0 0 auto; }
   .lyr-row:hover .lyr-actions { display: flex; }
-  .lyr-act { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; }
+  .lyr-act { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; }
   .lyr-act:hover { background: var(--stone-200); color: var(--stone-900); }
   .lyr-act.lyr-del:hover { background: #fee2e2; color: #dc2626; }
   .lyr-row.active .lyr-act { color: rgba(255,255,255,.85); }
   .lyr-row.active .lyr-act:hover { background: rgba(255,255,255,.18); color: #fff; }
   .lyr-row.active .lyr-act.lyr-del:hover { background: rgba(255,255,255,.2); color: #fff; }
-  .lyr-act svg { width: 15px; height: 15px; }
+  .lyr-act svg { width: 16px; height: 16px; }
   /* hidden (eye-off) layers: dimmed name; the eye action stays lit to show state */
   .lyr-row.lyr-hidden .lyr-name { color: var(--stone-400); font-style: italic; }
   .lyr-row.active.lyr-hidden .lyr-name { color: rgba(255,255,255,.7); }
@@ -208,17 +210,17 @@
   .lyr-row.lyr-hidden .lyr-act.lyr-hide { color: var(--stone-600); }
   /* drag-to-reorder visuals */
   .lyr-row.dragging { opacity: .45; }
-  .lyr-row.drop-before::before { content:""; position: absolute; left: 8px; right: 8px; top: -1px; height: 2px; background: var(--sel); border-radius: 2px; }
-  .lyr-row.drop-after::after { content:""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; background: var(--sel); border-radius: 2px; }
+  .lyr-row.drop-before::before { content:""; position: absolute; left: 4px; right: 4px; top: -2px; height: 2px; background: var(--sel); border-radius: 2px; }
+  .lyr-row.drop-after::after { content:""; position: absolute; left: 4px; right: 4px; bottom: -2px; height: 2px; background: var(--sel); border-radius: 2px; }
   /* breadcrumb in the block settings card */
   .sf-crumb { border: none; background: none; padding: 0; font: inherit; font-size: 10px; font-weight: 600; color: var(--sel); cursor: pointer; }
   .sf-crumb:hover { text-decoration: underline; }
   /* + Add block / + Add section row — flush blue-text row, same height as a layer row */
-  .lyr-add { display: flex; align-items: center; gap: 10px; height: 34px; margin: 0; padding: 0 14px 0 34px; border: none; background: none; cursor: pointer; font: inherit; font-size: 13px; font-weight: 550; color: var(--sel); width: 100%; border-radius: 8px; }
+  .lyr-add { display: flex; align-items: center; gap: 10px; height: 32px; margin: 1px 8px; padding: 0 14px 0 36px; border: none; background: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 550; color: var(--sel); width: auto; border-radius: 8px; }
   .lyr-add:hover { background: var(--stone-100); }
   .lyr-add svg { flex: 0 0 auto; }
   /* section-level Add (less indented than the block-level Add) */
-  .lyr-add-sec { padding-left: 18px; }
+  .lyr-add-sec { padding-left: 14px; }
   /* nested Add block: indentation set inline by depth */
   .lyr-add-nested { padding-left: 0; }
   /* generic theme blocks in the canvas */
@@ -274,14 +276,17 @@
   /* ---- subgroup ---- */
   .subgroup { display: flex; flex-direction: column; gap: 10px; }
   .subgroup.divider { border-top: 1px solid var(--stone-100); padding-top: 12px; }
-  .subgroup-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--stone-400); }
+  /* SUBGROUP HEADING — one shared style reused everywhere a group/subgroup is labelled
+     (layers section groups, settings subgroups, settings header rows). Shopify uses a
+     14px, regular-case, dark heading rather than tiny grey uppercase. */
+  .subgroup-label, .set-header { font-size: 14px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--stone-900); }
   .subgroup-items { display: flex; flex-direction: column; gap: 10px; }
 
   /* ---- control row: LABEL on the left, CONTROL on the right (skimmable, Shopify-like) -- */
   .ctl { display: flex; align-items: center; gap: 12px; }
-  .ctl > label, .ctl > .ctl-label { flex: 0 0 76px; width: 76px; font-size: 11px; color: var(--stone-600); font-weight: 500; line-height: 1.3; }
+  .ctl > label, .ctl > .ctl-label { flex: 0 0 76px; width: 76px; font-size: 12px; color: var(--stone-600); font-weight: 500; line-height: 1.3; }
   .ctl > *:not(label):not(.ctl-label) { flex: 1 1 auto; min-width: 0; }   /* the control fills the rest of the row */
-  .ctl-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  .ctl-label { font-size: 12px; color: var(--stone-600); font-weight: 500; }
   /* slider: rail on the right, with a fixed-width EDITABLE value box at the end (Shopify range).
      slider-wrap is the row's single flex child, so it lines up to the same width as a dropdown /
      colour field; the value box is a FIXED width, so the rail width — and therefore the column
@@ -336,7 +341,7 @@
   .colorinput { display: flex; align-items: center; gap: 8px; width: 100%; }
   .colorinput .sw { position: relative; width: 20px; height: 20px; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 1px var(--stone-200); flex: 0 0 auto; }
   .colorinput .sw input[type=color] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; padding: 0; }
-  .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 11px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
+  .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
 
   /* ---- palette rows: derived name on the left, color input + delete on the right ---- */
   .palette-row { display: flex; align-items: center; gap: 12px; }
@@ -389,13 +394,23 @@
   .hv-tag { position: fixed; z-index: 60; pointer-events: none; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; background: var(--sel); color: #fff; font-size: 12px; font-weight: 600; border-radius: 6px; white-space: nowrap; box-shadow: 0 2px 8px -2px rgba(37,99,235,.5); transform: translateY(-100%); }
   .hv-tag[hidden] { display: none; }
   .hv-tag svg { width: 13px; height: 13px; }
-  /* ---- canvas insertion affordance: a full-width line with a centred blue + ---- */
+  /* ---- canvas insertion affordance: a centred blue + (no line — the hovered element's
+     own blue frame already marks where you are) ---- */
   .hv-add { position: fixed; z-index: 58; height: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   .hv-add[hidden] { display: none; }
-  .hv-add::before { content:""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--sel); transform: translateY(-50%); border-radius: 2px; }
-  .hv-add .hv-plus { position: relative; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 999px; background: var(--sel); color: #fff; cursor: pointer; pointer-events: auto; box-shadow: 0 2px 6px -1px rgba(37,99,235,.5); }
+  .hv-add .hv-plus { position: relative; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 999px; background: var(--sel); color: #fff; cursor: pointer; pointer-events: auto; box-shadow: 0 2px 8px -1px rgba(37,99,235,.55); }
   .hv-add .hv-plus:hover { background: #1d4ed8; transform: scale(1.08); }
   .hv-add .hv-plus svg { width: 14px; height: 14px; }
+
+  /* ---- shared pane header (left panel page name ⇄ right inspector layer name) ---- */
+  .pane-head { display: flex; align-items: center; gap: 9px; padding: 12px 16px; min-height: 49px; border-bottom: 1px solid var(--stone-200); flex: 0 0 auto; }
+  .pane-ic { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
+  .pane-title { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pane-btn { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
+  .pane-btn:hover { color: var(--stone-900); background: var(--stone-100); }
+  /* left panel page header — desktop only (mobile keeps the bottom-sheet header) */
+  .panel-pagehead { display: flex; }
+  @media (max-width: 860px){ .panel-pagehead { display: none; } }
 
   /* RIGHT inspector column (desktop): fixed settings rail, like Shopify */
   .inspector { width: 320px; flex: 0 0 320px; border-left: 1px solid var(--stone-200); background: #fff; display: flex; flex-direction: column; min-height: 0; }
@@ -409,15 +424,15 @@
   .section-float[hidden] { display: none; }
   /* docked in the right inspector: fill the column, no floating chrome */
   .section-float.in-inspector { position: static; width: 100%; max-height: none; height: 100%; border: none; border-radius: 0; box-shadow: none; z-index: auto; }
-  .section-float.in-inspector .sf-head { padding: 14px 16px; border-bottom: 1px solid var(--stone-200); }
-  .sf-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
-  .sf-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .sf-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--sel); flex: 0 0 auto; }
-  .sf-name { font-size: 12px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 2px; display: inline-flex; flex: 0 0 auto; }
-  .sf-close:hover { color: var(--stone-900); }
+  .section-float.in-inspector .sf-head { padding: 12px 16px; border-bottom: 1px solid var(--stone-200); min-height: 49px; }
+  .sf-head { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-bottom: 1px solid var(--stone-100); }
+  .sf-title { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1 1 auto; }
+  .sf-ic { color: var(--stone-500); display: inline-flex; flex: 0 0 auto; }
+  .sf-name { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
+  .sf-close:hover { color: var(--stone-900); background: var(--stone-100); }
   .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .sf-label { font-size: 11px; color: var(--stone-600); font-weight: 500; }
+  .sf-label { font-size: 12px; color: var(--stone-600); font-weight: 500; }
   /* type/limit caption under the section name (mirrors Shopify's section subtitle) */
   .sf-sub { font-size: 10px; color: var(--stone-400); font-weight: 500; margin-top: 1px; }
 
@@ -433,10 +448,11 @@
   .picker-field { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; color: var(--stone-500); }
   .picker-field .pf-label { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .picker-field svg { color: var(--stone-400); flex: 0 0 auto; }
-  /* header / paragraph — the ONLY grouping Shopify allows inside a section's settings */
-  .set-header { font-size: 11px; font-weight: 600; color: var(--stone-700); letter-spacing: .01em; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--stone-100); }
+  /* header / paragraph — the ONLY grouping Shopify allows inside a section's settings.
+     (font size/weight/case/color come from the shared .subgroup-label,.set-header rule.) */
+  .set-header { padding-top: 12px; margin-top: 6px; border-top: 1px solid var(--stone-100); }
   .sf-body > .set-header:first-child { border-top: none; padding-top: 0; margin-top: 0; }
-  .set-paragraph { font-size: 11px; color: var(--stone-500); line-height: 1.5; }
+  .set-paragraph { font-size: 12px; color: var(--stone-500); line-height: 1.5; }
   /* contextual scheme picker — bigger rows that match the left panel's scheme list */
   .sf-scheme .dd-trigger { min-height: 56px; padding: 8px 10px; gap: 10px; }
   .sf-scheme .dd-cur { gap: 10px; }
@@ -854,6 +870,11 @@
   <!-- ===================== LEFT: SETTINGS PANEL ========================= -->
   <aside class="panel" data-mode="layers">
     <div class="sheet-handle" id="sheet-handle"><span class="grip"></span></div>
+    <!-- desktop page header (matches the right inspector header) -->
+    <div class="pane-head panel-pagehead">
+      <span class="pane-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span class="pane-title">Home page</span>
+    </div>
     <div class="panel-header">
       <!-- global header (default) -->
       <div class="ph-global">
@@ -2750,13 +2771,17 @@ let selectedBlock = null;   // { section, index } when a block is selected
 const ICON_EYE     = '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
 const ICON_EYE_OFF = '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
 const ICON_TRASH   = '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>';
-const ICON_DRAG    = '<line x1="8" y1="6" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="18"/>';
+// classic drag grip: two columns of three dots (filled)
+function gripSvg(size){
+  const dots = [9,15].flatMap(x=>[6,12,18].map(y=>`<circle cx="${x}" cy="${y}" r="1.5"/>`)).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" stroke="none">${dots}</svg>`;
+}
 
 // the lead slot: a type icon that swaps to a drag handle on row hover (when draggable)
 function makeLead(iconSvg, iconSize, dragPayload, ghostRow){
   const lead = el(`<span class="lyr-lead"><span class="lyr-ic">${svg(iconSvg, iconSize)}</span></span>`);
   if(dragPayload){
-    const handle = el(`<span class="lyr-handle" draggable="true" title="Drag to reorder">${svg(ICON_DRAG, iconSize)}</span>`);
+    const handle = el(`<span class="lyr-handle" draggable="true" title="Drag to reorder">${gripSvg(iconSize)}</span>`);
     gripStart(handle, dragPayload, ghostRow);
     lead.appendChild(handle);
   }
@@ -2886,7 +2911,7 @@ function renderBlockRows(grp, section, list, parentPath, depth){
       renderBlockRows(grp, section, kids, path, depth+1);
       if(depth < 8){
         const add = el(`<button type="button" class="lyr-add lyr-add-nested">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
-        add.style.paddingLeft = (34 + depth*16) + 'px';
+        add.style.paddingLeft = (36 + depth*16) + 'px';
         add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
         // dropping on a group's "Add block" appends the dragged block INTO that group
         dropTarget(add, ()=>dragState && dragState.kind==='block' && dragState.section===section, ()=>{
@@ -2965,7 +2990,7 @@ function renderSectionControls(){
       const lastIdx = path[path.length-1];
       const phName = document.getElementById('ph-section-name'); if(phName) phName.textContent = blockName(inst, lastIdx);
       card.innerHTML = '';
-      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div><div class="sf-sub"></div></div></div></div>`);
+      const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(ICONS.box,16)}</span><div style="min-width:0;flex:1 1 auto"><div class="sf-name"></div><div class="sf-sub"></div></div></div></div>`);
       head.querySelector('.sf-name').textContent = blockName(inst, lastIdx);
       // breadcrumb: section ▸ each ancestor block ▸ (current type)
       const sub = head.querySelector('.sf-sub');
@@ -3005,7 +3030,7 @@ function renderSectionControls(){
   const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
   if(phName) phName.textContent = title;
   card.innerHTML = '';
-  const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-dot"></span><div style="min-width:0"><div class="sf-name"></div>${schema.category?`<div class="sf-sub">${schema.category} section</div>`:''}</div></div></div>`);
+  const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(layerIcon(schema),16)}</span><span class="sf-name"></span></div></div>`);
   head.querySelector('.sf-name').textContent = title;
   const close = el(`<button class="sf-close" title="Deselect section">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
   close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
@@ -3136,9 +3161,16 @@ function updateCanvasHover(target){
   hvTag.textContent = name; hvTag.hidden = false;
   hvTag.style.left = Math.max(6, r.left) + 'px';
   hvTag.style.top  = (r.top - 5) + 'px';
-  const showAdd = (kind==='block') || isTemplateSection(secId);
-  positionAdd(hvBefore, r, r.top,    showAdd);
-  positionAdd(hvAfter,  r, r.bottom, showAdd);
+  // Sections get a "+" above AND below (a section can be tall / its other edge off-screen);
+  // blocks get only the "+" below — both edges are usually in view, so two would be noisy.
+  if(kind==='block'){
+    positionAdd(hvBefore, r, r.top, false);
+    positionAdd(hvAfter,  r, r.bottom, true);
+  } else {
+    const showAdd = isTemplateSection(secId);
+    positionAdd(hvBefore, r, r.top,    showAdd);
+    positionAdd(hvAfter,  r, r.bottom, showAdd);
+  }
 }
 function initCanvasHover(){
   const preview = document.querySelector('.preview');
