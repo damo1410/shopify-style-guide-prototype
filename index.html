@@ -579,6 +579,9 @@
   .sf-name { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
   .sf-close:hover { color: var(--stone-900); background: var(--stone-100); }
+  .sf-more { border: none; background: none; cursor: pointer; color: var(--stone-500); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
+  .sf-more:hover { color: var(--stone-900); background: var(--stone-100); }
+  .sf-more svg { width: 18px; height: 18px; }
   .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .sf-label { font-size: 12px; color: var(--stone-600); font-weight: 400; }
   /* type/limit caption under the section name (mirrors Shopify's section subtitle) */
@@ -1024,9 +1027,8 @@
   <!-- ===================== LEFT: SETTINGS PANEL ========================= -->
   <aside class="panel" data-mode="layers">
     <div class="sheet-handle" id="sheet-handle"><span class="grip"></span></div>
-    <!-- desktop page header (matches the right inspector header) -->
+    <!-- desktop page header (no icon — matches Shopify's page/theme-settings header) -->
     <div class="pane-head panel-pagehead">
-      <span class="pane-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
       <span class="pane-title">Home page</span>
     </div>
     <div class="panel-header">
@@ -3169,6 +3171,36 @@ function duplicateSection(id){
   placeNewSection(orig.cloneNode(true), newId, sectionGroupId(id), sectionIndexInGroup(id)+1);
   toast('Section duplicated.');
 }
+function duplicateBlock(section, path){
+  const list = parentListOf(section, path); const idx = path[path.length-1];
+  if(!list || !list[idx]) return;
+  list.splice(idx+1, 0, clone(list[idx]));
+  renderSectionContent(section);
+  selectBlock(section, path.slice(0,-1).concat(idx+1));
+  toast('Block duplicated.');
+}
+function duplicateScheme(id){
+  const src = STATE.schemes[id]; if(!src) return;
+  let n = Object.keys(STATE.schemes).length + 1; let name = 'Scheme ' + n;
+  while(STATE.schemes[name]){ n++; name = 'Scheme ' + n; }
+  STATE.schemes[name] = clone(src);
+  selectScheme(name);
+  toast('Scheme duplicated.');
+}
+// inspector header "⋯" menu — entries: {icon,label,fn,danger} or {sep:true}
+const DUP_ICON = '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>';
+function openMoreMenu(anchor, entries){
+  popover(anchor, (close)=>{
+    const m = el('<div class="cmenu"></div>');
+    entries.forEach(e=>{
+      if(e.sep){ m.appendChild(el('<div class="cmenu-sep"></div>')); return; }
+      const b = el(`<button type="button" class="cmenu-item ${e.danger?'danger':''}">${svg(e.icon,16)}<span>${e.label}</span></button>`);
+      b.onclick = ()=>{ close(); e.fn(); };
+      m.appendChild(b);
+    });
+    return m;
+  });
+}
 function openSectionPicker(gid, index){
   gid = gid || 'template';
   const groups = {};
@@ -3434,9 +3466,14 @@ function renderSectionControls(){
       card.innerHTML='';
       const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-name"></span></div></div>`);
       head.querySelector('.sf-name').textContent = 'Editing ' + selectedScheme;
+      const schemeId = selectedScheme;
+      const more = el(`<button class="sf-more" title="More options">${svg(DOTS_ICON,16)}</button>`);
+      more.onclick = (e)=>{ e.stopPropagation(); const entries=[{icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateScheme(schemeId)}];
+        if(Object.keys(STATE.schemes).length > 1) entries.push({sep:true},{icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>{ removeScheme(schemeId); selectedScheme=null; buildLayers(); renderSchemes(); renderSectionControls(); }});
+        openMoreMenu(e.currentTarget, entries); };
       const close = el(`<button class="sf-close" title="Done">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
       close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
-      head.appendChild(close); card.appendChild(head);
+      head.appendChild(more); head.appendChild(close); card.appendChild(head);
       const b = el('<div class="sf-body"></div>');
       const hero = el('<div class="sf-scheme-hero"><span class="sc-aa">Aa</span><span class="sc-pills"><span class="sc-pill"></span><span class="sc-pill"></span></span></div>');
       const paintHero = ()=>{ hero.style.background=swatchHex(scheme.bg); hero.querySelector('.sc-aa').style.color=swatchHex(scheme.heading); const p=hero.querySelectorAll('.sc-pill'); p[0].style.background=swatchHex(scheme.btnBg); p[1].style.background=swatchHex(scheme.btn2Border); };
@@ -3450,11 +3487,6 @@ function renderSectionControls(){
           b.appendChild(controlRow(r.label, colorField(scheme[r.key], v=>{ scheme[r.key]=v; applyRoles(); applyAllSectionSettings(); paintHero(); renderSchemes(); })));
         });
       });
-      if(Object.keys(STATE.schemes).length > 1){
-        const rm = el(`<button type="button" class="sf-remove">${svg(ICON_TRASH,14)}<span>Remove scheme</span></button>`);
-        rm.onclick = (e)=>{ e.stopPropagation(); removeScheme(selectedScheme); selectedScheme=null; buildLayers(); renderSchemes(); renderSectionControls(); };
-        b.appendChild(rm);
-      }
       card.appendChild(b);
       placeCard(card);
       return;
@@ -3481,9 +3513,17 @@ function renderSectionControls(){
       const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(blockLayerIcon(inst),16)}</span><span class="sf-name"></span></div></div>`);
       head.querySelector('.sf-name').textContent = blockName(inst, lastIdx);
       // (no breadcrumb — navigate the nested block tree via the Layers panel)
+      const bHideKey = blockHideKey(section, path), bHidden = hiddenLayers.has(bHideKey);
+      const bMore = el(`<button class="sf-more" title="More options">${svg(DOTS_ICON,16)}</button>`);
+      bMore.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, [
+        {icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateBlock(section, path)},
+        {icon:(bHidden?ICON_EYE:ICON_EYE_OFF), label:(bHidden?'Show':'Hide'), fn:()=>toggleHidden(bHideKey)},
+        {sep:true},
+        {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>removeBlock(section, path)},
+      ]); };
       const close = el(`<button class="sf-close" title="Deselect">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
       close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
-      head.appendChild(close); card.appendChild(head);
+      head.appendChild(bMore); head.appendChild(close); card.appendChild(head);
       const bb = el('<div class="sf-body"></div>');
       const bvals = inst.settings || (inst.settings = {});
       renderSettingsList(bb, bSchema.settings,
@@ -3495,9 +3535,6 @@ function renderSectionControls(){
         addc.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
         bb.appendChild(addc);
       }
-      const rm = el(`<button type="button" class="sf-remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}<span>Remove block</span></button>`);
-      rm.onclick = (e)=>{ e.stopPropagation(); removeBlock(section, path); };
-      bb.appendChild(rm);
       card.appendChild(bb);
       placeCard(card);
       return;
@@ -3511,9 +3548,17 @@ function renderSectionControls(){
   card.innerHTML = '';
   const head = el(`<div class="sf-head"><div class="sf-title"><span class="sf-ic">${svg(layerIcon(schema),16)}</span><span class="sf-name"></span></div></div>`);
   head.querySelector('.sf-name').textContent = title;
+  const secId = selectedSection, secHidden = hiddenLayers.has(secId);
+  const sMore = el(`<button class="sf-more" title="More options">${svg(DOTS_ICON,16)}</button>`);
+  sMore.onclick = (e)=>{ e.stopPropagation(); openMoreMenu(e.currentTarget, [
+    {icon:DUP_ICON, label:'Duplicate', fn:()=>duplicateSection(secId)},
+    {icon:(secHidden?ICON_EYE:ICON_EYE_OFF), label:(secHidden?'Show':'Hide'), fn:()=>toggleHidden(secId)},
+    {sep:true},
+    {icon:ICON_TRASH, label:'Remove', danger:true, fn:()=>removeSection(secId)},
+  ]); };
   const close = el(`<button class="sf-close" title="Deselect section">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
   close.onclick = (e)=>{ e.stopPropagation(); deselectSection(); };
-  head.appendChild(close); card.appendChild(head);
+  head.appendChild(sMore); head.appendChild(close); card.appendChild(head);
 
   // Render the section's Shopify-shaped settings via the schema engine. color_scheme routes
   // to STATE.sectionSchemes (existing scheme wiring); every other setting persists to secVals.
@@ -3527,15 +3572,7 @@ function renderSectionControls(){
   };
   const b = el('<div class="sf-body"></div>');
   renderSettingsList(b, schema.settings, getVal, setVal);
-  if(selectedSection){   // every section can be duplicated / removed now
-    const sec = selectedSection;
-    const dup = el(`<button type="button" class="sf-dup">${svg('<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',14)}<span>Duplicate section</span></button>`);
-    dup.onclick = (e)=>{ e.stopPropagation(); duplicateSection(sec); };
-    b.appendChild(dup);
-    const rm = el(`<button type="button" class="sf-remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}<span>Remove section</span></button>`);
-    rm.onclick = (e)=>{ e.stopPropagation(); removeSection(sec); };
-    b.appendChild(rm);
-  }
+  // (Duplicate / Hide / Remove now live in the header ⋯ menu, matching Shopify)
   card.appendChild(b);
   placeCard(card);
 }
