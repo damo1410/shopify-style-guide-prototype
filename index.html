@@ -169,6 +169,7 @@
 
   /* ---- layers tree (the Shopify section/block hierarchy) ---- */
   .layers { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0 28px; }
+  .groups { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .lyr-group { padding: 2px 0; }
   .lyr-grouphd { font-size: 13px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
   /* divider line between the Header / Template / Footer groups (Shopify section groups) */
@@ -176,20 +177,23 @@
   /* EVERY row — section or block, any nesting depth — is the same fixed height. The ROW is
      the hover/select surface (chevron + actions live INSIDE it), so the highlight always
      spans full width and never narrows when the hover actions appear. */
-  .lyr-row { display: flex; align-items: center; height: 34px; margin: 1px 8px; padding: 0 4px 0 2px; position: relative; border-radius: 8px; }
+  .lyr-row { display: flex; align-items: center; height: 34px; margin: 1px 8px; padding: 0 4px; position: relative; border-radius: 8px; }
   /* hover OR cross-hover from the canvas; .active (selected) keeps the solid blue fill */
   .lyr-row:hover:not(.active), .lyr-row.lyr-hover:not(.active) { background: var(--stone-100); }
   .lyr-row.active { background: var(--sel); }
-  .lyr-tw { flex: 0 0 22px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; border-radius: 6px; }
+  /* chevron + lead: narrow width, but the same 26px height as the right-side actions, with a
+     6px-radius hover surface. No gap between them; the lead sits flush after the chevron. */
+  .lyr-tw { flex: 0 0 20px; width: 20px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--stone-400); cursor: pointer; padding: 0; border-radius: 6px; }
   .lyr-tw:hover { background: var(--stone-200); color: var(--stone-700); }
   .lyr-row.active .lyr-tw { color: rgba(255,255,255,.85); }
   .lyr-row.active .lyr-tw:hover { background: rgba(255,255,255,.18); color: #fff; }
   .lyr-tw svg { transition: transform .12s; }
   .lyr-tw.open svg { transform: rotate(90deg); }
-  .lyr-tw-spacer { flex: 0 0 22px; width: 22px; }
-  .lyr-main { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 4px; border: none; background: none; cursor: pointer; font: inherit; text-align: left; }
+  .lyr-tw-spacer { flex: 0 0 20px; width: 20px; }
+  /* main: no side padding so the lead is flush to the chevron; 4px gap before the name */
+  .lyr-main { flex: 1 1 auto; min-width: 0; height: 100%; display: flex; align-items: center; gap: 4px; padding: 0; border: none; background: none; cursor: pointer; font: inherit; text-align: left; }
   /* lead slot holds the type icon, swapped for a drag handle on hover */
-  .lyr-lead { position: relative; width: 22px; height: 22px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+  .lyr-lead { position: relative; width: 20px; height: 26px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
   .lyr-ic { color: var(--stone-500); display: inline-flex; }
   .lyr-handle { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--stone-500); cursor: grab; border-radius: 6px; }
   .lyr-handle:hover { background: var(--stone-200); color: var(--stone-700); }
@@ -948,18 +952,7 @@
           <div class="announce">Free shipping over $75 · 30-day risk-free returns · 2-year warranty</div>
 
           <!-- NAV -->
-          <nav class="nav" data-sec="nav"><div class="container">
-            <span class="logo">NOIR</span>
-            <div class="nav-links"><a>New</a><a>Men</a><a>Women</a><a>Sport</a><a>Collections</a><a>Sale</a></div>
-            <div class="nav-actions">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span class="cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <span class="dot">3</span>
-              </span>
-            </div>
-          </div><div class="container tb-root" data-blocks style="padding-top:0;padding-bottom:0"><!-- header theme blocks --></div></nav>
+          <nav class="nav" data-sec="nav"><div class="container" data-blocks><!-- header blocks: logo / menu / icons --></div></nav>
 
           <!-- HERO -->
           <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
@@ -1024,20 +1017,7 @@
           </div></section>
 
           <!-- FOOTER -->
-          <footer class="store-footer" data-sec="footer"><div class="container">
-            <div class="tb-root" data-blocks><!-- footer theme blocks --></div>
-            <div class="cols">
-              <div><div class="brandmark">NOIR</div><p style="opacity:.7;font-size:.92rem;line-height:1.6">Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.</p></div>
-              <div><h6>Shop</h6><a>New arrivals</a><a>Best sellers</a><a>Men</a><a>Women</a><a>Sale</a></div>
-              <div><h6>Help</h6><a>Track order</a><a>Shipping</a><a>Returns</a><a>Warranty</a><a>FAQ</a></div>
-              <div><h6>Company</h6><a>About</a><a>Sustainability</a><a>Stores</a><a>Careers</a></div>
-              <div><h6>Connect</h6><a>Instagram</a><a>TikTok</a><a>Newsletter</a><a>Contact</a></div>
-            </div>
-            <div class="footer-bottom">
-              <span>© 2026 NOIR Eyewear. All rights reserved.</span>
-              <div class="pay"><span>VISA</span><span>AMEX</span><span>PAYPAL</span><span>APPLE PAY</span><span>KLARNA</span></div>
-            </div>
-          </div></footer>
+          <footer class="store-footer" data-sec="footer"><div class="container" data-blocks><!-- footer blocks: brand / menus / bottom bar --></div></footer>
 
         </div>
       </div>
@@ -1640,17 +1620,18 @@ function fontDropdown(value, onChange){
 let schemesHost;
 let expandedScheme = null;   // which scheme is expanded for editing (and previewed); null = all collapsed
 
-function renderColor(body){
-  // ---- Palette: derived name label above, color input + delete beside ----
-  const pal = subgroup('Palette');
+// BRAND COLORS — the raw palette swatches (a prototype convenience; see note in chat: real
+// Shopify themes have no shared named palette, schemes pick colors directly).
+function renderBrandColors(body){
+  const host = el('<div style="display:flex;flex-direction:column;gap:10px"></div>');
+  body.appendChild(host);
   function drawPalette(){
-    pal.body.innerHTML='';
+    host.innerHTML='';
     STATE.palette.forEach((c,i)=>{
       const row = el('<div class="palette-row"></div>');
       const label = el(`<span class="ctl-label">${c.name}</span>`);
       row.appendChild(label);
       const inputRow = el('<div class="palette-input-row"></div>');
-      // changing the hex updates the derived name + everything that references the swatch
       inputRow.appendChild(colorInput(c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); label.textContent=c.name; renderSchemes(); applyRoles(); }));
       if(STATE.palette.length > 1){
         const rm = el(`<button class="icon-btn" title="Remove colour">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',12)}</button>`);
@@ -1658,24 +1639,22 @@ function renderColor(body){
         inputRow.appendChild(rm);
       }
       row.appendChild(inputRow);
-      pal.body.appendChild(row);
+      host.appendChild(row);
     });
     const add = el(`<button class="add-btn">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}Add colour</button>`);
     add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'sw'+Date.now().toString(36), name:colorName(hex), hex }); drawPalette(); renderSchemes(); };
-    pal.body.appendChild(add);
+    host.appendChild(add);
   }
   drawPalette();
-  body.appendChild(pal.wrap);
-
-  // ---- Schemes ----
-  const sch = subgroup('Color schemes', true);
-  sch.body.appendChild(el('<p class="subgroup-hint">Edit a scheme’s tokens here. To use a scheme, select a section in the preview and pick it there.</p>'));
+}
+// COLOR SCHEMES — role→swatch mappings applied per section (this is the real Shopify concept).
+function renderSchemesGroup(body){
+  body.appendChild(el('<p class="subgroup-hint">Edit a scheme’s tokens here. To use a scheme, select a section in the preview and pick it there.</p>'));
   schemesHost = el('<div></div>');           // renderSchemes() owns this node (hint stays put)
-  sch.body.appendChild(schemesHost);
+  body.appendChild(schemesHost);
   // null = intentionally all collapsed; only repoint if it points at a now-missing scheme
   if(expandedScheme !== null && !STATE.schemes[expandedScheme]) expandedScheme = STATE.activeScheme;
   renderSchemes();
-  body.appendChild(sch.wrap);
 }
 
 // If a swatch is deleted, repoint any scheme role that referenced it.
@@ -2156,10 +2135,8 @@ const PADDING_BLOCK = [ {type:'header', content:'Section padding'}, PAD('padding
 const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color scheme' };
 
 const SECTION_SCHEMAS = {
-  nav: { name:'Header', category:'Header', blocks:[{type:'@theme'}], max_blocks:20, settings:[
+  nav: { name:'Header', category:'Header', blocks:[{type:'header_logo'},{type:'header_menu'},{type:'header_icons'}], max_blocks:20, settings:[
     SCHEME_SETTING,
-    {type:'text', id:'logo_text', label:'Logo text', default:'NOIR'},
-    {type:'checkbox', id:'show_search', label:'Show search icon', default:true},
     {type:'checkbox', id:'sticky', label:'Stick to top on scroll', default:false},
   ]},
   hero: { name:'Image banner', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
@@ -2220,10 +2197,8 @@ const SECTION_SCHEMAS = {
     {type:'text_alignment', id:'content_alignment', label:'Content alignment', default:'center'},
     ...PADDING_BLOCK,
   ]},
-  footer: { name:'Footer', category:'Footer', blocks:[{type:'@theme'}], max_blocks:20, settings:[
+  footer: { name:'Footer', category:'Footer', blocks:[{type:'footer_brand'},{type:'footer_menu'},{type:'footer_bottom'}], max_blocks:20, settings:[
     SCHEME_SETTING,
-    {type:'checkbox', id:'show_payment_icons', label:'Show payment icons', default:true},
-    {type:'text', id:'copyright', label:'Copyright text', default:'© 2026 NOIR Eyewear. All rights reserved.'},
   ]},
 };
 
@@ -2264,15 +2239,9 @@ const SECTION_WIRE = {
     const head = elm.querySelector('[data-blocks]'); if(head) head.style.alignItems = ai;
   },
   bestsellers(elm, sec){ const btn=elm.querySelector('.rowhead > .btn'); if(btn) btn.style.display = secSetting(sec,'show_view_all')===false ? 'none' : ''; },
-  nav(elm, sec){
-    const logo=elm.querySelector('.logo'); if(logo) logo.textContent = secSetting(sec,'logo_text') || 'NOIR';
-    const search=elm.querySelector('.nav-actions svg'); if(search) search.style.display = secSetting(sec,'show_search')===false ? 'none' : '';
+  nav(elm, sec){   // logo / menu / icons are blocks now; only the sticky toggle stays section-level
     const st = !!secSetting(sec,'sticky');
     elm.style.position = st?'sticky':''; elm.style.top = st?'0':''; elm.style.zIndex = st?'20':'';
-  },
-  footer(elm, sec){
-    const cr=elm.querySelector('.footer-bottom span'); if(cr) cr.textContent = secSetting(sec,'copyright') || '';
-    const pay=elm.querySelector('.pay'); if(pay) pay.style.display = secSetting(sec,'show_payment_icons')===false ? 'none' : '';
   },
 };
 // Apply ALL of a section's settings to its element (padding + per-type wiring).
@@ -2345,6 +2314,19 @@ Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
 // while _demo lets the hardcoded markup keep rendering. Exports drop _demo.
 function buildDefaultBlocks(){
   return {
+    nav: [
+      { type:'header_logo',  name:'Logo',  settings:{ text:'NOIR' } },
+      { type:'header_menu',  name:'Menu',  settings:{ links:'New, Men, Women, Sport, Collections, Sale' } },
+      { type:'header_icons', name:'Icons', settings:{ show_search:true, show_account:true, show_cart:true } },
+    ],
+    footer: [
+      { type:'footer_brand', name:'Brand', settings:{ title:'NOIR', text:'Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.' } },
+      { type:'footer_menu',  name:'Shop',    settings:{ title:'Shop',    links:'New arrivals, Best sellers, Men, Women, Sale' } },
+      { type:'footer_menu',  name:'Help',    settings:{ title:'Help',    links:'Track order, Shipping, Returns, Warranty, FAQ' } },
+      { type:'footer_menu',  name:'Company', settings:{ title:'Company', links:'About, Sustainability, Stores, Careers' } },
+      { type:'footer_menu',  name:'Connect', settings:{ title:'Connect', links:'Instagram, TikTok, Newsletter, Contact' } },
+      { type:'footer_bottom',name:'Bottom bar', settings:{ copyright:'© 2026 NOIR Eyewear. All rights reserved.', show_payment:true } },
+    ],
     hero: [
       { type:'text_block',    name:"New · Summer '26", settings:{ text:"New · Summer '26" } },
       { type:'heading_block', name:'See the world in style.', settings:{ text:'See the world in style.', size:'h1' } },
@@ -2469,6 +2451,55 @@ const CARD_RENDERERS = {
 };
 // Full-list renderers for the remaining (pure-card) sections.
 const SECTION_RENDERERS = {};
+
+/* ---- Header / Footer bespoke blocks — the nav + footer are built from real block
+   instances (they show in the layers tree and are selectable/hoverable on canvas). ---- */
+Object.assign(BLOCK_SCHEMAS, {
+  header_logo:  { name:'Logo', settings:[ {type:'text', id:'text', label:'Logo text', default:'NOIR'} ] },
+  header_menu:  { name:'Menu', settings:[ {type:'text', id:'links', label:'Menu items', default:'New, Men, Women, Sport, Collections, Sale', info:'Comma-separated'} ] },
+  header_icons: { name:'Icons', settings:[ {type:'checkbox', id:'show_search', label:'Search', default:true},{type:'checkbox', id:'show_account', label:'Account', default:true},{type:'checkbox', id:'show_cart', label:'Cart', default:true} ] },
+  footer_brand: { name:'Brand', settings:[ {type:'text', id:'title', label:'Brand name', default:'NOIR'},{type:'textarea', id:'text', label:'Description', default:'Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.'} ] },
+  footer_menu:  { name:'Menu', settings:[ {type:'text', id:'title', label:'Heading', default:'Shop'},{type:'textarea', id:'links', label:'Links', default:'New arrivals, Best sellers', info:'Comma-separated'} ] },
+  footer_bottom:{ name:'Bottom bar', settings:[ {type:'text', id:'copyright', label:'Copyright', default:'© 2026 NOIR Eyewear. All rights reserved.'},{type:'checkbox', id:'show_payment', label:'Show payment icons', default:true} ] },
+});
+// (BLOCK_ICON / BLOCK_CATEGORY entries for these live in their literals below — they're
+//  declared later in the file, so we can't Object.assign them here.)
+
+const PAY_ICONS = ['VISA','AMEX','PAYPAL','APPLE PAY','KLARNA'];
+const navSvg = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const linkList = s => (s||'').split(',').map(l=>l.trim()).filter(Boolean).map(l=>`<a>${l}</a>`).join('');
+function renderHeaderBlock(b,i){
+  const s=b.settings||{};
+  switch(b.type){
+    case 'header_logo':  return `<span class="logo" data-bpath="${i}">${s.text||'NOIR'}</span>`;
+    case 'header_menu':  return `<div class="nav-links" data-bpath="${i}">${linkList(s.links)}</div>`;
+    case 'header_icons': {
+      let ic='';
+      if(s.show_search!==false)  ic+=navSvg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>');
+      if(s.show_account!==false) ic+=navSvg('<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>');
+      if(s.show_cart!==false)    ic+=`<span class="cart">${navSvg('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>')}<span class="dot">3</span></span>`;
+      return `<div class="nav-actions" data-bpath="${i}">${ic}</div>`;
+    }
+    default: return `<div class="tb" data-bpath="${i}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
+  }
+}
+SECTION_RENDERERS.nav = (list)=> (list||[]).map((b,i)=>renderHeaderBlock(b,i)).join('');
+
+function renderFooterColumn(b,i){
+  const s=b.settings||{};
+  if(b.type==='footer_brand') return `<div data-bpath="${i}"><div class="brandmark">${s.title||'NOIR'}</div><p style="opacity:.7;font-size:.92rem;line-height:1.6">${s.text||''}</p></div>`;
+  return `<div data-bpath="${i}"><h6>${s.title||''}</h6>${linkList(s.links)}</div>`;
+}
+function renderFooterBottom(b,i){
+  const s=b.settings||{};
+  const pay = (s.show_payment!==false) ? `<div class="pay">${PAY_ICONS.map(p=>`<span>${p}</span>`).join('')}</div>` : '';
+  return `<div class="footer-bottom" data-bpath="${i}"><span>${s.copyright||''}</span>${pay}</div>`;
+}
+SECTION_RENDERERS.footer = (list)=>{
+  let cols='', bottom='';
+  (list||[]).forEach((b,i)=>{ if(b.type==='footer_bottom') bottom+=renderFooterBottom(b,i); else cols+=renderFooterColumn(b,i); });
+  return `<div class="cols">${cols}</div>${bottom}`;
+};
 function renderSectionContent(key){
   const secEl = sectionEl(key); if(!secEl) return;
   const type = secType(key);
@@ -2582,7 +2613,9 @@ const SECTION_SEED = { groupsec: demoGroupBlocks };
 const BLOCK_CATEGORY = { icon_column:'Content', testimonial:'Content', checklist_item:'Content', logo:'Content',
   collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content',
   group:'Layout', heading_block:'Text', text_block:'Text', button_block:'Text', image_block:'Media',
-  icon_block:'Media', email_form:'Content' };
+  icon_block:'Media', email_form:'Content',
+  header_logo:'Header', header_menu:'Header', header_icons:'Header',
+  footer_brand:'Footer', footer_menu:'Footer', footer_bottom:'Footer' };
 // placeholder _demo for a freshly-added block so media-backed types still render
 const NEW_BLOCK_DEMO = {
   collection_card: ()=>({ seed:'noir-'+Math.random().toString(36).slice(2,7), seed2:'noir-'+Math.random().toString(36).slice(2,7) }),
@@ -2906,6 +2939,7 @@ const BLOCK_ICON = {
   icon_block:'star', email_form:'mail', group:'folder',
   collection_card:'tag', product_card:'box', testimonial:'quote', logo:'frame',
   gallery_image:'image', post_card:'file', icon_column:'grid', checklist_item:'text',
+  header_logo:'frame', header_menu:'text', header_icons:'grid', footer_brand:'frame', footer_menu:'text', footer_bottom:'layout',
 };
 function blockTypeIcon(type){ return ICONS[BLOCK_ICON[type]] || ICONS.box; }
 function blockLayerIcon(b){ return blockTypeIcon(b && b.type); }
@@ -3583,7 +3617,8 @@ function closeExport(){ const ov=document.getElementById('ex-ov'); if(ov) ov.rem
 function buildPanel(){
   const host=document.getElementById('groups'); host.innerHTML='';
   [
-    ['Color','palette',false,renderColor],
+    ['Brand colors','palette',false,renderBrandColors],
+    ['Color schemes','palette',false,renderSchemesGroup],
     ['Typography','type',false,renderTypography],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
