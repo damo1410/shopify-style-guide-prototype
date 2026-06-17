@@ -166,11 +166,13 @@
   /* a block's frame should hug its content — spacing between blocks is the tb-root gap,
      so zero the heading/paragraph bottom-margins the store adds (which were inflating the
      selection/hover frame). .store specificity beats section rules like .hero p. */
-  .store .tb > * { margin: 0; }
+  .store .tb > * { margin: 0 !important; }
   /* groups are invisible layout containers; only an EMPTY group shows a drop affordance */
   .tb-group:empty { min-width: 80px; min-height: 44px; border: 1px dashed var(--c-border, #e7e5e4); border-radius: var(--radius, 10px); }
   .tb-img { width: 100%; max-width: 360px; min-height: 120px; border-radius: var(--radius, 10px); background: repeating-conic-gradient(var(--c-surface,#f0efed) 0% 25%, #fff 0% 50%) 50% / 22px 22px; }
   /* Remove block button (bottom of the block settings card) */
+  .sf-dup { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: var(--stone-700); }
+  .sf-dup:hover { background: var(--stone-50); }
   .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
   .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
 
@@ -770,13 +772,13 @@
 
           <!-- VALUE PROPS / TRUST BAR -->
           <section class="section" data-sec="valueprops"><div class="container">
-            <div class="valueprops" id="valueprops"></div>
+            <div class="valueprops" data-cards></div>
           </div></section>
 
           <!-- SHOP BY COLLECTION -->
           <section class="section sec-surface" data-sec="collections"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
-            <div class="collections" id="collections"></div>
+            <div class="collections" data-cards></div>
           </div></section>
 
           <!-- BEST SELLERS -->
@@ -785,7 +787,7 @@
               <div class="ey" data-blocks-head><!-- heading/text blocks injected by JS --></div>
               <a class="btn btn-secondary">View all</a>
             </div>
-            <div class="carousel" id="products"></div>
+            <div class="carousel" data-cards></div>
           </div></section>
 
           <!-- GUARANTEE / RISK-FREE -->
@@ -801,25 +803,25 @@
               <div class="big">4.8 out of 5</div>
               <div class="sub">Based on 12,400+ verified reviews</div>
             </div>
-            <div class="reviews" id="reviews"></div>
+            <div class="reviews" data-cards></div>
           </div></section>
 
           <!-- PRESS / FEATURED IN -->
           <section class="press" data-sec="press"><div class="container">
             <div class="plabel">As featured in</div>
-            <div class="press-logos" id="press"></div>
+            <div class="press-logos" data-cards></div>
           </div></section>
 
           <!-- UGC / INSTAGRAM -->
           <section class="section" data-sec="ugc"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
-            <div class="ugc" id="ugc"></div>
+            <div class="ugc" data-cards></div>
           </div></section>
 
           <!-- BLOG / JOURNAL -->
           <section class="section sec-surface" data-sec="journal"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
-            <div class="journal" id="journal"></div>
+            <div class="journal" data-cards></div>
           </div></section>
 
           <!-- NEWSLETTER -->
@@ -2033,11 +2035,11 @@ function applySectionSetting(sec, setting, v){
 }
 // Re-apply persisted section settings to the preview (e.g. after Reset rebuild).
 function applyAllSectionSettings(){
-  Object.keys(SECTION_SCHEMAS).forEach(sec=>{
-    const elm = sectionEl(sec); if(!elm) return;
+  allSectionIds().forEach(id=>{
+    const elm = sectionEl(id); if(!elm) return;
     elm.style.removeProperty('padding-top'); elm.style.removeProperty('padding-bottom');
-    const vals = STATE.sectionSettings[sec]; if(!vals) return;
-    (SECTION_SCHEMAS[sec].settings||[]).forEach(s=>{ if(s.id in vals) applySectionSetting(sec, s, vals[s.id]); });
+    const vals = STATE.sectionSettings[id]; const sc = SECTION_SCHEMAS[secType(id)]; if(!vals || !sc) return;
+    (sc.settings||[]).forEach(s=>{ if(s.id in vals) applySectionSetting(id, s, vals[s.id]); });
   });
 }
 
@@ -2178,12 +2180,8 @@ const BLOCK_CONTAINERS = {
   reviews:['#reviews','.review'], press:['#press','.logo'], ugc:['#ugc','.ugc-tile'], journal:['#journal','.post'],
 };
 function blockEl(section, path){
-  const secEl = sectionEl(section);
-  // generic (theme-block) sections tag each block element with data-bpath
-  if(secEl){ const byPath = secEl.querySelector(`[data-bpath="${path.join('.')}"]`); if(byPath) return byPath; }
-  // flat bespoke sections: index into the known child container (depth-1 only)
-  if(path.length===1){ const m=BLOCK_CONTAINERS[section]; if(m){ const c=document.querySelector(m[0]); if(c) return c.querySelectorAll(m[1])[path[0]]||null; } }
-  return null;
+  const secEl = sectionEl(section); if(!secEl) return null;   // every block element carries data-bpath
+  return secEl.querySelector(`[data-bpath="${path.join('.')}"]`) || null;
 }
 function clearBlockHighlight(){ document.querySelectorAll('#store .block-selected').forEach(e => e.classList.remove('block-selected')); }
 function highlightBlockEl(section, path){ clearBlockHighlight(); const e = blockEl(section, path); if(e){ e.classList.add('block-selected'); e.scrollIntoView({block:'nearest'}); } }
@@ -2216,20 +2214,22 @@ const SECTION_RENDERERS = {
 };
 function renderSectionContent(key){
   const secEl = sectionEl(key); if(!secEl) return;
+  const type = secType(key);
   const list = sectionBlocks(key);
   const head = secEl.querySelector('[data-blocks-head]');
-  const cardFn = CARD_RENDERERS[key];
+  const cardFn = CARD_RENDERERS[type];
   if(head && cardFn){   // two-zone: content blocks → header zone, card blocks → grid
-    const cardHost = document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]);
+    const cardHost = secEl.querySelector('[data-cards]');
     let h='', c='';
     list.forEach((b,i)=>{ if(THEME_BLOCK_TYPES.includes(b.type)) h+=renderThemeBlock(b,[i]); else c+=cardFn(b,i); });
     head.innerHTML=h; if(cardHost) cardHost.innerHTML=c; applySectionSchemes(); return;
   }
-  const gen = secEl.querySelector('[data-blocks]'); const r = SECTION_RENDERERS[key];
+  const gen = secEl.querySelector('[data-blocks]'); const r = SECTION_RENDERERS[type];
   if(gen){ gen.innerHTML = r ? r(list) : renderThemeBlocks(list,[]); applySectionSchemes(); return; }  // generic sections
-  if(r){ const host = document.querySelector((BLOCK_CONTAINERS[key]||['#'+key])[0]); if(host){ host.innerHTML=r(list); applySectionSchemes(); } }  // pure-card sections
+  const cardHost = secEl.querySelector('[data-cards]');
+  if(r && cardHost){ cardHost.innerHTML=r(list); applySectionSchemes(); }                              // pure-card sections
 }
-function renderBlockSections(){ [...new Set([...Object.keys(SECTION_RENDERERS), ...Object.keys(CARD_RENDERERS)])].forEach(renderSectionContent); }
+function renderBlockSections(){ allSectionIds().forEach(renderSectionContent); }
 
 /* ----------------------------------------------------------------------------
    GENERIC THEME BLOCKS  —  reusable, NESTABLE blocks (Shopify /blocks). `group`
@@ -2316,13 +2316,13 @@ function newBlockInstance(type){
   const sc = BLOCK_SCHEMAS[type] || { settings:[] };
   return { type, name:(sc.name||'Block'), settings:defaultSettingsFor(sc), _demo:(NEW_BLOCK_DEMO[type]?NEW_BLOCK_DEMO[type]():{}) };
 }
-function blockCap(section){ const sc=SECTION_SCHEMAS[section]||{}; return Math.min(sc.max_blocks||50, 50); }   // Shopify hard ceiling: 50
-function acceptedBlockTypes(section){ const sc=SECTION_SCHEMAS[section]||{}; return (sc.blocks||[]).map(b=>b.type); }
+function blockCap(section){ const sc=SECTION_SCHEMAS[secType(section)]||{}; return Math.min(sc.max_blocks||50, 50); }   // Shopify hard ceiling: 50
+function acceptedBlockTypes(section){ const sc=SECTION_SCHEMAS[secType(section)]||{}; return (sc.blocks||[]).map(b=>b.type); }
 // Accepted child types at a position: a section's `blocks` (parentPath=[]) or a block's
 // `blocks`, expanding `@theme` to the theme-block set (and dropping `@app`).
 function acceptedChildTypes(section, parentPath){
   const accepts = !parentPath.length
-    ? ((SECTION_SCHEMAS[section]||{}).blocks||[])
+    ? ((SECTION_SCHEMAS[secType(section)]||{}).blocks||[])
     : (((BLOCK_SCHEMAS[(blockAt(section,parentPath)||{}).type]||{}).blocks)||[]);
   const out=[];
   accepts.forEach(a=>{ if(a.type==='@theme') out.push(...THEME_BLOCK_TYPES); else if(a.type!=='@app') out.push(a.type); });
@@ -2447,39 +2447,66 @@ function toast(msg){
    type arrives with the model-driven section rewrite that backs export.)
    ---------------------------------------------------------------------------- */
 const TEMPLATE_SECTION_TYPES = ['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter','groupsec'];
-const detachedSections = {};
-function isTemplateSection(key){ return SECTION_GROUPS.template.sections.includes(key); }
-function removeSection(key){
-  const i = SECTION_GROUPS.template.sections.indexOf(key); if(i<0) return;
-  const store=document.getElementById('store'); const node=store && store.querySelector(`[data-sec="${key}"]`);
-  if(node){ detachedSections[key]=node; node.remove(); }
+
+/* INSTANCE MODEL — a section on the page is an INSTANCE with a unique id; its TYPE
+   (schema/renderer key) is the id for originals, or looked up here for duplicates. */
+const sectionTypes = {};                                   // instanceId -> type (duplicates only)
+function secType(id){ return sectionTypes[id] || id; }
+const SECTION_TEMPLATES = {};                              // type -> empty shell node (captured at boot)
+function captureSectionTemplates(){
+  document.querySelectorAll('#store [data-sec]').forEach(eln=>{ SECTION_TEMPLATES[eln.getAttribute('data-sec')] = eln.cloneNode(true); });
+}
+function makeSectionNode(type){
+  if(SECTION_TEMPLATES[type]) return SECTION_TEMPLATES[type].cloneNode(true);
+  if(SECTION_BUILDERS[type]) return SECTION_BUILDERS[type]();
+  return null;
+}
+function allSectionIds(){ return [...SECTION_GROUPS.header.sections, ...SECTION_GROUPS.template.sections, ...SECTION_GROUPS.footer.sections]; }
+function sectionIdInUse(id){ return allSectionIds().includes(id) || !!sectionTypes[id]; }
+function uniqueSectionId(type){ if(!sectionIdInUse(type)) return type; let n=2; while(sectionIdInUse(type+'-'+n)) n++; return type+'-'+n; }
+function seedFor(type){ return SECTION_SEED[type] ? SECTION_SEED[type]() : clone(buildDefaultBlocks()[type] || []); }
+
+function isTemplateSection(id){ return SECTION_GROUPS.template.sections.includes(id); }
+function removeSection(id){
+  const i = SECTION_GROUPS.template.sections.indexOf(id); if(i<0) return;   // only template sections removable
+  const node = sectionEl(id); if(node) node.remove();
   SECTION_GROUPS.template.sections.splice(i,1);
-  if(selectedSection===key){ selectedSection=null; selectedBlock=null; }
-  clearBlockHighlight();
-  buildLayers(); renderSectionControls();
-  toast(`Removed ${(SECTION_SCHEMAS[key]||{}).name||'section'}.`);
+  delete STATE.sectionBlocks[id]; delete STATE.sectionSettings[id]; delete STATE.sectionSchemes[id]; delete sectionTypes[id];
+  if(selectedSection===id){ selectedSection=null; selectedBlock=null; }
+  clearBlockHighlight(); buildLayers(); renderSectionControls();
+  toast(`Removed ${(SECTION_SCHEMAS[secType(id)]||{}).name||'section'}.`);
+}
+function placeNewSection(node, id, afterId){
+  const store=document.getElementById('store'); const footer=store.querySelector('[data-sec="footer"]');
+  node.setAttribute('data-sec', id); node.classList.remove('sec-selected');
+  node.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));   // avoid duplicate ids in clones
+  const afterNode = afterId && sectionEl(afterId);
+  if(afterNode) afterNode.after(node); else store.insertBefore(node, footer);
+  const at = afterId ? SECTION_GROUPS.template.sections.indexOf(afterId)+1 : SECTION_GROUPS.template.sections.length;
+  SECTION_GROUPS.template.sections.splice(at, 0, id);
+  reorderSectionDom(); renderSectionContent(id); applySectionSchemes(); applyAllSectionSettings();
+  buildLayers(); selectSection(id);
 }
 function addSection(type){
-  if(SECTION_GROUPS.template.sections.includes(type)){ toast('That section is already added.'); return; }
-  const store=document.getElementById('store'); const footer=store && store.querySelector('[data-sec="footer"]'); if(!store||!footer) return;
-  let node = detachedSections[type]; if(node) delete detachedSections[type];
-  if(!node && SECTION_BUILDERS[type]){   // never-present section type → build a fresh instance + seed
-    node = SECTION_BUILDERS[type]();
-    if(SECTION_SEED[type] && !(STATE.sectionBlocks[type] && STATE.sectionBlocks[type].length)) STATE.sectionBlocks[type] = SECTION_SEED[type]();
-  }
-  if(!node){ toast('That section can\'t be added yet.'); return; }
-  store.insertBefore(node, footer);
-  SECTION_GROUPS.template.sections.push(type);
-  reorderSectionDom();
-  renderSectionContent(type);
-  applySectionSchemes();
-  buildLayers(); selectSection(type);
+  const node = makeSectionNode(type); if(!node){ toast('Can\'t add that section yet.'); return; }
+  const id = uniqueSectionId(type);
+  if(id!==type) sectionTypes[id] = type;
+  STATE.sectionBlocks[id] = seedFor(type);
+  placeNewSection(node, id, null);
+}
+function duplicateSection(id){
+  const orig = sectionEl(id); if(!orig) return;
+  const type = secType(id), newId = uniqueSectionId(type);
+  sectionTypes[newId] = type;
+  STATE.sectionBlocks[newId]   = clone(STATE.sectionBlocks[id] || []);
+  if(STATE.sectionSettings[id]) STATE.sectionSettings[newId] = clone(STATE.sectionSettings[id]);
+  if(STATE.sectionSchemes[id])  STATE.sectionSchemes[newId]  = STATE.sectionSchemes[id];
+  placeNewSection(orig.cloneNode(true), newId, id);
+  toast('Section duplicated.');
 }
 function openSectionPicker(){
-  const avail = TEMPLATE_SECTION_TYPES.filter(t => !SECTION_GROUPS.template.sections.includes(t));
-  if(!avail.length){ toast('Every available section is already on the page.'); return; }
   const groups = {};
-  avail.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t }); });
+  TEMPLATE_SECTION_TYPES.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t }); });
   openPicker('Add section', groups, t=>addSection(t));
 }
 
@@ -2506,7 +2533,7 @@ function buildLayers(){
     const grp = el('<div class="lyr-group"></div>');
     grp.appendChild(el(`<div class="lyr-grouphd">${g.name}</div>`));
     g.sections.forEach(key=>{
-      const schema = SECTION_SCHEMAS[key] || { name: SECTION_TITLES[key] || key };
+      const schema = SECTION_SCHEMAS[secType(key)] || { name: SECTION_TITLES[key] || key };
       const blocks = sectionBlocks(key);
       const hasBlocks = blocks.length > 0 || acceptedChildTypes(key, []).length > 0;
       const expanded = expandedLayers.has(key);
@@ -2659,7 +2686,7 @@ function renderSectionControls(){
       head.querySelector('.sf-name').textContent = blockName(inst, lastIdx);
       // breadcrumb: section ▸ each ancestor block ▸ (current type)
       const sub = head.querySelector('.sf-sub');
-      const crumbs = [{ label:(SECTION_SCHEMAS[section]||{}).name || SECTION_TITLES[section] || 'Section', go:()=>selectSection(section) }];
+      const crumbs = [{ label:(SECTION_SCHEMAS[secType(section)]||{}).name || SECTION_TITLES[section] || 'Section', go:()=>selectSection(section) }];
       for(let k=1; k<path.length; k++){ const ap=path.slice(0,k); const ab=blockAt(section,ap); crumbs.push({ label:blockName(ab, ap[ap.length-1]), go:()=>selectBlock(section, ap) }); }
       crumbs.forEach((c,ci)=>{
         if(ci) sub.appendChild(document.createTextNode(' ▸ '));
@@ -2690,7 +2717,7 @@ function renderSectionControls(){
     }
   }
 
-  const schema = SECTION_SCHEMAS[selectedSection] || { name: SECTION_TITLES[selectedSection]||'Section', settings:[SCHEME_SETTING] };
+  const schema = SECTION_SCHEMAS[secType(selectedSection)] || { name: SECTION_TITLES[selectedSection]||'Section', settings:[SCHEME_SETTING] };
   const title = schema.name;
   const phName = document.getElementById('ph-section-name');   // mobile header mirrors the selection
   if(phName) phName.textContent = title;
@@ -2714,8 +2741,12 @@ function renderSectionControls(){
   const b = el('<div class="sf-body"></div>');
   renderSettingsList(b, schema.settings, getVal, setVal);
   if(isTemplateSection(selectedSection)){
+    const sec = selectedSection;
+    const dup = el(`<button type="button" class="sf-dup">${svg('<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',14)}<span>Duplicate section</span></button>`);
+    dup.onclick = (e)=>{ e.stopPropagation(); duplicateSection(sec); };
+    b.appendChild(dup);
     const rm = el(`<button type="button" class="sf-remove">${svg('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',14)}<span>Remove section</span></button>`);
-    rm.onclick = (e)=>{ e.stopPropagation(); removeSection(selectedSection); };
+    rm.onclick = (e)=>{ e.stopPropagation(); removeSection(sec); };
     b.appendChild(rm);
   }
   card.appendChild(b);
@@ -2819,7 +2850,7 @@ function blocksToJson(list, counter){
   return { blocks, order };
 }
 function sectionInstanceJson(key){
-  const obj = { type: key };
+  const obj = { type: secType(key) };
   const settings = Object.assign({}, STATE.sectionSettings[key] || {});
   if(STATE.sectionSchemes[key]) settings.color_scheme = STATE.sectionSchemes[key];
   if(Object.keys(settings).length) obj.settings = settings;
@@ -2877,7 +2908,7 @@ function settingsSchemaJson(){
 }
 function buildThemeFiles(){
   const files = [];
-  const secTypes = new Set([...SECTION_GROUPS.header.sections, ...SECTION_GROUPS.template.sections, ...SECTION_GROUPS.footer.sections]);
+  const secTypes = new Set(allSectionIds().map(secType));   // one section file per TYPE (instances share it)
   [...secTypes].sort().forEach(t=>{ if(SECTION_SCHEMAS[t]) files.push({ name:`sections/${t}.liquid`, content: sectionLiquid(t) }); });
   const blockTypes = new Set(); const collect = l => (l||[]).forEach(b=>{ blockTypes.add(b.type); collect(b.blocks); });
   Object.values(STATE.sectionBlocks).forEach(collect);
@@ -2969,6 +3000,7 @@ function buildPanel(){
 document.getElementById('reset-btn').onclick = ()=>{ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); renderBlockSections(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); };
 
 refreshNames();   // derive palette names from their hex values
+captureSectionTemplates();   // snapshot each section's empty shell for Add/Duplicate (before content fills it)
 seedBlocks();    // seed per-section block instances BEFORE the homepage renders from them
 buildPanel();
 buildHomepage();
