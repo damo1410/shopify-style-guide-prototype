@@ -2357,14 +2357,36 @@ function removeBlock(section, path){
    ---------------------------------------------------------------------------- */
 function templateIndex(key){ return SECTION_GROUPS.template.sections.indexOf(key); }
 // Reorders TOP-LEVEL blocks within a section (drag is wired only at depth 1 for now).
-function moveBlock(section, from, to){
-  const arr = STATE.sectionBlocks[section]; if(!arr) return;
-  to = Math.max(0, Math.min(arr.length-1, to)); if(from<0 || from===to) return;
-  const [it] = arr.splice(from,1); arr.splice(to,0,it);
+function subtreeDepth(b){ const kids=b.blocks||[]; return kids.length ? 1+Math.max(...kids.map(subtreeDepth)) : 1; }
+// After splicing out `removed`, fix up another path `p` whose indices may have shifted: if p
+// runs through the removed node's parent at a position after it, decrement that index.
+function adjustPathAfterRemoval(p, removed){
+  const d = removed.length - 1;
+  if(p.length > d && removed.slice(0,d).every((v,i)=>v===p[i]) && p[d] > removed[d]){
+    const q = p.slice(); q[d]--; return q;
+  }
+  return p;
+}
+// Move a block (with its subtree) to a new parent list + index — nested reorder AND
+// re-parenting (drag into/out of a group). Resolves array references before mutating so
+// index shifts can't corrupt the target. Enforces the 8-deep cap and blocks cycles.
+function moveBlockPath(section, fromPath, toParentPath, toIndex){
+  const moving = blockAt(section, fromPath); if(!moving) return;
+  // can't drop a block into itself or one of its descendants
+  if(toParentPath.length>=fromPath.length && fromPath.every((v,i)=>v===toParentPath[i])) return;
+  if(toParentPath.length + subtreeDepth(moving) > 8){ toast('Theme blocks can nest up to 8 levels deep.'); return; }
+  const fromParent = parentListOf(section, fromPath);
+  const toParent   = childListAt(section, toParentPath);   // resolve array refs BEFORE removal
+  const fromIdx = fromPath[fromPath.length-1];
+  fromParent.splice(fromIdx, 1);
+  if(fromParent===toParent && fromIdx < toIndex) toIndex--;   // removal shifted the target index
+  toIndex = Math.max(0, Math.min(toParent.length, toIndex));
+  toParent.splice(toIndex, 0, moving);
   renderSectionContent(section);
-  if(selectedBlock && selectedBlock.section===section && selectedBlock.path.length===1) selectedBlock.path = [to];
+  const adjParent = adjustPathAfterRemoval(toParentPath, fromPath);   // target may have shifted up
+  selectedBlock = { section, path: adjParent.concat(toIndex) };
   buildLayers();
-  if(selectedBlock && selectedBlock.section===section && selectedBlock.path.length===1) highlightBlockEl(section, [to]);
+  highlightBlockEl(section, selectedBlock.path);
 }
 function moveSection(from, to){
   const arr = SECTION_GROUPS.template.sections;
@@ -2562,6 +2584,10 @@ function buildLayers(){
         if(acceptedChildTypes(key, []).length){
           const add = el(`<button type="button" class="lyr-add">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
           add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(key, []); };
+          // dropping here moves the dragged block out to the section's top level (end)
+          dropTarget(add, ()=>dragState && dragState.kind==='block' && dragState.section===key, ()=>{
+            moveBlockPath(key, dragState.path, [], sectionBlocks(key).length);
+          });
           grp.appendChild(add);
         }
       }
@@ -2596,12 +2622,12 @@ function renderBlockRows(grp, section, list, parentPath, depth){
     main.querySelector('.lyr-name').textContent = blockName(b,i);
     main.onclick = ()=> selectBlock(section, path);
     row.appendChild(main);
-    if(!parentPath.length){   // top-level drag-reorder
-      const grip = makeGrip(); gripStart(grip, {kind:'block', section, index:i}, row); row.appendChild(grip);
-      dropTarget(row, ()=>dragState && dragState.kind==='block' && dragState.section===section, half=>{
-        let to = half==='before' ? i : i+1; if(dragState.index < to) to--; moveBlock(section, dragState.index, to);
-      });
-    }
+    // drag-reorder at EVERY depth: grip carries the full source path; dropping before/after
+    // a row inserts as a sibling in that row's parent (so re-parenting works across groups).
+    const grip = makeGrip(); gripStart(grip, {kind:'block', section, path}, row); row.appendChild(grip);
+    dropTarget(row, ()=>dragState && dragState.kind==='block' && dragState.section===section, half=>{
+      moveBlockPath(section, dragState.path, parentPath, half==='before' ? i : i+1);
+    });
     grp.appendChild(row);
     if(canNest && expanded){
       renderBlockRows(grp, section, kids, path, depth+1);
@@ -2609,6 +2635,10 @@ function renderBlockRows(grp, section, list, parentPath, depth){
         const add = el(`<button type="button" class="lyr-add lyr-add-nested">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
         add.style.marginLeft = (20 + depth*16) + 'px';
         add.onclick = (e)=>{ e.stopPropagation(); openBlockPicker(section, path); };
+        // dropping on a group's "Add block" appends the dragged block INTO that group
+        dropTarget(add, ()=>dragState && dragState.kind==='block' && dragState.section===section, ()=>{
+          moveBlockPath(section, dragState.path, path, (blockAt(section,path).blocks||[]).length);
+        });
         grp.appendChild(add);
       }
     }
