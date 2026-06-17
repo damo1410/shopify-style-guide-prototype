@@ -88,8 +88,12 @@
   .tb-ico:hover { background: var(--stone-100); color: var(--stone-900); }
   .tb-ico.active { background: var(--stone-900); color: #fff; }
   .tb-ico svg { width: 18px; height: 18px; }
-  /* mode toggle group (Layers ⇄ Theme settings) */
-  .tb-modes { display: flex; align-items: center; gap: 2px; }
+  /* mode toggle group (Layers ⇄ Theme settings) — segmented, like the device toggle */
+  .tb-modes { display: flex; align-items: center; gap: 2px; background: var(--stone-100); border-radius: 9px; padding: 3px; }
+  .tb-mode { width: 34px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; transition: all .12s; }
+  .tb-mode:hover { color: var(--stone-900); }
+  .tb-mode.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04); }
+  .tb-mode svg { width: 18px; height: 18px; }
   /* page switcher pill in the centre */
   .tb-page { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; color: var(--stone-900); }
   .tb-page:hover { background: var(--stone-100); }
@@ -189,7 +193,7 @@
   .lyr-row:hover .lyr-ic { display: none; }
   .lyr-row:hover .lyr-handle { display: inline-flex; }
   .lyr-row.active .lyr-ic, .lyr-row.active .lyr-handle { color: #fff; }
-  .lyr-name { flex: 1 1 auto; font-size: 12px; font-weight: 450; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lyr-name { flex: 1 1 auto; font-size: 13px; font-weight: 450; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lyr-row.active .lyr-name { color: #fff; font-weight: 550; }
   .lyr-count { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--stone-400); font-variant-numeric: tabular-nums; padding-right: 2px; }
   .lyr-row.active .lyr-count { color: rgba(255,255,255,.8); }
@@ -244,27 +248,27 @@
   .sf-remove { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 9px 0; border: 1px solid var(--stone-200); background: #fff; border-radius: 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; color: #b42318; }
   .sf-remove:hover { background: #fef2f2; border-color: #fecaca; }
 
-  /* ---- Add picker modal — Shopify-style master/detail: searchable list (left) + preview (right) ---- */
+  /* ---- Add picker modal — Shopify-style master/detail: searchable list (left) + preview (right).
+     No header strip: dismiss by clicking outside (or Esc). ---- */
   .picker-ov { position: fixed; inset: 0; background: rgba(12,10,9,.45); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
   .picker { width: min(880px, 100%); height: min(620px, 100%); display: flex; flex-direction: column; background: #fff; border-radius: 14px; box-shadow: 0 24px 60px -12px rgba(0,0,0,.4); overflow: hidden; }
-  .picker-hd { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--stone-200); font-size: 14px; font-weight: 600; flex: 0 0 auto; }
-  .picker-x { border: none; background: none; cursor: pointer; color: var(--stone-400); display: inline-flex; padding: 4px; border-radius: 6px; }
-  .picker-x:hover { color: var(--stone-900); background: var(--stone-100); }
   .picker-main { flex: 1 1 auto; min-height: 0; display: flex; }
-  /* left: search + categorised list */
+  /* left: search + categorised list (mirrors the layers panel sizing/spacing) */
   .picker-list { flex: 0 0 320px; max-width: 60%; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--stone-200); }
   .picker-search { flex: 0 0 auto; padding: 12px; border-bottom: 1px solid var(--stone-100); }
   .picker-search .ps-field { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 8px; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); }
   .picker-search .ps-field:focus-within { box-shadow: inset 0 0 0 1.5px var(--sel); }
   .picker-search svg { color: var(--stone-400); flex: 0 0 auto; }
   .picker-search input { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 13px; color: var(--stone-900); min-width: 0; }
-  .picker-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px; }
-  .picker-cat { font-size: 14px; font-weight: 600; color: var(--stone-900); padding: 12px 10px 6px; }
-  .picker-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; }
+  .picker-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0; }
+  /* subcategory heading — same as the layers Header/Template/Footer style */
+  .picker-cat { font-size: 14px; font-weight: 600; color: var(--stone-900); padding: 14px 16px 6px; }
+  /* item row mirrors .lyr-row: 34px height, 8px side margins, 16px icon, 13px name */
+  .picker-item { display: flex; align-items: center; gap: 10px; height: 34px; margin: 1px 8px; padding: 0 10px; border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit; text-align: left; width: auto; }
   .picker-item:hover, .picker-item.focus { background: var(--stone-100); }
-  .picker-ic { width: 22px; height: 22px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: var(--stone-600); }
-  .picker-ic svg { width: 20px; height: 20px; }
-  .picker-name { font-size: 14px; font-weight: 450; color: var(--stone-900); }
+  .picker-ic { width: 16px; height: 16px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; color: var(--stone-500); }
+  .picker-ic svg { width: 16px; height: 16px; }
+  .picker-name { font-size: 13px; font-weight: 450; color: var(--stone-900); }
   .picker-empty { padding: 24px 14px; text-align: center; font-size: 13px; color: var(--stone-400); }
   /* right: preview pane */
   .picker-preview { flex: 1 1 auto; min-width: 0; background: var(--stone-100); display: flex; align-items: center; justify-content: center; padding: 28px; }
@@ -283,15 +287,16 @@
 
   /* ---- accordion group ---- */
   .group { border-bottom: 1px solid var(--stone-100); }
-  .group > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; }
+  .group > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
   .group > summary::-webkit-details-marker { display: none; }
   .group > summary:hover { background: var(--stone-50); }
   .group .gtitle { display: flex; align-items: center; gap: 10px; }
-  .group .gtitle svg { width: 14px; height: 14px; color: var(--stone-500); }
-  .group .gtitle span { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+  /* accordion headers match the pane headers: 14px, dark, no leading icon (Shopify-style) */
+  .group .gtitle svg { display: none; }
+  .group .gtitle span { font-size: 14px; font-weight: 600; color: var(--stone-900); letter-spacing: 0; }
   .group .chev { width: 14px; height: 14px; color: var(--stone-400); transition: transform .15s; }
   .group[open] .chev { transform: rotate(180deg); }
-  .group-body { padding: 4px 20px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .group-body { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
 
   /* ---- subgroup ---- */
   .subgroup { display: flex; flex-direction: column; gap: 10px; }
@@ -304,9 +309,9 @@
 
   /* ---- control row: LABEL on the left, CONTROL on the right (skimmable, Shopify-like) -- */
   .ctl { display: flex; align-items: center; gap: 12px; }
-  .ctl > label, .ctl > .ctl-label { flex: 0 0 76px; width: 76px; font-size: 12px; color: var(--stone-600); font-weight: 500; line-height: 1.3; }
+  .ctl > label, .ctl > .ctl-label { flex: 0 0 76px; width: 76px; font-size: 13px; color: var(--stone-600); font-weight: 450; line-height: 1.3; }
   .ctl > *:not(label):not(.ctl-label) { flex: 1 1 auto; min-width: 0; }   /* the control fills the rest of the row */
-  .ctl-label { font-size: 12px; color: var(--stone-600); font-weight: 500; }
+  .ctl-label { font-size: 13px; color: var(--stone-600); font-weight: 450; }
   /* slider: rail on the right, with a fixed-width EDITABLE value box at the end (Shopify range).
      slider-wrap is the row's single flex child, so it lines up to the same width as a dropdown /
      colour field; the value box is a FIXED width, so the rail width — and therefore the column
@@ -316,8 +321,8 @@
   /* the rail floats — no boxed surface around it (only the value input is boxed) */
   .field.slider-field, .field.slider-field:hover, .field.slider-field:focus-within { background: transparent; box-shadow: none; padding: 0 6px; }
   .val-field { flex: 0 0 80px; width: 80px; gap: 2px; padding: 0 10px; }
-  .val-input { flex: 1 1 auto; width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-700); text-align: right; font-variant-numeric: tabular-nums; padding: 0; }
-  .val-unit { flex: 0 0 auto; font-size: 12px; color: var(--stone-400); font-weight: 500; }
+  .val-input { flex: 1 1 auto; width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--stone-900); text-align: right; font-variant-numeric: tabular-nums; padding: 0; }
+  .val-unit { flex: 0 0 auto; font-size: 13px; color: var(--stone-400); font-weight: 500; }
 
   /* ---- shared field surface — Shopify uses white fields with a hairline border ---- */
   .field { min-height: 34px; border-radius: 8px; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); display: flex; align-items: center; padding: 0 12px; transition: box-shadow .12s; }
@@ -325,13 +330,13 @@
   .field:focus-within { box-shadow: inset 0 0 0 1.5px var(--sel); }
 
   /* ---- text inputs ---- */
-  input.txt { width: 100%; min-height: 34px; border: none; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); border-radius: 8px; padding: 0 12px; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-900); transition: box-shadow .12s; outline: none; }
+  input.txt { width: 100%; min-height: 34px; border: none; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); border-radius: 8px; padding: 0 12px; font: inherit; font-size: 13px; font-weight: 500; color: var(--stone-900); transition: box-shadow .12s; outline: none; }
   input.txt:hover { box-shadow: inset 0 0 0 1px var(--stone-400); }
   input.txt:focus { box-shadow: inset 0 0 0 1.5px var(--sel); }
 
   /* ---- segmented toggle group (pill track, white selected, like Shopify) ---- */
   .seg { display: flex; gap: 2px; background: var(--stone-100); border-radius: 8px; padding: 3px; min-height: 34px; box-shadow: inset 0 0 0 1px var(--stone-200); }
-  .seg button { flex: 1; border: none; background: transparent; border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-500); padding: 0 6px; transition: all .12s; white-space: nowrap; text-transform: capitalize; }
+  .seg button { flex: 1; border: none; background: transparent; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; color: var(--stone-500); padding: 0 6px; transition: all .12s; white-space: nowrap; text-transform: capitalize; }
   .seg button:hover { color: var(--stone-900); }
   .seg button.active { background: #fff; color: var(--stone-900); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.06); }
   /* glyph variant (case control): show labels verbatim — no capitalize transform */
@@ -347,7 +352,7 @@
   .dd { width: 100%; }
   .dd-trigger { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; }
   .dd-cur { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-  .dd-label { font-size: 12px; font-weight: 500; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+  .dd-label { font-size: 13px; font-weight: 500; color: var(--stone-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
   .dd-sw { width: 18px; height: 18px; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.10); flex: 0 0 auto; }
   .dd-chev { width: 12px; height: 12px; color: var(--stone-500); flex: 0 0 auto; transition: transform .15s; }
   .dd-trigger.open .dd-chev { transform: rotate(180deg); }
@@ -361,7 +366,7 @@
   .colorinput { display: flex; align-items: center; gap: 8px; width: 100%; }
   .colorinput .sw { position: relative; width: 20px; height: 20px; border-radius: 4px; overflow: hidden; box-shadow: 0 0 0 1px var(--stone-200); flex: 0 0 auto; }
   .colorinput .sw input[type=color] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; padding: 0; }
-  .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
+  .colorinput .hex { flex: 1; background: transparent; border: none; outline: none; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 13px; text-transform: uppercase; color: var(--stone-700); min-width: 0; }
 
   /* ---- palette rows: derived name on the left, color input + delete on the right ---- */
   .palette-row { display: flex; align-items: center; gap: 12px; }
@@ -452,12 +457,12 @@
   .sf-close { border: none; background: none; cursor: pointer; color: var(--stone-400); padding: 4px; display: inline-flex; border-radius: 6px; flex: 0 0 auto; }
   .sf-close:hover { color: var(--stone-900); background: var(--stone-100); }
   .sf-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .sf-label { font-size: 12px; color: var(--stone-600); font-weight: 500; }
+  .sf-label { font-size: 13px; color: var(--stone-600); font-weight: 450; }
   /* type/limit caption under the section name (mirrors Shopify's section subtitle) */
   .sf-sub { font-size: 10px; color: var(--stone-400); font-weight: 500; margin-top: 1px; }
 
   /* ---- schema-engine controls (Shopify setting types) ---- */
-  .text-input { width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 12px; font-weight: 500; color: var(--stone-900); padding: 0; }
+  .text-input { width: 100%; min-width: 0; border: none; background: transparent; outline: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--stone-900); padding: 0; }
   .text-input.ta { resize: vertical; min-height: 52px; padding: 7px 0; line-height: 1.45; }
   .field.field-ta { align-items: stretch; }
   .ctl-inline { display: flex; align-items: center; }
@@ -466,18 +471,22 @@
   .switch.on { background: var(--sel); }
   .switch.on .knob { transform: translateX(16px); }
   .picker-field { width: 100%; justify-content: space-between; gap: 8px; border: none; cursor: pointer; font: inherit; color: var(--stone-500); }
-  .picker-field .pf-label { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picker-field .pf-label { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .picker-field svg { color: var(--stone-400); flex: 0 0 auto; }
   /* header / paragraph — the ONLY grouping Shopify allows inside a section's settings.
      (font size/weight/case/color come from the shared .subgroup-label,.set-header rule.) */
   .set-header { padding-top: 12px; margin-top: 6px; border-top: 1px solid var(--stone-100); }
   .sf-body > .set-header:first-child { border-top: none; padding-top: 0; margin-top: 0; }
   .set-paragraph { font-size: 12px; color: var(--stone-500); line-height: 1.5; }
-  /* contextual scheme picker — bigger rows that match the left panel's scheme list */
-  .sf-scheme .dd-trigger { min-height: 56px; padding: 8px 10px; gap: 10px; }
-  .sf-scheme .dd-cur { gap: 10px; }
-  .sf-scheme .dd-label { font-size: 12px; font-weight: 600; color: var(--stone-800); }
-  .sf-scheme .dd-menu .dd-item { padding: 6px; gap: 10px; }
+  /* contextual scheme picker — normal field height with a compact swatch (Shopify-style) */
+  .sf-scheme .dd-trigger { min-height: 34px; padding: 0 12px; gap: 8px; }
+  .sf-scheme .dd-cur { gap: 8px; }
+  .sf-scheme .dd-label { font-size: 13px; font-weight: 500; color: var(--stone-900); }
+  .sf-scheme .dd-menu .dd-item { padding: 6px 8px; gap: 8px; min-height: 34px; }
+  /* compact scheme swatch (trigger + menu rows) */
+  .scheme-sq-sm { width: 22px; height: 22px; border-radius: 5px; gap: 2px; }
+  .scheme-sq-sm span { font-size: 9px; }
+  .scheme-sq-sm .bar { width: 11px; height: 2px; }
 
   /* ==========================================================================
      PREVIEW SHELL — the .store inner element is the themed surface (role vars).
@@ -845,18 +854,17 @@
   <!-- ===================== TOP BAR (desktop chrome) ===================== -->
   <header class="topbar">
     <div class="tb-left">
-      <!-- brand sits where Shopify's exit/home control is, in the very top-left -->
+      <!-- brand mark (sits where Shopify's exit/home control is, in the very top-left) -->
       <div class="tb-brand">
         <div class="logo"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></div>
-        <div><div class="t1">NOIR</div><div class="t2">Theme prototype</div></div>
       </div>
       <div class="tb-div"></div>
-      <!-- mode toggle: Layers ⇄ Theme settings (icons only, like Shopify) -->
+      <!-- mode toggle: Layers ⇄ Theme settings (segmented, like the device toggle) -->
       <div class="tb-modes">
-        <button type="button" class="tb-ico tb-mode active" data-mode="layers" title="Sections / Layers">
+        <button type="button" class="tb-mode active" data-mode="layers" title="Sections / Layers">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
         </button>
-        <button type="button" class="tb-ico tb-mode" data-mode="theme" title="Theme settings">
+        <button type="button" class="tb-mode" data-mode="theme" title="Theme settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
@@ -938,7 +946,7 @@
                 <span class="dot">3</span>
               </span>
             </div>
-          </div></nav>
+          </div><div class="container tb-root" data-blocks style="padding-top:0;padding-bottom:0"><!-- header theme blocks --></div></nav>
 
           <!-- HERO -->
           <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
@@ -1004,6 +1012,7 @@
 
           <!-- FOOTER -->
           <footer class="store-footer" data-sec="footer"><div class="container">
+            <div class="tb-root" data-blocks><!-- footer theme blocks --></div>
             <div class="cols">
               <div><div class="brandmark">NOIR</div><p style="opacity:.7;font-size:.92rem;line-height:1.6">Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.</p></div>
               <div><h6>Shop</h6><a>New arrivals</a><a>Best sellers</a><a>Men</a><a>Women</a><a>Sale</a></div>
@@ -1667,8 +1676,8 @@ function paintSquare(sq, scheme){
   sq.querySelector('span').style.color = swatchHex(scheme.heading);
   sq.querySelector('.bar').style.background = swatchHex(scheme.accent);
 }
-function schemePreview(scheme){
-  const sq = el('<div class="scheme-sq"><span>Aa</span><div class="bar"></div></div>');
+function schemePreview(scheme, small){
+  const sq = el(`<div class="scheme-sq${small?' scheme-sq-sm':''}"><span>Aa</span><div class="bar"></div></div>`);
   paintSquare(sq, scheme);
   return sq;
 }
@@ -1992,7 +2001,7 @@ function schemeSelect(value, onChange){
   function renderTrigger(){
     trigger.innerHTML = '';
     const c = el('<span class="dd-cur"></span>');
-    c.appendChild(schemePreview(cur(value)));
+    c.appendChild(schemePreview(cur(value), true));
     const lbl = el('<span class="dd-label"></span>'); lbl.textContent = value;
     c.appendChild(lbl); trigger.appendChild(c);
     trigger.appendChild(el('<svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'));
@@ -2004,7 +2013,7 @@ function schemeSelect(value, onChange){
     menu = el('<div class="dd-menu" style="position:absolute;bottom:calc(100% + 4px);left:0;right:0;max-height:280px"></div>');
     Object.keys(STATE.schemes).forEach(id=>{
       const it = el('<button type="button" class="dd-item"></button>');
-      it.appendChild(schemePreview(STATE.schemes[id]));
+      it.appendChild(schemePreview(STATE.schemes[id], true));
       const lbl = el('<span class="dd-label"></span>'); lbl.textContent = id; it.appendChild(lbl);
       if(id===value) it.appendChild(el('<svg class="dd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'));
       it.onclick = ()=>{ value=id; renderTrigger(); close(); onChange(id); };
@@ -2121,7 +2130,7 @@ const PADDING_BLOCK = [ {type:'header', content:'Section padding'}, PAD('padding
 const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color scheme' };
 
 const SECTION_SCHEMAS = {
-  nav: { name:'Header', category:'Header', settings:[
+  nav: { name:'Header', category:'Header', blocks:[{type:'@theme'}], max_blocks:20, settings:[
     SCHEME_SETTING,
     {type:'text', id:'logo_text', label:'Logo text', default:'NOIR'},
     {type:'checkbox', id:'show_search', label:'Show search icon', default:true},
@@ -2185,7 +2194,7 @@ const SECTION_SCHEMAS = {
     {type:'text_alignment', id:'content_alignment', label:'Content alignment', default:'center'},
     ...PADDING_BLOCK,
   ]},
-  footer: { name:'Footer', category:'Footer', settings:[
+  footer: { name:'Footer', category:'Footer', blocks:[{type:'@theme'}], max_blocks:20, settings:[
     SCHEME_SETTING,
     {type:'checkbox', id:'show_payment_icons', label:'Show payment icons', default:true},
     {type:'text', id:'copyright', label:'Copyright text', default:'© 2026 NOIR Eyewear. All rights reserved.'},
@@ -2602,6 +2611,9 @@ function removeBlock(section, path){
    move updates the model, re-renders the affected canvas, and rebuilds the tree.
    ---------------------------------------------------------------------------- */
 function templateIndex(key){ return SECTION_GROUPS.template.sections.indexOf(key); }
+// which group (header/template/footer) a section instance belongs to, and its index within it
+function sectionGroupId(key){ return Object.keys(SECTION_GROUPS).find(gid=>SECTION_GROUPS[gid].sections.includes(key)) || 'template'; }
+function sectionIndexInGroup(key){ return SECTION_GROUPS[sectionGroupId(key)].sections.indexOf(key); }
 // Reorders TOP-LEVEL blocks within a section (drag is wired only at depth 1 for now).
 function subtreeDepth(b){ const kids=b.blocks||[]; return kids.length ? 1+Math.max(...kids.map(subtreeDepth)) : 1; }
 // After splicing out `removed`, fix up another path `p` whose indices may have shifted: if p
@@ -2634,18 +2646,23 @@ function moveBlockPath(section, fromPath, toParentPath, toIndex){
   buildLayers();
   highlightBlockEl(section, selectedBlock.path);
 }
-function moveSection(from, to){
-  const arr = SECTION_GROUPS.template.sections;
+// Reorder within a single group (Header / Template / Footer); sections never cross groups.
+function moveSection(gid, from, to){
+  const arr = SECTION_GROUPS[gid].sections;
   to = Math.max(0, Math.min(arr.length-1, to)); if(from<0 || from===to) return;
   const [key] = arr.splice(from,1); arr.splice(to,0,key);
   reorderSectionDom(); buildLayers();
 }
-// Re-order the template [data-sec] elements in the DOM to match the model (header
-// stays on top, footer at the bottom — we only shuffle the template sections).
+// Re-order ALL [data-sec] elements to match the model order: header → template → footer,
+// kept after the (decorative) announcement bar at the top of the store.
 function reorderSectionDom(){
   const store=document.getElementById('store'); if(!store) return;
-  const footer=store.querySelector('[data-sec="footer"]'); if(!footer) return;
-  SECTION_GROUPS.template.sections.forEach(key=>{ const e=store.querySelector(`[data-sec="${key}"]`); if(e) store.insertBefore(e, footer); });
+  let anchor = store.querySelector('.announce') || null;   // keep the announce bar first
+  allSectionIds().forEach(key=>{
+    const e = store.querySelector(`[data-sec="${key}"]`); if(!e) return;
+    if(anchor) anchor.after(e); else store.insertBefore(e, store.firstChild);
+    anchor = e;
+  });
 }
 
 // --- drag-and-drop plumbing (HTML5 DnD initiated from a grip handle) ---
@@ -2683,7 +2700,6 @@ function openPicker(title, groups, onPick, kind){
   kind = kind || 'sections';
   const ov = el(`<div class="picker-ov" id="picker-ov">
     <div class="picker">
-      <div class="picker-hd"><span>${title}</span><button class="picker-x" type="button">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',16)}</button></div>
       <div class="picker-main">
         <div class="picker-list">
           <div class="picker-search"><div class="ps-field">${svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',16)}<input type="text" placeholder="Search ${kind}" autocomplete="off"></div></div>
@@ -2720,7 +2736,7 @@ function openPicker(title, groups, onPick, kind){
       if(!matches.length) return;
       body.appendChild(el(`<div class="picker-cat">${cat}</div>`));
       matches.forEach(it=>{
-        const row = el(`<button type="button" class="picker-item"><span class="picker-ic">${svg(it.icon || ICONS.box,20)}</span><span class="picker-name"></span></button>`);
+        const row = el(`<button type="button" class="picker-item"><span class="picker-ic">${svg(it.icon || ICONS.box,16)}</span><span class="picker-name"></span></button>`);
         row.__it = it;
         row.querySelector('.picker-name').textContent = it.name;
         row.onmouseenter = ()=> setFocus(it);
@@ -2745,7 +2761,6 @@ function openPicker(title, groups, onPick, kind){
     }
   });
 
-  ov.querySelector('.picker-x').onclick = closePicker;
   ov.addEventListener('mousedown', e=>{ if(e.target===ov) closePicker(); });
   document.body.appendChild(ov);
   document.addEventListener('keydown', pickerEsc);
@@ -2791,36 +2806,38 @@ function sectionIdInUse(id){ return allSectionIds().includes(id) || !!sectionTyp
 function uniqueSectionId(type){ if(!sectionIdInUse(type)) return type; let n=2; while(sectionIdInUse(type+'-'+n)) n++; return type+'-'+n; }
 function seedFor(type){ return SECTION_SEED[type] ? SECTION_SEED[type]() : clone(buildDefaultBlocks()[type] || []); }
 
+// every group's sections are now fully editable (add / remove / reorder / blocks)
 function isTemplateSection(id){ return SECTION_GROUPS.template.sections.includes(id); }
 function removeSection(id){
-  const i = SECTION_GROUPS.template.sections.indexOf(id); if(i<0) return;   // only template sections removable
+  const gid = sectionGroupId(id); const arr = SECTION_GROUPS[gid].sections;
+  const i = arr.indexOf(id); if(i<0) return;
   const node = sectionEl(id); if(node) node.remove();
-  SECTION_GROUPS.template.sections.splice(i,1);
+  arr.splice(i,1);
   delete STATE.sectionBlocks[id]; delete STATE.sectionSettings[id]; delete STATE.sectionSchemes[id]; delete sectionTypes[id];
   if(selectedSection===id){ selectedSection=null; selectedBlock=null; }
   clearBlockHighlight(); buildLayers(); renderSectionControls();
   toast(`Removed ${(SECTION_SCHEMAS[secType(id)]||{}).name||'section'}.`);
 }
-// Place a new/cloned section node at a position in the template (index = slot in the
-// template.sections array; null = append at the end, just before the footer).
-function placeNewSection(node, id, index){
-  const store=document.getElementById('store'); const footer=store.querySelector('[data-sec="footer"]');
-  const tmpl = SECTION_GROUPS.template.sections;
-  if(index==null) index = tmpl.length;
-  index = Math.max(0, Math.min(tmpl.length, index));
+// Place a new/cloned section node at a position within a group (index = slot in that
+// group's sections array; null = append at the end of the group).
+function placeNewSection(node, id, gid, index){
+  const store=document.getElementById('store'); const arr = SECTION_GROUPS[gid].sections;
+  if(index==null) index = arr.length;
+  index = Math.max(0, Math.min(arr.length, index));
   node.setAttribute('data-sec', id); node.classList.remove('sec-selected');
   node.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));   // avoid duplicate ids in clones
-  store.insertBefore(node, footer);   // attach first so reorderSectionDom can find + place it
-  tmpl.splice(index, 0, id);
+  store.appendChild(node);   // attach first so reorderSectionDom can find + place it
+  arr.splice(index, 0, id);
   reorderSectionDom(); renderSectionContent(id); applySectionSchemes(); applyAllSectionSettings();
   buildLayers(); selectSection(id);
 }
-function addSection(type, index){
+function addSection(type, gid, index){
+  gid = gid || 'template';
   const node = makeSectionNode(type); if(!node){ toast('Can\'t add that section yet.'); return; }
   const id = uniqueSectionId(type);
   if(id!==type) sectionTypes[id] = type;
   STATE.sectionBlocks[id] = seedFor(type);
-  placeNewSection(node, id, index);
+  placeNewSection(node, id, gid, index);
 }
 function duplicateSection(id){
   const orig = sectionEl(id); if(!orig) return;
@@ -2829,13 +2846,14 @@ function duplicateSection(id){
   STATE.sectionBlocks[newId]   = clone(STATE.sectionBlocks[id] || []);
   if(STATE.sectionSettings[id]) STATE.sectionSettings[newId] = clone(STATE.sectionSettings[id]);
   if(STATE.sectionSchemes[id])  STATE.sectionSchemes[newId]  = STATE.sectionSchemes[id];
-  placeNewSection(orig.cloneNode(true), newId, templateIndex(id)+1);
+  placeNewSection(orig.cloneNode(true), newId, sectionGroupId(id), sectionIndexInGroup(id)+1);
   toast('Section duplicated.');
 }
-function openSectionPicker(index){
+function openSectionPicker(gid, index){
+  gid = gid || 'template';
   const groups = {};
   TEMPLATE_SECTION_TYPES.forEach(t=>{ const sc=SECTION_SCHEMAS[t]||{}; const cat=sc.category||'Sections'; (groups[cat]=groups[cat]||[]).push({ type:t, name:sc.name||t, icon:layerIcon(sc), desc:sc.description }); });
-  openPicker('Add section', groups, t=>addSection(t, index), 'sections');
+  openPicker('Add section', groups, t=>addSection(t, gid, index), 'sections');
 }
 
 /* ============================================================================
@@ -2928,7 +2946,6 @@ function buildLayers(){
       const blocks = sectionBlocks(key);
       const hasBlocks = blocks.length > 0 || acceptedChildTypes(key, []).length > 0;
       const expanded = expandedLayers.has(key);
-      const isTemplate = gid==='template';
       const hidden = hiddenLayers.has(key);
       const row = el(`<div class="lyr-row ${hidden?'lyr-hidden':''}" data-lyr="${key}"></div>`);
       if(hasBlocks){
@@ -2937,19 +2954,18 @@ function buildLayers(){
         row.appendChild(tw);
       } else { row.appendChild(el('<span class="lyr-tw-spacer"></span>')); }
       const main = el(`<button type="button" class="lyr-main"><span class="lyr-name"></span><span class="lyr-count"></span></button>`);
-      main.prepend(makeLead(layerIcon(schema), 15, isTemplate ? {kind:'section', key} : null, row));
+      // every group's sections are draggable + removable now
+      main.prepend(makeLead(layerIcon(schema), 15, {kind:'section', key, gid}, row));
       main.querySelector('.lyr-name').textContent = schema.name;
       if(hasBlocks) main.querySelector('.lyr-count').textContent = blocks.length;
       main.onclick = ()=>{ selectSection(key); };
       row.appendChild(main);
-      row.appendChild(makeActions(hidden, ()=>toggleHidden(key), isTemplate ? ()=>removeSection(key) : null));
-      // Template sections drag to reorder (Header/Footer groups stay fixed).
-      if(isTemplate){
-        dropTarget(row, ()=>dragState && dragState.kind==='section', half=>{
-          const ti = templateIndex(key); let to = half==='before' ? ti : ti+1;
-          const from = templateIndex(dragState.key); if(from < to) to--; moveSection(from, to);
-        });
-      }
+      row.appendChild(makeActions(hidden, ()=>toggleHidden(key), ()=>removeSection(key)));
+      // drag to reorder within the same group (sections never cross groups)
+      dropTarget(row, ()=>dragState && dragState.kind==='section' && dragState.gid===gid, half=>{
+        const ti = sectionIndexInGroup(key); let to = half==='before' ? ti : ti+1;
+        const from = sectionIndexInGroup(dragState.key); if(from < to) to--; moveSection(gid, from, to);
+      });
       grp.appendChild(row);
       if(expanded){
         renderBlockRows(grp, key, blocks, [], 1);
@@ -2964,11 +2980,10 @@ function buildLayers(){
         }
       }
     });
-    if(gid==='template'){
-      const addS = el(`<button type="button" class="lyr-add lyr-add-sec">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add section</span></button>`);
-      addS.onclick = ()=> openSectionPicker();
-      grp.appendChild(addS);
-    }
+    // every group can add sections (Header → announcement bar/nav, Footer → utility strip, etc.)
+    const addS = el(`<button type="button" class="lyr-add lyr-add-sec">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add section</span></button>`);
+    addS.onclick = ()=> openSectionPicker(gid);
+    grp.appendChild(addS);
     host.appendChild(grp);
   });
   refreshLayerHighlight();
@@ -3135,7 +3150,7 @@ function renderSectionControls(){
   };
   const b = el('<div class="sf-body"></div>');
   renderSettingsList(b, schema.settings, getVal, setVal);
-  if(isTemplateSection(selectedSection)){
+  if(selectedSection){   // every section can be duplicated / removed now
     const sec = selectedSection;
     const dup = el(`<button type="button" class="sf-dup">${svg('<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',14)}<span>Duplicate section</span></button>`);
     dup.onclick = (e)=>{ e.stopPropagation(); duplicateSection(sec); };
@@ -3218,8 +3233,7 @@ function hideCanvasHover(){ if(hvTag) hvTag.hidden=true; if(hvBefore) hvBefore.h
 function addAtCursor(side){
   if(!hvCur) return;
   if(hvCur.kind==='section'){
-    if(!isTemplateSection(hvCur.secId)) return;
-    openSectionPicker(templateIndex(hvCur.secId) + (side==='after'?1:0));
+    openSectionPicker(sectionGroupId(hvCur.secId), sectionIndexInGroup(hvCur.secId) + (side==='after'?1:0));
   } else {
     const path = hvCur.path, parentPath = path.slice(0,-1), i = path[path.length-1];
     openBlockPicker(hvCur.secId, parentPath, side==='after' ? i+1 : i);
@@ -3260,9 +3274,8 @@ function updateCanvasHover(target){
     positionAdd(hvBefore, r, r.top, false);
     positionAdd(hvAfter,  r, r.bottom, true);
   } else {
-    const showAdd = isTemplateSection(secId);
-    positionAdd(hvBefore, r, r.top,    showAdd);
-    positionAdd(hvAfter,  r, r.bottom, showAdd);
+    positionAdd(hvBefore, r, r.top,    true);
+    positionAdd(hvAfter,  r, r.bottom, true);
   }
 }
 function initCanvasHover(){
