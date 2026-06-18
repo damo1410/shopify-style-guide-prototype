@@ -106,12 +106,13 @@ via `secEl.querySelector`, never global `#ids`, so duplicates stay isolated).
 edited). Click on canvas (nearest `[data-bpath]` → block, else the section), a
 layers-tree row, or a scheme card. `renderSectionControls()` is the one entry point:
 it branches scheme → block → section and renders the right **inspector**
-(`#section-float`, docked in `#inspector` on desktop / bottom sheet on mobile).
-When nothing is selected the inspector collapses (canvas full-width). Selecting
-auto-scrolls + expands the layers tree to the row (`revealActiveLayer`). The
-inspector header has a type icon + name + a `⋯` menu (`openMoreMenu`:
-sections/blocks = Duplicate/Hide/Remove, schemes = Duplicate/Remove) + close; a
-bottom Remove button mirrors the menu's Remove. Section/block schemas render via
+(`#section-float`, docked in `#inspector` on desktop / bottom sheet on mobile — see
+**Mobile** below). When nothing is selected the inspector collapses (canvas full-width).
+Selecting auto-scrolls (directional — `afterSelect(origin)`: from the layers tree →
+center the preview; from the canvas → center the layers row via `revealActiveLayer`).
+The inspector header has a type icon + name + a `⋯` menu (shared `sectionMoreEntries` /
+`blockMoreEntries` / `schemeMoreEntries`: Duplicate / Hide / Add before / Add after /
+Remove; schemes = Duplicate / Remove) + close; a bottom Remove button mirrors it. Section/block schemas render via
 the schema engine (`renderSettingsList` / `renderSetting`, one control per Shopify
 setting type); the scheme editor renders grouped `colorField`s + a preview hero.
 
@@ -155,10 +156,11 @@ edges (sections: above & below; blocks: below only). `+` → `openSectionPicker`
 Overlays are fixed-position and live **inside `.preview`** (so moving onto a `+`
 doesn't fire `mouseleave`). Top bar sits above them via `z-index`.
 
-**Add picker** (`openPicker`): master/detail modal — searchable, collapsible
-categorised list (rows mirror layer-row metrics) on the left + a live preview pane
-on the right; no header strip (click-outside / Esc to dismiss). Section/block lists
-carry per-item icons.
+**Add picker** (`openPicker`): on **desktop**, a master/detail modal — searchable,
+collapsible categorised list (rows mirror layer-row metrics) on the left + a live
+preview pane on the right; no header strip (click-outside / Esc to dismiss). On
+**mobile** it branches to `renderPickerInSheet` (list-only sheet modal — see Mobile).
+Section/block lists carry per-item icons.
 
 **Color system v2.** Brand colors are a *detached* concept: `STATE.palette` is the
 brand list, managed in a **modal** (`openBrandModal`) launched from a button atop
@@ -178,6 +180,75 @@ scheme preview, layer action/chevron/lead buttons), **32px** square icon-buttons
 **4px** padding around the 26px squares. Type: body/labels/inputs **12px / weight 400**;
 subheadings (layer group headers, settings `set-header`, picker categories,
 `subgroup-label`) **13px / 600**; pane + accordion headers **14px / 600**.
+
+## Mobile (bottom sheet — built out in the mobile-overhaul sessions)
+
+Everything mobile is gated on **`@media (max-width: 860px)`** + the JS mirror
+**`mqMobile`** (`matchMedia('(max-width:860px)')`). On mobile the `.topbar` and the
+right `.inspector` are hidden; the `.preview` goes full-screen; and the left `.panel`
+becomes a **draggable bottom sheet** over it. Aim: *everything* on mobile uses the
+sheet — same draggable/collapsible chrome for the panel, selection settings, the Add
+picker, and Brand colors.
+
+**Sheet controller** (the IIFE at the very bottom of the script). Height is a CSS var
+`--sheet-h`; three snaps — **peek** (`handle + header` height), **half** (`50vh`),
+**full** (`95vh`, leaving a 5vh strip of preview). `window.__sheetSnap(name)` snaps
+from elsewhere. Drag surface is the **whole `.panel-header`** (incl. its buttons):
+it *arms* on pointerdown and only *commits* to a drag past a ~6px threshold, so a tap
+still actuates a header button while a swipe moves the sheet; a committed drag calls
+the shared **`suppressNextClick()`** (a one-shot capture-phase click swallow, also
+used by touch reorder) so the button doesn't also fire, and `closePopover()` so any
+open menu dismisses. `.panel-header *` is `touch-action:none` so the gesture isn't
+hijacked when starting on a button.
+
+**Three swappable header views** inside `.panel-header`, toggled by body classes:
+`.ph-global` (default — Layers⇄Theme segmented toggle + page switcher + Export/Reset,
+all 36px), `.ph-section` (`body.sec-selected` — type icon + name + `⋯` + close, filled
+by **`syncMobileHeader`**), `.ph-modal` (`body.sheet-modal-open` — title + close). The
+Layers⇄Theme toggle reuses `.tb-mode`/`setPanelMode`; `data-mode` drives which of
+`#layers`/`#groups` shows, exactly like desktop (no left-rail tabs on mobile).
+
+**Selection on mobile** — the `#section-float` settings card renders **into the sheet**
+(`.in-sheet`, after the header); its own `.sf-head` is hidden because the panel header
+carries icon/name/`⋯`/close instead. Gotcha: an empty/hidden card must collapse
+(`.section-float.in-sheet[hidden]{display:none}`) or it eats half the sheet. The `⋯`
+opens the shared more-menu helpers **`sectionMoreEntries` / `blockMoreEntries` /
+`schemeMoreEntries`** (Duplicate / Hide / **Add before** / **Add after** / Remove) —
+the *same* arrays power the desktop inspector `⋯`, the mobile header `⋯`, and the
+per-row persistent `⋯` (**`makeMoreBtn`**, mobile-only; desktop keeps hover hide/delete).
+
+**Sheet modal** — generic full-height overlay-in-the-sheet: `openSheetModal(title, build)`
+/ `closeSheetModal()` render `build(host)` into `#sheet-modal` with a consistent
+`.ph-modal` header. The **Add picker** (`openPicker` branches on `mqMobile` →
+`renderPickerInSheet`: list-only, no preview, tap-to-add, opens at full) and **Brand
+colors** (`openBrandModal` → `buildBrandBody`) both use it; desktop keeps its own
+master/detail modal + `.bm-ov` overlay.
+
+**Popovers** (`popover()`) dismiss on outside **`pointerdown`** (capture, so touch
+works) and when a sheet drag starts.
+
+**Touch reorder of layers** — `attachTouchReorder(row, payload)` uses **touch events**
+(not pointer events: `pointermove.preventDefault` can't stop touch scroll). Long-press
+~300ms arms; once armed, the non-passive `touchmove` calls `preventDefault()` to hold
+the list still and the row follows the finger; drop reuses the **same `__accepts`/`__drop`
+closures** `dropTarget` stores on every row (so semantics match desktop HTML5 DnD).
+Guard skips `.lyr-tw`/`.lyr-act` only — **not all buttons** (`.lyr-main`, the row name,
+*is* a button).
+
+**Selection auto-scroll** is directional, via **`afterSelect(origin)`** with `origin`
+`'layers'`/`'canvas'`/undefined, threaded through `selectSection(key, origin)` /
+`selectBlock(section, path, origin)`. Mobile (either origin): snap **half** + center the
+selection in the preview area above the sheet, **once** (`scrollPreviewToSelection`,
+target = `innerHeight*0.5`; manual resizing never re-scrolls). Desktop: `'layers'` →
+center the preview; `'canvas'` → center the layers row (`revealActiveLayer`, centered in
+the list). Canvas hover chips (`.hv-tag`/`.hv-add`) are hidden on mobile.
+
+**Testing mobile** — the jsdom harness (`/tmp/smoke.js`) forces `matchMedia` to
+mobile/desktop and drives the global `window.*` functions; selection/scroll math is
+exercised by calling them directly (jsdom has no real touch engine, so the long-press
+*gesture* itself still needs a real-device check). Note: in web sessions the sandbox
+blocks `github.io`, so verify deploys via the GitHub Actions run status, not by fetching
+the live URL.
 
 ## Recipes
 
@@ -207,6 +278,9 @@ so CSS responsive defaults still win otherwise.)
   selectable/editable/exportable.
 - The color picker is HSV square + hue + alpha (no eyedropper / recent-colors —
   intentionally skipped). Brand-color names are derived from hex (`colorName`).
+- Mobile editor is built out (see **Mobile**). Open tuning items: the touch-reorder
+  long-press feel (300ms / scroll-vs-drag handoff) wasn't verifiable here (no device);
+  the page switcher is single-page (`PAGES` has only `index`).
 - Reset only resets theme (style-guide) settings; it does **not** restore
   added/removed/duplicated sections.
 - Reviews aggregate score + a couple of section chromes are intentionally simple.
