@@ -2786,17 +2786,14 @@ function selectedCanvasEl(){
   return null;
 }
 // Scroll the preview so the selection sits in the MIDDLE of the visible area (clamped at the ends).
-// On mobile the visible area is whatever's ABOVE the bottom sheet at its current height (peek / half
-// / full), so the centre shifts up as the sheet is opened. Used when selecting FROM the layers panel.
+// On mobile the visible area is what's above the HALF-height sheet (innerHeight*0.5), computed from
+// the snap target rather than the live panel rect so it doesn't depend on the slide animation.
 function scrollPreviewToSelection(){
   const target = selectedCanvasEl(); const preview = document.querySelector('.preview');
   if(!target || !preview) return;
   const pr = preview.getBoundingClientRect(), er = target.getBoundingClientRect();
   let visTop = pr.top, visBottom = pr.bottom;
-  if(mqMobile.matches){
-    const panel = document.querySelector('.panel');
-    if(panel){ const sr = panel.getBoundingClientRect(); if(sr.top > visTop) visBottom = Math.min(visBottom, sr.top); }
-  }
+  if(mqMobile.matches) visBottom = Math.min(visBottom, window.innerHeight * 0.5);   // above the half-sheet
   const delta = (er.top + er.height/2) - (visTop + visBottom)/2;
   if(Math.abs(delta) < 2) return;
   preview.scrollTo({ top: preview.scrollTop + delta, behavior:'smooth' });
@@ -3722,13 +3719,25 @@ function selectScheme(id){
   renderSectionControls();  // render the scheme editor in the inspector
 }
 // Directional auto-scroll keyed on where the selection came from (`origin`):
-//  • 'layers' (tapped a layer row) → scroll the PREVIEW so the selection is centred in the visible
-//    area (on mobile, the area above the sheet at its current height).
-//  • 'canvas' (tapped the preview) → scroll the LAYERS panel so its row is centred.
-//  • undefined (programmatic add/duplicate/remove) → just make the active row visible.
+//  • 'canvas' (tapped the preview): on mobile, expand the card to half-height and centre the tapped
+//    item in the remaining viewport above it — ONE TIME. Manually resizing the sheet afterwards never
+//    re-scrolls the preview. On desktop, centre the row in the layers panel instead.
+//  • 'layers' (tapped a layer row): centre it in the preview. Desktop only — on mobile you're inside
+//    the sheet, so the preview is left where it is.
+//  • undefined (programmatic add/duplicate/remove): just keep the active row visible.
 function afterSelect(origin){
-  if(origin === 'layers') requestAnimationFrame(scrollPreviewToSelection);
-  else revealActiveLayer();
+  if(origin === 'canvas'){
+    if(mqMobile.matches){
+      if(window.__sheetSnap) window.__sheetSnap('half');          // expand the card to half
+      requestAnimationFrame(scrollPreviewToSelection);            // centre the tapped item above it
+    } else {
+      revealActiveLayer();
+    }
+  } else if(origin === 'layers'){
+    if(!mqMobile.matches) requestAnimationFrame(scrollPreviewToSelection);
+  } else {
+    revealActiveLayer();
+  }
 }
 function selectSection(key, origin){
   selectedSection = key; selectedBlock = null; selectedScheme = null;
