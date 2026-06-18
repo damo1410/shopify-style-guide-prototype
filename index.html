@@ -2785,13 +2785,19 @@ function selectedCanvasEl(){
   if(selectedSection) return sectionEl(selectedSection);
   return null;
 }
-// Desktop only: scroll the preview so the selection sits in the MIDDLE of the visible area (clamped
-// at the ends). Not used on mobile — the sheet stays put on selection, so the preview is left alone.
+// Scroll the preview so the selection sits in the MIDDLE of the visible area (clamped at the ends).
+// On mobile the visible area is whatever's ABOVE the bottom sheet at its current height (peek / half
+// / full), so the centre shifts up as the sheet is opened. Used when selecting FROM the layers panel.
 function scrollPreviewToSelection(){
   const target = selectedCanvasEl(); const preview = document.querySelector('.preview');
   if(!target || !preview) return;
   const pr = preview.getBoundingClientRect(), er = target.getBoundingClientRect();
-  const delta = (er.top + er.height/2) - (pr.top + pr.bottom)/2;
+  let visTop = pr.top, visBottom = pr.bottom;
+  if(mqMobile.matches){
+    const panel = document.querySelector('.panel');
+    if(panel){ const sr = panel.getBoundingClientRect(); if(sr.top > visTop) visBottom = Math.min(visBottom, sr.top); }
+  }
+  const delta = (er.top + er.height/2) - (visTop + visBottom)/2;
   if(Math.abs(delta) < 2) return;
   preview.scrollTo({ top: preview.scrollTop + delta, behavior:'smooth' });
 }
@@ -3597,7 +3603,7 @@ function buildLayers(){
       main.prepend(makeLead(layerIcon(schema), 15, {kind:'section', key, gid}, row));
       main.querySelector('.lyr-name').textContent = schema.name;
       if(hasBlocks) main.querySelector('.lyr-count').textContent = blocks.length;
-      main.onclick = ()=>{ selectSection(key); };
+      main.onclick = ()=>{ selectSection(key, 'layers'); };
       row.onmouseenter = ()=> previewCanvasHover(key, null);   // layers → canvas hover
       row.onmouseleave = ()=> hideCanvasHover();
       row.appendChild(main);
@@ -3652,7 +3658,7 @@ function renderBlockRows(grp, section, list, parentPath, depth){
     const main = el(`<button type="button" class="lyr-main lyr-bmain"><span class="lyr-name"></span>${(canNest && kids.length)?`<span class="lyr-count">${kids.length}</span>`:''}</button>`);
     main.prepend(makeLead(blockLayerIcon(b), 14, {kind:'block', section, path}, row));
     main.querySelector('.lyr-name').textContent = blockName(b,i);
-    main.onclick = ()=> selectBlock(section, path);
+    main.onclick = ()=> selectBlock(section, path, 'layers');
     row.onmouseenter = ()=> previewCanvasHover(section, path);   // layers → canvas hover
     row.onmouseleave = ()=> hideCanvasHover();
     row.appendChild(main);
@@ -3715,26 +3721,33 @@ function selectScheme(id){
   renderSchemes();          // refresh the active card in the grid
   renderSectionControls();  // render the scheme editor in the inspector
 }
-// On mobile the sheet stays where it is when you select (you keep your place); on desktop we centre
-// the selection in the preview. The sheet no longer auto-rises, so there's nothing to scroll under.
-function selectSection(key){
+// Directional auto-scroll keyed on where the selection came from (`origin`):
+//  • 'layers' (tapped a layer row) → scroll the PREVIEW so the selection is centred in the visible
+//    area (on mobile, the area above the sheet at its current height).
+//  • 'canvas' (tapped the preview) → scroll the LAYERS panel so its row is centred.
+//  • undefined (programmatic add/duplicate/remove) → just make the active row visible.
+function afterSelect(origin){
+  if(origin === 'layers') requestAnimationFrame(scrollPreviewToSelection);
+  else revealActiveLayer();
+}
+function selectSection(key, origin){
   selectedSection = key; selectedBlock = null; selectedScheme = null;
   if(sectionBlocks(key).length) expandedLayers.add(key);
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===key));
   clearBlockHighlight();
-  buildLayers(); revealActiveLayer(); renderSchemes();
+  buildLayers(); renderSchemes();
   renderSectionControls();
-  if(!mqMobile.matches) requestAnimationFrame(scrollPreviewToSelection);
+  afterSelect(origin);
 }
-function selectBlock(section, path){
+function selectBlock(section, path, origin){
   selectedSection = section; selectedBlock = { section, path: path.slice() }; selectedScheme = null;
   expandedLayers.add(section);
   for(let k=1; k<path.length; k++) expandedLayers.add(pathKey(section, path.slice(0,k)));   // open ancestors
   document.querySelectorAll('#store [data-sec]').forEach(e => e.classList.toggle('sec-selected', e.getAttribute('data-sec')===section));
   highlightBlockEl(section, path);
-  buildLayers(); revealActiveLayer(); renderSchemes();
+  buildLayers(); renderSchemes();
   renderSectionControls();
-  if(!mqMobile.matches) requestAnimationFrame(scrollPreviewToSelection);
+  afterSelect(origin);
 }
 function deselectSection(){
   selectedSection = null; selectedBlock = null; selectedScheme = null;
@@ -3900,9 +3913,9 @@ function initSectionSelection(){
     const blk = e.target.closest('[data-bpath]');
     if(blk && sec.contains(blk)){
       const path = blk.getAttribute('data-bpath').split('.').map(Number);
-      selectBlock(key, path);
+      selectBlock(key, path, 'canvas');   // canvas tap → centre the row in the layers panel
     } else {
-      selectSection(key);
+      selectSection(key, 'canvas');
     }
   });
   // clicking the preview outside any section (or the empty canvas) deselects
