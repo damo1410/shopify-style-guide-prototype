@@ -3719,22 +3719,19 @@ function selectScheme(id){
   renderSectionControls();  // render the scheme editor in the inspector
 }
 // Directional auto-scroll keyed on where the selection came from (`origin`):
-//  • 'canvas' (tapped the preview): on mobile, expand the card to half-height and centre the tapped
-//    item in the remaining viewport above it — ONE TIME. Manually resizing the sheet afterwards never
-//    re-scrolls the preview. On desktop, centre the row in the layers panel instead.
-//  • 'layers' (tapped a layer row): centre it in the preview. Desktop only — on mobile you're inside
-//    the sheet, so the preview is left where it is.
+//  • MOBILE, 'canvas' or 'layers': expand the card to half-height and centre the selected item in the
+//    remaining viewport above it — ONE TIME. Manually resizing the sheet afterwards never re-scrolls.
+//  • DESKTOP, 'layers' (tapped a row): centre the selection in the preview.
+//  • DESKTOP, 'canvas' (tapped the preview): centre the row in the layers panel.
 //  • undefined (programmatic add/duplicate/remove): just keep the active row visible.
 function afterSelect(origin){
-  if(origin === 'canvas'){
-    if(mqMobile.matches){
-      if(window.__sheetSnap) window.__sheetSnap('half');          // expand the card to half
-      requestAnimationFrame(scrollPreviewToSelection);            // centre the tapped item above it
-    } else {
-      revealActiveLayer();
-    }
+  if((origin === 'canvas' || origin === 'layers') && mqMobile.matches){
+    if(window.__sheetSnap) window.__sheetSnap('half');     // expand the card to half
+    requestAnimationFrame(scrollPreviewToSelection);       // centre the selection above the half sheet
   } else if(origin === 'layers'){
-    if(!mqMobile.matches) requestAnimationFrame(scrollPreviewToSelection);
+    requestAnimationFrame(scrollPreviewToSelection);        // desktop: centre the selection in the preview
+  } else if(origin === 'canvas'){
+    revealActiveLayer();                                    // desktop: centre the row in the layers panel
   } else {
     revealActiveLayer();
   }
