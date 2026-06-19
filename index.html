@@ -1148,28 +1148,28 @@
           <div class="announce">Free shipping over $75 · 30-day risk-free returns · 2-year warranty</div>
 
           <!-- NAV -->
-          <nav class="nav" data-sec="nav"><div class="container" data-blocks><!-- header blocks: logo / menu / icons --></div></nav>
+          <nav class="nav" data-sec="header"><div class="container" data-blocks><!-- header blocks: logo / menu / icons --></div></nav>
 
           <!-- HERO -->
-          <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
+          <header class="hero" id="hero" data-sec="image_banner" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
             <div class="container">
               <div class="tb-root hero-blocks" data-blocks><!-- heading/text/button blocks injected by JS --></div>
             </div>
           </header>
 
           <!-- VALUE PROPS / TRUST BAR -->
-          <section class="section" data-sec="valueprops"><div class="container">
+          <section class="section" data-sec="multicolumn"><div class="container">
             <div class="valueprops" data-blocks data-cards></div>
           </div></section>
 
           <!-- SHOP BY COLLECTION -->
-          <section class="section sec-surface" data-sec="collections"><div class="container">
+          <section class="section sec-surface" data-sec="collection_list"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="collections" data-cards></div>
           </div></section>
 
           <!-- BEST SELLERS -->
-          <section class="section" data-sec="bestsellers"><div class="container">
+          <section class="section" data-sec="featured_collection"><div class="container">
             <div class="rowhead">
               <div class="ey" data-blocks-head><!-- heading/text blocks injected by JS --></div>
               <a class="btn btn-secondary">View all</a>
@@ -1178,37 +1178,37 @@
           </div></section>
 
           <!-- GUARANTEE / RISK-FREE -->
-          <section class="section guarantee" data-sec="guarantee"><div class="container">
+          <section class="section guarantee" data-sec="image_with_text"><div class="container">
             <div class="gmedia"><img src="https://picsum.photos/seed/noir-tryon/800/600" alt="Home try-on"></div>
             <div class="gtext tb-root" data-blocks><!-- heading/text/button blocks injected by JS --></div>
           </div></section>
 
           <!-- SOCIAL PROOF / REVIEWS -->
-          <section class="section" data-sec="reviews"><div class="container">
+          <section class="section" data-sec="testimonials"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="reviews" data-cards></div>
           </div></section>
 
           <!-- PRESS / FEATURED IN -->
-          <section class="press" data-sec="press"><div class="container">
+          <section class="press" data-sec="logo_list"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="press-logos" data-cards></div>
           </div></section>
 
           <!-- UGC / INSTAGRAM -->
-          <section class="section" data-sec="ugc"><div class="container">
+          <section class="section" data-sec="image_gallery"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="ugc" data-cards></div>
           </div></section>
 
           <!-- BLOG / JOURNAL -->
-          <section class="section sec-surface" data-sec="journal"><div class="container">
+          <section class="section sec-surface" data-sec="blog_posts"><div class="container">
             <div class="section-head" data-blocks-head><!-- heading/text blocks injected by JS --></div>
             <div class="journal" data-cards></div>
           </div></section>
 
           <!-- NEWSLETTER -->
-          <section class="section newsletter" data-sec="newsletter"><div class="container">
+          <section class="section newsletter" data-sec="email_signup"><div class="container">
             <div class="tb-root" data-blocks style="align-items:center"><!-- heading/text/form blocks injected by JS --></div>
           </div></section>
 
@@ -1373,7 +1373,7 @@ const DEFAULTS = {
   // Per-section scheme overrides: { sectionId -> schemeName }. A section listed here
   // paints its own background + role colors from that scheme; others inherit the baseline.
   // Newsletter ships dark, expressed cleanly as the Dark scheme on that one section.
-  sectionSchemes: { newsletter:'Dark' },
+  sectionSchemes: { email_signup:'Dark' },
   // Per-section setting VALUES (Shopify: section.settings → { settingId: value }). Lazily
   // filled as you edit; color scheme is NOT stored here (it lives in sectionSchemes, which
   // already drives the scheme wiring). Survives Reset because it's part of DEFAULTS.
@@ -2328,9 +2328,9 @@ function buildHomepage(){
    global style guide. The blue frame marks the hovered / selected section.
    ============================================================================ */
 const SECTION_TITLES = {
-  nav:'Navigation', hero:'Hero', valueprops:'Value Props', collections:'Collections',
-  bestsellers:'Best Sellers', guarantee:'Home Try-On', reviews:'Reviews', press:'Press',
-  ugc:'Instagram', journal:'Journal', newsletter:'Newsletter', footer:'Footer',
+  header:'Navigation', image_banner:'Hero', multicolumn:'Value Props', collection_list:'Collections',
+  featured_collection:'Best Sellers', image_with_text:'Home Try-On', testimonials:'Reviews', logo_list:'Press',
+  image_gallery:'Instagram', blog_posts:'Journal', email_signup:'Newsletter', footer:'Footer',
 };
 let selectedSection = null;
 let selectedScheme = null;   // a scheme is being edited in the right inspector
@@ -2490,11 +2490,11 @@ const PADDING_BLOCK = [ {type:'header', content:'Section padding'}, PAD('padding
 const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color scheme' };
 
 const SECTION_SCHEMAS = {
-  nav: { name:'Header', category:'Header', blocks:[{type:'header_logo'},{type:'header_menu'},{type:'header_icons'}], max_blocks:20, settings:[
+  header: { name:'Header', category:'Header', blocks:[{type:'header_logo'},{type:'header_menu'},{type:'header_icons'}], max_blocks:20, settings:[
     SCHEME_SETTING,
     {type:'checkbox', id:'sticky', label:'Stick to top on scroll', default:false},
   ]},
-  hero: { name:'Image banner', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
+  image_banner: { name:'Image banner', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
     {type:'image_picker', id:'image', label:'Background image'},
     {type:'select', id:'height', label:'Banner height', default:'large', options:[
@@ -2506,48 +2506,48 @@ const SECTION_SCHEMAS = {
       {value:'left',label:'Left'},{value:'center',label:'Center'}]},
     ...PADDING_BLOCK,
   ]},
-  valueprops: { name:'Multicolumn', category:'Layout', blocks:[{type:'@theme'}], max_blocks:6, settings:[
+  multicolumn: { name:'Multicolumn', category:'Layout', blocks:[{type:'@theme'}], max_blocks:6, settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:4},
     ...PADDING_BLOCK,
   ]},
-  collections: { name:'Collection list', category:'Collections', settings:[
+  collection_list: { name:'Collection list', category:'Collections', settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:2, max:5, step:1, default:4},
     ...PADDING_BLOCK,
   ]},
-  bestsellers: { name:'Featured collection', category:'Collections', settings:[
+  featured_collection: { name:'Featured collection', category:'Collections', settings:[
     SCHEME_SETTING,
     {type:'checkbox', id:'show_view_all', label:'Show "View all" button', default:true},
     ...PADDING_BLOCK,
   ]},
-  guarantee: { name:'Image with text', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
+  image_with_text: { name:'Image with text', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
     {type:'image_picker', id:'image', label:'Image'},
     {type:'select', id:'image_position', label:'Image position', default:'left', options:[
       {value:'left',label:'Left'},{value:'right',label:'Right'}]},
     ...PADDING_BLOCK,
   ]},
-  reviews: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
+  testimonials: { name:'Testimonials', category:'Reviews', max_blocks:9, settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:1, max:4, step:1, default:3},
     ...PADDING_BLOCK,
   ]},
-  press: { name:'Logo list', category:'Layout', settings:[
+  logo_list: { name:'Logo list', category:'Layout', settings:[
     SCHEME_SETTING,
     ...PADDING_BLOCK,
   ]},
-  ugc: { name:'Image gallery', category:'Image', settings:[
+  image_gallery: { name:'Image gallery', category:'Image', settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:2, max:6, step:1, default:6},
     ...PADDING_BLOCK,
   ]},
-  journal: { name:'Blog posts', category:'Layout', settings:[
+  blog_posts: { name:'Blog posts', category:'Layout', settings:[
     SCHEME_SETTING,
     {type:'range', id:'columns', label:'Columns', min:2, max:4, step:1, default:3},
     ...PADDING_BLOCK,
   ]},
-  newsletter: { name:'Email signup', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50, settings:[
+  email_signup: { name:'Email signup', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50, settings:[
     SCHEME_SETTING,
     {type:'text_alignment', id:'content_alignment', label:'Content alignment', default:'center'},
     ...PADDING_BLOCK,
@@ -2577,8 +2577,8 @@ const CONTENT_WIDTH = { narrow:'420px', medium:'600px', wide:'820px' };
 const ALIGN_ITEMS = a => a==='center' ? 'center' : (a==='right' ? 'flex-end' : 'flex-start');
 // Per-section live wiring: read settings → set CSS vars / classes / inline styles on the section.
 const SECTION_WIRE = {
-  valueprops: gridCols, collections: gridCols, ugc: gridCols, journal: gridCols, reviews: gridCols,
-  hero(elm, sec){
+  multicolumn: gridCols, collection_list: gridCols, image_gallery: gridCols, blog_posts: gridCols, testimonials: gridCols,
+  image_banner(elm, sec){
     elm.style.minHeight = HERO_HEIGHT[secSetting(sec,'height')] || '';
     elm.style.setProperty('--hero-overlay', (Number(secSetting(sec,'overlay_opacity')) || 0) / 100);
     const head = elm.querySelector('[data-blocks]'); if(head){
@@ -2587,14 +2587,14 @@ const SECTION_WIRE = {
       head.style.maxWidth = CONTENT_WIDTH[secSetting(sec,'content_width')] || '';
     }
   },
-  guarantee(elm, sec){ const gm=elm.querySelector('.gmedia'); if(gm) gm.style.order = secSetting(sec,'image_position')==='right' ? '2' : ''; },
-  newsletter(elm, sec){
+  image_with_text(elm, sec){ const gm=elm.querySelector('.gmedia'); if(gm) gm.style.order = secSetting(sec,'image_position')==='right' ? '2' : ''; },
+  email_signup(elm, sec){
     const al = secSetting(sec,'content_alignment'), ai = ALIGN_ITEMS(al);
     const c = elm.querySelector('.container'); if(c){ c.style.alignItems = ai; c.style.textAlign = al || 'center'; }
     const head = elm.querySelector('[data-blocks]'); if(head) head.style.alignItems = ai;
   },
-  bestsellers(elm, sec){ const btn=elm.querySelector('.rowhead > .btn'); if(btn) btn.style.display = secSetting(sec,'show_view_all')===false ? 'none' : ''; },
-  nav(elm, sec){   // logo / menu / icons are blocks now; only the sticky toggle stays section-level
+  featured_collection(elm, sec){ const btn=elm.querySelector('.rowhead > .btn'); if(btn) btn.style.display = secSetting(sec,'show_view_all')===false ? 'none' : ''; },
+  header(elm, sec){   // logo / menu / icons are blocks now; only the sticky toggle stays section-level
     const st = !!secSetting(sec,'sticky');
     elm.style.position = st?'sticky':''; elm.style.top = st?'0':''; elm.style.zIndex = st?'20':'';
   },
@@ -2617,11 +2617,6 @@ function applyAllSectionSettings(){ allSectionIds().forEach(applySectionSettings
    blocks is a later increment (today a block's settings persist + it highlights).
    ============================================================================ */
 const BLOCK_SCHEMAS = {
-  icon_column:    { name:'Icon column', settings:[
-    {type:'select', id:'icon', label:'Icon', default:'truck', options:[
-      {value:'truck',label:'Truck'},{value:'shield',label:'Shield'},{value:'refresh',label:'Returns'},{value:'sun',label:'Sun'},{value:'star',label:'Star'},{value:'check',label:'Check'}]},
-    {type:'text', id:'heading', label:'Heading', default:'Heading'},
-    {type:'text', id:'text', label:'Text'} ]},
   collection_card:{ name:'Collection', settings:[
     {type:'collection', id:'collection', label:'Collection'},
     {type:'text', id:'title', label:'Title'} ]},
@@ -2644,17 +2639,15 @@ const BLOCK_SCHEMAS = {
   post_card:      { name:'Post', settings:[
     {type:'blog', id:'blog', label:'Blog'},
     {type:'text', id:'title', label:'Title'} ]},
-  checklist_item: { name:'List item', settings:[
-    {type:'text', id:'text', label:'Text'} ]},
 };
 // Which block types each section accepts (Shopify: section.blocks). Attach to the
 // schemas + give a max_blocks so the registry stays the single source of truth.
 const SECTION_BLOCK_TYPES = {
-  collections:['collection_card'], bestsellers:['product_card'],
-  reviews:['testimonial'], press:['logo'], ugc:['gallery_image'], journal:['post_card'],
+  collection_list:['collection_card'], featured_collection:['product_card'],
+  testimonials:['testimonial'], logo_list:['logo'], image_gallery:['gallery_image'], blog_posts:['post_card'],
 };
 // Grid sections that also host a heading/text block zone above their card grid.
-const HEADER_GRID = new Set(['collections','bestsellers','ugc','journal','reviews','press']);
+const HEADER_GRID = new Set(['collection_list','featured_collection','image_gallery','blog_posts','testimonials','logo_list']);
 Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
   if(!SECTION_SCHEMAS[k]) return;
   const accept = types.map(t=>({type:t}));
@@ -2669,7 +2662,7 @@ Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
 // while _demo lets the hardcoded markup keep rendering. Exports drop _demo.
 function buildDefaultBlocks(){
   return {
-    nav: [
+    header: [
       { type:'header_logo',  name:'Logo',  settings:{ text:'NOIR' } },
       { type:'header_menu',  name:'Menu',  settings:{ links:'New, Men, Women, Sport, Collections, Sale' } },
       { type:'header_icons', name:'Icons', settings:{ show_search:true, show_account:true, show_cart:true } },
@@ -2682,65 +2675,65 @@ function buildDefaultBlocks(){
       { type:'footer_menu',  name:'Connect', settings:{ title:'Connect', links:'Instagram, TikTok, Newsletter, Contact' } },
       { type:'footer_bottom',name:'Bottom bar', settings:{ copyright:'© 2026 NOIR Eyewear. All rights reserved.', show_payment:true } },
     ],
-    hero: [
-      { type:'text_block',    name:"New · Summer '26", settings:{ text:"New · Summer '26" } },
-      { type:'heading_block', name:'See the world in style.', settings:{ text:'See the world in style.', size:'h1' } },
-      { type:'text_block',    name:'Subheading', settings:{ text:'Premium polarized sunglasses, handcrafted from Italian acetate — built to last a lifetime.' } },
+    image_banner: [
+      { type:'text',    name:"New · Summer '26", settings:{ text:"New · Summer '26" } },
+      { type:'heading', name:'See the world in style.', settings:{ text:'See the world in style.', size:'h1' } },
+      { type:'text',    name:'Subheading', settings:{ text:'Premium polarized sunglasses, handcrafted from Italian acetate — built to last a lifetime.' } },
       { type:'group', name:'Buttons', settings:{ direction:'horizontal', alignment:'left' }, blocks:[
-        { type:'button_block', name:'Shop best sellers', settings:{ label:'Shop best sellers', style:'primary' } },
-        { type:'button_block', name:'Explore collections', settings:{ label:'Explore collections', style:'secondary' } },
+        { type:'button', name:'Shop best sellers', settings:{ label:'Shop best sellers', style:'primary' } },
+        { type:'button', name:'Explore collections', settings:{ label:'Explore collections', style:'secondary' } },
       ]},
     ],
-    valueprops:  VALUEPROPS.map(v => ({ type:'group', name:v.h, settings:{ direction:'vertical', alignment:'center', gap:10 }, blocks:[
-      { type:'icon_block',    name:'Icon',    settings:{ icon:v.ic } },
-      { type:'heading_block', name:v.h,       settings:{ text:v.h, size:'h4', alignment:'center' } },
-      { type:'text_block',    name:'Text',    settings:{ text:v.p, size:'small', alignment:'center' } },
+    multicolumn:  VALUEPROPS.map(v => ({ type:'group', name:v.h, settings:{ direction:'vertical', alignment:'center', gap:10 }, blocks:[
+      { type:'icon',    name:'Icon',    settings:{ icon:v.ic } },
+      { type:'heading', name:v.h,       settings:{ text:v.h, size:'h4', alignment:'center' } },
+      { type:'text',    name:'Text',    settings:{ text:v.p, size:'small', alignment:'center' } },
     ] })),
-    collections: [
-      { type:'text_block',    name:'Shop by style', settings:{ text:'Shop by style' } },
-      { type:'heading_block', name:'Find your perfect frame', settings:{ text:'Find your perfect frame', size:'h2' } },
-      { type:'text_block',    name:'Body', settings:{ text:"From timeless aviators to bold modern silhouettes — there's a NOIR for every face." } },
+    collection_list: [
+      { type:'text',    name:'Shop by style', settings:{ text:'Shop by style' } },
+      { type:'heading', name:'Find your perfect frame', settings:{ text:'Find your perfect frame', size:'h2' } },
+      { type:'text',    name:'Body', settings:{ text:"From timeless aviators to bold modern silhouettes — there's a NOIR for every face." } },
       ...COLLECTIONS.map(c => ({ type:'collection_card', name:c.name, settings:{ title:c.name }, _demo:{ seed:c.seed, seed2:c.seed2 } })),
     ],
-    bestsellers: [
-      { type:'text_block',    name:'Best sellers', settings:{ text:'Best sellers' } },
-      { type:'heading_block', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
+    featured_collection: [
+      { type:'text',    name:'Best sellers', settings:{ text:'Best sellers' } },
+      { type:'heading', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
       ...PRODUCTS.map(p => ({ type:'product_card', name:p.name, settings:{ show_badge:!!p.badge }, _demo:{ name:p.name, frame:p.frame, frame2:p.frame2, rating:p.rating, reviews:p.reviews, price:p.price, was:p.was, badge:p.badge } })),
     ],
-    reviews: [
-      { type:'heading_block', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
-      { type:'text_block',    name:'Rating', settings:{ text:'4.8 out of 5 · Based on 12,400+ verified reviews' } },
+    testimonials: [
+      { type:'heading', name:'Loved by thousands', settings:{ text:'Loved by thousands', size:'h2' } },
+      { type:'text',    name:'Rating', settings:{ text:'4.8 out of 5 · Based on 12,400+ verified reviews' } },
       ...REVIEWS.map(r => ({ type:'testimonial', name:r.name, settings:{ quote:r.text, author:r.name, rating:5 }, _demo:{ initials:r.initials } })),
     ],
-    press: [
-      { type:'text_block', name:'As featured in', settings:{ text:'As featured in' } },
+    logo_list: [
+      { type:'text', name:'As featured in', settings:{ text:'As featured in' } },
       ...PRESS.map(n => ({ type:'logo', name:n, settings:{ name:n } })),
     ],
-    ugc: [
-      { type:'text_block',    name:'#NoirOnYou', settings:{ text:'#NoirOnYou' } },
-      { type:'heading_block', name:'As seen on you', settings:{ text:'As seen on you', size:'h2' } },
-      { type:'text_block',    name:'Body', settings:{ text:'Tag @noir for a chance to be featured. Join 200k+ wearers around the world.' } },
+    image_gallery: [
+      { type:'text',    name:'#NoirOnYou', settings:{ text:'#NoirOnYou' } },
+      { type:'heading', name:'As seen on you', settings:{ text:'As seen on you', size:'h2' } },
+      { type:'text',    name:'Body', settings:{ text:'Tag @noir for a chance to be featured. Join 200k+ wearers around the world.' } },
       ...UGC.map((s,i) => ({ type:'gallery_image', name:'Image '+(i+1), settings:{}, _demo:{ seed:s } })),
     ],
-    journal: [
-      { type:'text_block',    name:'The Journal', settings:{ text:'The Journal' } },
-      { type:'heading_block', name:'Style notes & guides', settings:{ text:'Style notes &amp; guides', size:'h2' } },
+    blog_posts: [
+      { type:'text',    name:'The Journal', settings:{ text:'The Journal' } },
+      { type:'heading', name:'Style notes & guides', settings:{ text:'Style notes &amp; guides', size:'h2' } },
       ...POSTS.map(p => ({ type:'post_card', name:p.title, settings:{ title:p.title }, _demo:{ seed:p.seed, cat:p.cat } })),
     ],
-    guarantee: [
-      { type:'text_block',    name:'Risk-free', settings:{ text:'Risk-free' } },
-      { type:'heading_block', name:'Try them on at home, on us.', settings:{ text:'Try them on at home, on us.', size:'h2' } },
-      { type:'text_block',    name:'Body', settings:{ text:'Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.' } },
-      { type:'text_block',    name:'Free 14-day home try-on', settings:{ text:'✓  Free 14-day home try-on' } },
-      { type:'text_block',    name:'2-year warranty + lifetime repairs', settings:{ text:'✓  2-year warranty + lifetime repairs' } },
-      { type:'text_block',    name:'Free returns & exchanges', settings:{ text:'✓  Free returns & exchanges' } },
-      { type:'button_block',  name:'Start your home try-on', settings:{ label:'Start your home try-on', style:'primary' } },
+    image_with_text: [
+      { type:'text',    name:'Risk-free', settings:{ text:'Risk-free' } },
+      { type:'heading', name:'Try them on at home, on us.', settings:{ text:'Try them on at home, on us.', size:'h2' } },
+      { type:'text',    name:'Body', settings:{ text:'Not sure which frame suits you? Order up to 3 pairs, try them for 14 days, and only pay for what you keep.' } },
+      { type:'text',    name:'Free 14-day home try-on', settings:{ text:'✓  Free 14-day home try-on' } },
+      { type:'text',    name:'2-year warranty + lifetime repairs', settings:{ text:'✓  2-year warranty + lifetime repairs' } },
+      { type:'text',    name:'Free returns & exchanges', settings:{ text:'✓  Free returns & exchanges' } },
+      { type:'button',  name:'Start your home try-on', settings:{ label:'Start your home try-on', style:'primary' } },
     ],
-    newsletter: [
-      { type:'text_block',    name:'Join the club', settings:{ text:'Join the club' } },
-      { type:'heading_block', name:'Get 10% off your first order', settings:{ text:'Get 10% off your first order', size:'h2' } },
-      { type:'text_block',    name:'Body', settings:{ text:'Sign up for early access to new drops, styling tips, and members-only offers.' } },
-      { type:'email_form',    name:'Email signup form', settings:{ placeholder:'Enter your email', button_label:'Get my 10% off' } },
+    email_signup: [
+      { type:'text',    name:'Join the club', settings:{ text:'Join the club' } },
+      { type:'heading', name:'Get 10% off your first order', settings:{ text:'Get 10% off your first order', size:'h2' } },
+      { type:'text',    name:'Body', settings:{ text:'Sign up for early access to new drops, styling tips, and members-only offers.' } },
+      { type:'email_signup_form',    name:'Email signup form', settings:{ placeholder:'Enter your email', button_label:'Get my 10% off' } },
     ],
   };
 }
@@ -2770,8 +2763,8 @@ function acceptsChildren(type){ return (((BLOCK_SCHEMAS[type]||{}).blocks)||[]).
 
 // Map a block instance → its preview element (for the selection outline).
 const BLOCK_CONTAINERS = {
-  valueprops:['#valueprops','.vp'], collections:['#collections','.collection'], bestsellers:['#products','.product'],
-  reviews:['#reviews','.review'], press:['#press','.logo'], ugc:['#ugc','.ugc-tile'], journal:['#journal','.post'],
+  multicolumn:['#valueprops','.vp'], collection_list:['#collections','.collection'], featured_collection:['#products','.product'],
+  testimonials:['#reviews','.review'], logo_list:['#press','.logo'], image_gallery:['#ugc','.ugc-tile'], blog_posts:['#journal','.post'],
 };
 function blockEl(section, path){
   const secEl = sectionEl(section); if(!secEl) return null;   // every block element carries data-bpath
@@ -2810,18 +2803,18 @@ function initialsOf(name){ return (name||'').split(/\s+/).map(w=>w[0]||'').join(
 // [data-blocks-head] zone where their heading/text theme blocks render, so a section's
 // one ordered block list is split by type: content blocks → header zone, cards → grid.
 const CARD_RENDERERS = {
-  collections: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
+  collection_list: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const label=`<div class="cname">${s.title||''}</div><div class="cgo">Shop now ${svg(SI.arrow,14)}</div>`;
     return `<a class="collection" data-bpath="${i}"><div class="cmedia"><img class="cimg cimg-1" src="https://picsum.photos/seed/${d.seed||'noir'}/520/720" alt="${s.title||''}"><img class="cimg cimg-2" src="https://picsum.photos/seed/${d.seed2||'noir-b'}/520/720" alt="" aria-hidden="true"><span class="coverlay"></span><div class="clabel clabel-on">${label}</div></div><div class="clabel clabel-below">${label}</div></a>`; },
-  bestsellers: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
+  featured_collection: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; const badge=(s.show_badge!==false)&&d.badge;
     const rating = (s.show_rating!==false) ? `<div class="rrow">${stars(d.rating||5)}<span class="rev">(${d.reviews||0})</span></div>` : '';
     const price = (s.show_price!==false) ? `<span class="price">${d.was?`<s>${d.was}</s>`:''}${d.price||''}</span>` : '';
     return `<article class="product" data-bpath="${i}"><div class="thumb">${badge?`<span class="badge">${d.badge}</span>`:''}<div class="sg-layer sg-1">${sunglasses(d.frame||'#1c1917')}</div><div class="sg-layer sg-2">${sunglasses(d.frame2||'#a83716')}</div></div><span class="poverlay"></span><div class="pbody"><div class="pname">${b.name||d.name||''}</div>${rating}${price}<a class="btn btn-primary">Add to cart</a></div></article>`; },
-  ugc: (b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; },
-  journal: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; },
-  reviews: (b,i)=>{ const s=b.settings||{}, d=b._demo||{};
+  image_gallery: (b,i)=>{ const d=b._demo||{}; return `<a class="ugc-tile" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'ugc'}/320/320" alt=""></a>`; },
+  blog_posts: (b,i)=>{ const s=b.settings||{}, d=b._demo||{}; return `<article class="post" data-bpath="${i}"><img src="https://picsum.photos/seed/${d.seed||'jr'}/600/380" alt=""><div class="pbody"><div class="cat">${d.cat||'Journal'}</div><h4>${s.title||''}</h4><span class="link">Read more ${svg(SI.arrow,15)}</span></div></article>`; },
+  testimonials: (b,i)=>{ const s=b.settings||{}, d=b._demo||{};
     const avatar = (s.show_avatar!==false) ? `<span class="av">${d.initials||initialsOf(s.author)}</span>` : '';
     return `<div class="review" data-bpath="${i}">${stars(s.rating||5)}<p>“${s.quote||''}”</p><div class="who">${avatar}<div><div class="nm">${s.author||''}</div><div class="vf">${svg(SI.check,12)} Verified buyer</div></div></div></div>`; },
-  press: (b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; },
+  logo_list: (b,i)=>{ const s=b.settings||{}; return `<span class="logo" data-bpath="${i}">${s.name||''}</span>`; },
 };
 // Full-list renderers for the remaining (pure-card) sections.
 const SECTION_RENDERERS = {};
@@ -2857,7 +2850,7 @@ function renderHeaderBlock(b,i){
     default: return `<div class="tb" data-bpath="${i}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
-SECTION_RENDERERS.nav = (list)=> (list||[]).map((b,i)=>renderHeaderBlock(b,i)).join('');
+SECTION_RENDERERS.header = (list)=> (list||[]).map((b,i)=>renderHeaderBlock(b,i)).join('');
 
 function renderFooterColumn(b,i){
   const s=b.settings||{};
@@ -2904,30 +2897,30 @@ Object.assign(BLOCK_SCHEMAS, {
     {type:'select', id:'direction', label:'Direction', default:'horizontal', options:[{value:'horizontal',label:'Horizontal'},{value:'vertical',label:'Vertical'}]},
     {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'},
     {type:'range', id:'gap', label:'Spacing', min:0, max:48, step:2, unit:'px', default:16} ]},
-  heading_block:{ name:'Heading', settings:[
+  heading:{ name:'Heading', settings:[
     {type:'inline_richtext', id:'text', label:'Heading', default:'Built to last'},
     {type:'select', id:'size', label:'Size', default:'h3', options:[{value:'h1',label:'Display'},{value:'h2',label:'Large'},{value:'h3',label:'Medium'},{value:'h4',label:'Small'}]},
     {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
-  text_block:   { name:'Text', settings:[
+  text:   { name:'Text', settings:[
     {type:'textarea', id:'text', label:'Text', default:'Add your text here.'},
     {type:'select', id:'size', label:'Size', default:'normal', options:[{value:'small',label:'Small'},{value:'normal',label:'Normal'},{value:'large',label:'Large'}]},
     {type:'text_alignment', id:'alignment', label:'Alignment', default:'left'} ]},
-  button_block: { name:'Button', settings:[
+  button: { name:'Button', settings:[
     {type:'text', id:'label', label:'Label', default:'Shop now'}, {type:'url', id:'link', label:'Link'},
     {type:'select', id:'style', label:'Style', default:'primary', options:[{value:'primary',label:'Primary'},{value:'secondary',label:'Secondary'}]},
     {type:'select', id:'size', label:'Size', default:'medium', options:[{value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'}]} ]},
-  image_block:  { name:'Image', settings:[
+  image:  { name:'Image', settings:[
     {type:'image_picker', id:'image', label:'Image'},
     {type:'select', id:'ratio', label:'Aspect ratio', default:'landscape', options:[{value:'square',label:'Square'},{value:'portrait',label:'Portrait'},{value:'landscape',label:'Landscape'},{value:'wide',label:'Wide'}]},
     {type:'range', id:'width', label:'Width', min:20, max:100, step:5, unit:'%', default:100} ]},
-  icon_block:   { name:'Icon', settings:[
+  icon:   { name:'Icon', settings:[
     {type:'select', id:'icon', label:'Icon', default:'star', options:[
       {value:'truck',label:'Truck'},{value:'shield',label:'Shield'},{value:'refresh',label:'Returns'},{value:'sun',label:'Sun'},{value:'star',label:'Star'},{value:'check',label:'Check'}]} ]},
-  email_form:   { name:'Email signup form', settings:[
+  email_signup_form:   { name:'Email signup form', settings:[
     {type:'text', id:'placeholder', label:'Placeholder', default:'Enter your email'},
     {type:'text', id:'button_label', label:'Button label', default:'Subscribe'} ]},
 });
-const THEME_BLOCK_TYPES = ['group','heading_block','text_block','button_block','image_block','icon_block','email_form'];
+const THEME_BLOCK_TYPES = ['group','heading','text','button','image','icon','email_signup_form'];
 
 // Generic recursive canvas renderer (threads the block path onto each element so the
 // selection outline can find any nested block).
@@ -2944,50 +2937,50 @@ function renderThemeBlock(b, path){
       const gap = (s.gap!=null) ? s.gap : 16;
       return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:${gap}px;align-items:${al}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
     }
-    case 'heading_block': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><${sz}>${s.text||''}</${sz}></div>`; }
-    case 'text_block':    return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><p style="font-size:${TXT[s.size]||'1em'}">${s.text||''}</p></div>`;
-    case 'button_block':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'} btn-${s.size||'medium'}">${s.label||'Button'}</a></div>`;
-    case 'image_block':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
-    case 'icon_block':    return `<div class="tb" data-bpath="${bp}"><span class="tb-icon ic">${svg(SI[s.icon]||SI.star,24)}</span></div>`;
-    case 'email_form':    return `<div class="tb" data-bpath="${bp}"><form class="nl-form" onsubmit="return false"><input type="email" placeholder="${s.placeholder||'Enter your email'}" aria-label="Email"><button type="submit" class="btn btn-primary">${s.button_label||'Subscribe'}</button></form></div>`;
+    case 'heading': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><${sz}>${s.text||''}</${sz}></div>`; }
+    case 'text':    return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><p style="font-size:${TXT[s.size]||'1em'}">${s.text||''}</p></div>`;
+    case 'button':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'} btn-${s.size||'medium'}">${s.label||'Button'}</a></div>`;
+    case 'image':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
+    case 'icon':    return `<div class="tb" data-bpath="${bp}"><span class="tb-icon ic">${svg(SI[s.icon]||SI.star,24)}</span></div>`;
+    case 'email_signup_form':    return `<div class="tb" data-bpath="${bp}"><form class="nl-form" onsubmit="return false"><input type="email" placeholder="${s.placeholder||'Enter your email'}" aria-label="Email"><button type="submit" class="btn btn-primary">${s.button_label||'Subscribe'}</button></form></div>`;
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
-SECTION_RENDERERS.groupsec   = bs => renderThemeBlocks(bs, []);
-SECTION_RENDERERS.valueprops = bs => renderThemeBlocks(bs, []);   // multicolumn = generic blocks (group per column)
-SECTION_RENDERERS.hero       = bs => renderThemeBlocks(bs, []);   // hero content = theme blocks
-SECTION_RENDERERS.guarantee  = bs => renderThemeBlocks(bs, []);   // image-with-text content = theme blocks
-SECTION_RENDERERS.newsletter = bs => renderThemeBlocks(bs, []);   // email-signup content = theme blocks
+SECTION_RENDERERS.group   = bs => renderThemeBlocks(bs, []);
+SECTION_RENDERERS.multicolumn = bs => renderThemeBlocks(bs, []);   // multicolumn = generic blocks (group per column)
+SECTION_RENDERERS.image_banner       = bs => renderThemeBlocks(bs, []);   // image_banner content = theme blocks
+SECTION_RENDERERS.image_with_text  = bs => renderThemeBlocks(bs, []);   // image-with-text content = theme blocks
+SECTION_RENDERERS.email_signup = bs => renderThemeBlocks(bs, []);   // email-signup content = theme blocks
 
 // The "Group" section: a generic host for theme blocks (add-only; built fresh on add).
 Object.assign(SECTION_SCHEMAS, {
-  groupsec: { name:'Group', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50,
+  group: { name:'Group', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50,
     settings:[ SCHEME_SETTING, {type:'inline_richtext', id:'heading', label:'Heading', default:'Build your layout'}, ...PADDING_BLOCK ] },
 });
 const SECTION_BUILDERS = {
-  groupsec: ()=> el('<section class="section" data-sec="groupsec"><div class="container"><div class="tb-root" data-blocks></div></div></section>'),
+  group: ()=> el('<section class="section" data-sec="group"><div class="container"><div class="tb-root" data-blocks></div></div></section>'),
 };
 function demoGroupBlocks(){
   return [
     { type:'group', name:'Group', settings:{direction:'horizontal', alignment:'left'}, blocks:[
-      { type:'heading_block', name:'Heading', settings:{ text:'Built to last', size:'h3' } },
-      { type:'text_block',    name:'Text',    settings:{ text:'Premium acetate frames, polarized lenses.' } },
-      { type:'button_block',  name:'Button',  settings:{ label:'Shop now', style:'primary' } },
+      { type:'heading', name:'Heading', settings:{ text:'Built to last', size:'h3' } },
+      { type:'text',    name:'Text',    settings:{ text:'Premium acetate frames, polarized lenses.' } },
+      { type:'button',  name:'Button',  settings:{ label:'Shop now', style:'primary' } },
     ]},
-    { type:'image_block', name:'Image', settings:{} },
+    { type:'image', name:'Image', settings:{} },
   ];
 }
-const SECTION_SEED = { groupsec: demoGroupBlocks };
+const SECTION_SEED = { group: demoGroupBlocks };
 
 /* ----------------------------------------------------------------------------
    ADD / REMOVE BLOCKS  —  Shopify-faithful: blocks are added from a picker (one
    grouping level by category), capped at max_blocks (≤ 50). Removing is offered
    at the bottom of the block's settings (Shopify's placement).
    ---------------------------------------------------------------------------- */
-const BLOCK_CATEGORY = { icon_column:'Content', testimonial:'Content', checklist_item:'Content', logo:'Content',
+const BLOCK_CATEGORY = { testimonial:'Content', logo:'Content',
   collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content',
-  group:'Layout', heading_block:'Text', text_block:'Text', button_block:'Text', image_block:'Media',
-  icon_block:'Media', email_form:'Content',
+  group:'Layout', heading:'Text', text:'Text', button:'Text', image:'Media',
+  icon:'Media', email_signup_form:'Content',
   header_logo:'Header', header_menu:'Header', header_icons:'Header',
   footer_brand:'Footer', footer_menu:'Footer', footer_bottom:'Footer' };
 // placeholder _demo for a freshly-added block so media-backed types still render
@@ -3325,7 +3318,7 @@ function toast(msg){
    re-adding restores its content. (True multi-instance duplication of a section
    type arrives with the model-driven section rewrite that backs export.)
    ---------------------------------------------------------------------------- */
-const TEMPLATE_SECTION_TYPES = ['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter','groupsec'];
+const TEMPLATE_SECTION_TYPES = ['image_banner','multicolumn','collection_list','featured_collection','image_with_text','testimonials','logo_list','image_gallery','blog_posts','email_signup','group'];
 
 /* INSTANCE MODEL — a section on the page is an INSTANCE with a unique id; its TYPE
    (schema/renderer key) is the id for originals, or looked up here for duplicates. */
@@ -3495,8 +3488,8 @@ function openSectionPicker(gid, index){
    section or block, opens its settings, and highlights it in the preview.
    ============================================================================ */
 const SECTION_GROUPS = {
-  header:   { name:'Header',   sections:['nav'] },
-  template: { name:'Template', sections:['hero','valueprops','collections','bestsellers','guarantee','reviews','press','ugc','journal','newsletter'] },
+  header:   { name:'Header',   sections:['header'] },
+  template: { name:'Template', sections:['image_banner','multicolumn','collection_list','featured_collection','image_with_text','testimonials','logo_list','image_gallery','blog_posts','email_signup'] },
   footer:   { name:'Footer',   sections:['footer'] },
 };
 // Shopify uses ONE generic section icon for every section in the layers panel (only blocks
@@ -3505,10 +3498,10 @@ function layerIcon(schema){ return ICONS.section; }
 // per-block-type glyphs (used in the layers tree, the canvas hover chip, the inspector
 // header, and the Add-block picker) — chosen to echo Shopify's basic-block icons.
 const BLOCK_ICON = {
-  heading_block:'heading', text_block:'text', button_block:'click', image_block:'image',
-  icon_block:'star', email_form:'mail', group:'folder',
+  heading:'heading', text:'text', button:'click', image:'image',
+  icon:'star', email_signup_form:'mail', group:'folder',
   collection_card:'tag', product_card:'box', testimonial:'quote', logo:'frame',
-  gallery_image:'image', post_card:'file', icon_column:'grid', checklist_item:'text',
+  gallery_image:'image', post_card:'file', 
   header_logo:'frame', header_menu:'text', header_icons:'grid', footer_brand:'frame', footer_menu:'text', footer_bottom:'layout',
 };
 function blockTypeIcon(type){ return ICONS[BLOCK_ICON[type]] || ICONS.box; }
