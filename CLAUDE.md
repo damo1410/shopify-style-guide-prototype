@@ -174,6 +174,35 @@ Schemes show as a **3-col card grid** (`renderSchemes`); selecting one edits it 
 the inspector. `popover()`/`closePopover()` is the shared anchored-popover helper;
 `.cmenu` is the shared context-menu style.
 
+**Theme setups (color schemes ⇄ color palette).** The prototype ships **two
+fully-independent theme "setups"**, switched from the **black brand mark** (top-left;
+`openSetupSwitcher` → a `popover()` menu). Each setup is a complete editor *document*:
+`serializeDoc()` snapshots `clone(STATE)` + `SECTION_GROUPS` + `sectionTypes` +
+`hiddenLayers` + `#store` innerHTML; `restoreDoc()` restores them (the const globals are
+restored **in place**; selection is delegated off `#store`, so swapping its innerHTML keeps
+listeners). `switchSetup(id)` serializes the outgoing setup, restores the target. Registry =
+`THEME_SETUPS` (seeded by `seedSetups()` after boot); `activeSetupId`. This is an **experiment
+harness** — add more named setups freely. The two seeded setups differ only by
+**`STATE.colorMode`** (`'schemes'` | `'palette'`); the palette setup seeds its per-section
+overrides from the schemes setup so it starts visually identical.
+- **`'schemes'`** (classic): `STATE.schemes` (role→palette maps) assigned per section via
+  `STATE.sectionSchemes` + the `color_scheme` section setting; brand colors in the detached
+  `openBrandModal`. Exports `color_scheme_group` + per-section `color_scheme`.
+- **`'palette'`** (Horizon-style): a flat editable palette (`STATE.palette`, now edited
+  **inline** in Theme settings → Colors via `renderPaletteGroup`, no detached modal) + a
+  baseline `STATE.paletteDefaults` (role→value binding) + per-section overrides
+  `STATE.sectionColors[id]`. A section role with no override **follows the palette** ("Default"
+  binding) so editing a palette/default color cascades; picking a color overrides locally.
+  Paint: `applyRoles` baselines from `paletteDefaults`; `applySectionColors` writes per-section
+  overrides inline. Inspector: `appendSectionColors`. Exports a real `color_palette` setting +
+  per-section `color`/`color_background` settings whose defaults are
+  `{{ settings.color_palette.<id> }}` palette references (`exportColorVal`/`paletteColorSettings`).
+The three color-model branches are: **paint** (`applySectionSchemes` → `applySectionColors`),
+**Colors panel** (`buildPanel`: `renderSchemesGroup` vs `renderPaletteGroup`) + the section
+inspector, and **export** (`settingsSchemaJson` / `sectionInstanceJson` / `settingsDataJson`).
+Schemes-mode code is untouched and fully intact. (Switcher is desktop chrome; mobile hides the
+top bar, so it's desktop-only for now.)
+
 **Shared sizing vocabulary** (keep to these): **26px** squares (swatches, db button,
 scheme preview, layer action/chevron/lead buttons), **32px** square icon-buttons
 (top-bar toggles inner buttons, inspector `⋯`/`×`), **34px** control/row height,
