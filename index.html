@@ -466,6 +466,19 @@
   .sf-reset-colors { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 10px; padding: 8px; border: 1px solid var(--stone-200); background: none; border-radius: 8px; color: var(--stone-600); font: inherit; font-size: 12px; cursor: pointer; }
   .sf-reset-colors:hover { background: var(--stone-50); color: var(--stone-900); }
   .sf-reset-colors svg { width: 14px; height: 14px; }
+  /* palette swatch grid (Theme settings → Color palette) */
+  .pal-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 16px 4px; }
+  .pal-tile { width: 44px; height: 44px; border-radius: 10px; padding: 0; border: none; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); position: relative; }
+  .pal-tile.add { background: var(--stone-100); color: var(--stone-500); display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
+  .pal-tile.add:hover { background: var(--stone-200); color: var(--stone-800); }
+  .pal-tile.sel { box-shadow: inset 0 0 0 1px rgba(0,0,0,.12), 0 0 0 2px #fff, 0 0 0 4px var(--sel); }
+  /* nullable "Default"/color control (section background, per-block text/bg) */
+  .pcc { display: flex; align-items: center; gap: 6px; }
+  .pcc .field { flex: 1 1 auto; }
+  .cf-sw-none { position: relative; background: #fff; }
+  .cf-sw-none::after { content: ''; position: absolute; inset: 3px; border-radius: 3px; background: linear-gradient(to top left, transparent calc(50% - 1px), #e11d48 calc(50% - 1px), #e11d48 calc(50% + 1px), transparent calc(50% + 1px)); box-shadow: inset 0 0 0 1px var(--stone-300); }
+  .pcc-clear { width: 28px; height: 28px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-400); cursor: pointer; }
+  .pcc-clear:hover { background: var(--stone-100); color: var(--stone-700); }
 
   /* color field — raw hex variant (swatch + value, db icon on hover). Even 6px padding so
      the swatch and the db button sit with equal top/right/bottom/left padding. */
@@ -1402,13 +1415,13 @@ const DEFAULTS = {
   // bound to palette entries (Shopify's newer Horizon-style model). Lives in STATE so it's
   // captured by each theme setup's document snapshot. The switcher (black brand mark) flips it.
   colorMode: 'schemes',
-  // PALETTE-MODE state (only consulted when colorMode==='palette'):
-  //  • paletteDefaults: the store's BASELINE role→value binding (one map, like a single scheme).
-  //    Each value is a palette-color id | '#hex' | 'transparent', resolved by swatchHex. Seeded
-  //    from the Light scheme just below the DEFAULTS literal.
-  //  • sectionColors: per-section role OVERRIDES { sectionId -> { roleKey -> value } }. A role not
-  //    listed inherits paletteDefaults (the "Default" binding); editing a palette color updates
-  //    every section still on Default for that role. Mirrors Horizon's color/color_background defaults.
+  // PALETTE-MODE state (only consulted when colorMode==='palette'). Horizon-style granularity:
+  //  • paletteDefaults: the store's hidden BASELINE role→value map (one set, like a single scheme),
+  //    each value a palette-color id | '#hex' | 'transparent' (resolved by swatchHex). Paints #store
+  //    so unstyled sections/blocks look right; not surfaced in the palette panel. Seeded from Light.
+  //  • sectionColors: per-section override, just a Background → { sectionId -> { background: value } }.
+  //  • per-BLOCK text/background colors live in each block's own settings (text_color / bg_on /
+  //    bg_color), read by renderThemeBlock. "Default" (unset) means inherit the baseline/section.
   paletteDefaults: {},
   sectionColors: {},
   // Per-section setting VALUES (Shopify: section.settings → { settingId: value }). Lazily
@@ -1702,13 +1715,12 @@ function applySectionSchemes(){
 function applySectionColors(){
   document.querySelectorAll('#store [data-sec]').forEach(elm=>{
     const id = elm.getAttribute('data-sec');
-    const ov = STATE.sectionColors[id];
-    STATE.colorRoles.forEach(r => elm.style.removeProperty(r.cssVar));
-    ['--c-accent','--c-accent-soft','--c-btn-bg-eff','--c-btn2-bg-eff'].forEach(v => elm.style.removeProperty(v));
-    if(ov && Object.keys(ov).length){
-      const resolved = Object.assign({}, STATE.paletteDefaults, ov);
-      STATE.colorRoles.forEach(r => elm.style.setProperty(r.cssVar, swatchHex(resolved[r.key])));
-      setSchemeButtonVars(elm.style, resolved);
+    const bg = (STATE.sectionColors[id] || {}).background;
+    elm.style.removeProperty('--c-bg'); elm.style.removeProperty('--c-surface');
+    if(bg != null){
+      const hex = swatchHex(bg);
+      elm.style.setProperty('--c-bg', hex);
+      elm.style.setProperty('--c-surface', hex);
       elm.classList.add('sec-themed');
     } else {
       elm.classList.remove('sec-themed');
@@ -1722,20 +1734,31 @@ function applySectionColors(){
    called from the section inspector. */
 function appendSectionColors(host, secId){
   host.appendChild(el('<div class="set-header">Colors</div>'));
-  host.appendChild(el('<p class="sf-scheme-hint">Each color follows the palette by default. Pick a color to override it for just this section.</p>'));
-  const ov = () => (STATE.sectionColors[secId] || (STATE.sectionColors[secId] = {}));
-  const resolved = (key) => { const o = STATE.sectionColors[secId]; return (o && (key in o)) ? o[key] : STATE.paletteDefaults[key]; };
-  const buckets = []; STATE.colorRoles.forEach(r=>{ const g=r.group||''; let bk=buckets.find(x=>x.name===g); if(!bk){bk={name:g,roles:[]};buckets.push(bk);} bk.roles.push(r); });
-  buckets.forEach(bk=>{
-    if(bk.name) host.appendChild(el(`<div class="set-header">${bk.name}</div>`));
-    bk.roles.forEach(r=>{
-      host.appendChild(controlRow(r.label, colorField(resolved(r.key), v=>{ ov()[r.key]=v; applySectionColors(); })));
-    });
-  });
-  if(STATE.sectionColors[secId] && Object.keys(STATE.sectionColors[secId]).length){
-    const reset = el(`<button type="button" class="sf-reset-colors">${svg('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',14)}<span>Reset colors to palette</span></button>`);
-    reset.onclick = (e)=>{ e.stopPropagation(); delete STATE.sectionColors[secId]; applySectionColors(); renderSectionControls(); };
-    host.appendChild(reset);
+  const cur = (STATE.sectionColors[secId] || {}).background;
+  host.appendChild(controlRow('Background color', paletteColorControl(cur==null ? null : cur, v=>{
+    if(v==null){ if(STATE.sectionColors[secId]) delete STATE.sectionColors[secId].background; }
+    else { (STATE.sectionColors[secId] || (STATE.sectionColors[secId] = {})).background = v; }
+    applySectionColors();
+  })));
+}
+/* PALETTE MODE — per-block Appearance colors. Text color on text-bearing blocks; a Background
+   toggle + color on any block. Stored in the block's own settings (text_color / bg_on / bg_color)
+   and read by renderThemeBlock, so the preview repaints live. */
+const TEXT_COLOR_BLOCKS = ['heading','text','button','icon'];
+function appendBlockColors(host, section, path, inst){
+  const s = inst.settings || (inst.settings = {});
+  const repaint = ()=>{ renderSectionContent(section); highlightBlockEl(section, path); };
+  host.appendChild(el('<div class="set-header">Appearance</div>'));
+  if(TEXT_COLOR_BLOCKS.includes(inst.type)){
+    host.appendChild(controlRow('Text color', paletteColorControl(s.text_color==null ? null : s.text_color, v=>{
+      if(v==null) delete s.text_color; else s.text_color = v; repaint();
+    })));
+  }
+  host.appendChild(controlRow('Background', switchField(!!s.bg_on, on=>{ s.bg_on = on; repaint(); renderSectionControls(); })));
+  if(s.bg_on){
+    host.appendChild(controlRow('Background color', paletteColorControl(s.bg_color==null ? null : s.bg_color, v=>{
+      if(v==null) delete s.bg_color; else s.bg_color = v; repaint();
+    })));
   }
 }
 
@@ -1890,6 +1913,35 @@ function colorInput(value, onChange){
   const sw=wrap.querySelector('.sw'), picker=wrap.querySelector('input[type=color]'), hex=wrap.querySelector('.hex');
   picker.oninput = ()=>{ hex.value=picker.value.toUpperCase(); sw.style.background=picker.value; onChange(picker.value); };
   hex.onchange = ()=>{ let v=hex.value.trim(); if(!v.startsWith('#'))v='#'+v; if(/^#[0-9A-Fa-f]{6}$/.test(v)){ picker.value=v; sw.style.background=v; onChange(v); } };
+  return wrap;
+}
+
+/* PALETTE-MODE optional color control (Horizon-style). value is null = "Default" (inherit the
+   theme/section default) OR a palette-color id | '#hex' | 'transparent'. Click the field to pick a
+   custom color; the palette (database) icon connects to a palette color; a clear button resets to
+   Default. onChange(null) means "back to Default". Used for section background + per-block text/bg. */
+function paletteColorControl(value, onChange){
+  const wrap = el('<div class="pcc"></div>');
+  function set(v){ value = v; onChange(v); render(); }
+  function render(){
+    wrap.innerHTML = '';
+    const isSet = value != null;
+    const swInner = isSet ? `<i style="background:${swatchHex(value)}"></i>` : '';
+    const label = !isSet ? 'Default'
+      : (isBrandRef(value) ? ((brandColor(value)||{}).name || 'Palette color')
+        : (value==='transparent' ? 'Transparent' : swatchHex(value).toUpperCase()));
+    const f = el(`<div class="field cf-hex"><span class="cf-sw ${isSet?'':'cf-sw-none'}">${swInner}</span><span class="cf-val"></span><button type="button" class="cf-db" title="Use a palette color">${svg(DB_ICON,15)}</button></div>`);
+    f.querySelector('.cf-val').textContent = label;
+    f.onclick = ()=> openColorPicker(f, isSet ? swatchHex(value) : '#888888', h=>set(h));
+    f.querySelector('.cf-db').onclick = (e)=>{ e.stopPropagation(); openBrandConnect(e.currentTarget, id=>set(id)); };
+    wrap.appendChild(f);
+    if(isSet){
+      const clr = el(`<button type="button" class="pcc-clear" title="Reset to default">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
+      clr.onclick = (e)=>{ e.stopPropagation(); set(null); };
+      wrap.appendChild(clr);
+    }
+  }
+  render();
   return wrap;
 }
 
@@ -2136,40 +2188,25 @@ function reconcileSchemes(){
    detached Brand-colors modal when colorMode==='palette'. */
 function renderPaletteGroup(body){
   schemesHost = null;   // no schemes grid in palette mode — keep renderSchemes() a no-op
-  // ---- Palette: the theme's editable color set ----
-  body.appendChild(el('<div class="subgroup-label" style="margin-bottom:2px">Palette</div>'));
-  body.appendChild(el('<p class="subgroup-hint" style="margin-bottom:10px">Brand colors available throughout the theme. Change one here and every color that follows it updates.</p>'));
-  const palHost = el('<div class="pal-list"></div>');
-  body.appendChild(palHost);
-  function drawPal(){
-    palHost.innerHTML='';
+  body.appendChild(el('<p class="subgroup-hint" style="margin:0 0 10px">Brand colors available throughout the theme. Pick from these on any section or text element.</p>'));
+  const grid = el('<div class="pal-grid"></div>');
+  body.appendChild(grid);
+  function draw(){
+    grid.innerHTML = '';
     STATE.palette.forEach((c,i)=>{
-      const row = el('<div class="pal-row"></div>');
-      const name = el('<span class="pal-name"></span>'); name.textContent = c.name;
-      row.appendChild(colorField(c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); name.textContent=c.name; applyRoles(); applyAllSectionSettings(); renderSectionControls(); }));
-      row.appendChild(name);
-      if(STATE.palette.length > 1){
-        const rm = el(`<button type="button" class="pal-rm" title="Remove color">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
-        rm.onclick = ()=>{ STATE.palette.splice(i,1); reconcilePaletteRefs(); drawPal(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); };
-        row.appendChild(rm);
-      }
-      palHost.appendChild(row);
+      const tile = el(`<button type="button" class="pal-tile" title="${c.name}"></button>`);
+      tile.style.background = c.hex;
+      tile.onclick = ()=> openColorPicker(tile, c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); tile.style.background=hex; tile.title=c.name; applyRoles(); applyAllSectionSettings(); renderSectionControls(); });
+      // right-click / long-press isn't wired; removal lives in the picker-adjacent menu via the ⋯? keep simple: shift-click removes
+      tile.oncontextmenu = (e)=>{ e.preventDefault(); if(STATE.palette.length>1){ STATE.palette.splice(i,1); reconcilePaletteRefs(); draw(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); } };
+      grid.appendChild(tile);
     });
-    const add = el(`<button type="button" class="pal-add">${svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',14)}<span>Add color</span></button>`);
-    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'pal'+Date.now().toString(36), name:colorName(hex), hex }); drawPal(); };
-    palHost.appendChild(add);
+    const add = el(`<button type="button" class="pal-tile add" title="Add color">${svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',18)}</button>`);
+    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'pal'+Date.now().toString(36), name:colorName(hex), hex }); draw(); const idx=STATE.palette.length-1; openColorPicker(grid.children[idx], hex, h=>{ const c=STATE.palette[idx]; c.hex=h; c.name=colorName(h); draw(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); }); };
+    grid.appendChild(add);
   }
-  drawPal();
-  // ---- Default colors: the store-wide baseline role bindings ----
-  body.appendChild(el('<div class="set-header" style="margin-top:14px">Default colors</div>'));
-  body.appendChild(el('<p class="subgroup-hint" style="margin-bottom:10px">Store-wide defaults. Every section follows these unless you override a color on the section itself.</p>'));
-  const buckets=[]; STATE.colorRoles.forEach(r=>{ const g=r.group||''; let bk=buckets.find(x=>x.name===g); if(!bk){bk={name:g,roles:[]};buckets.push(bk);} bk.roles.push(r); });
-  buckets.forEach(bk=>{
-    if(bk.name) body.appendChild(el(`<div class="set-header">${bk.name}</div>`));
-    bk.roles.forEach(r=>{
-      body.appendChild(controlRow(r.label, colorField(STATE.paletteDefaults[r.key], v=>{ STATE.paletteDefaults[r.key]=v; applyRoles(); applyAllSectionSettings(); renderSectionControls(); })));
-    });
-  });
+  draw();
+  body.appendChild(el('<p class="subgroup-hint" style="margin:8px 16px 0;font-size:11px">Tip: right-click a color to remove it.</p>'));
 }
 // If a palette color is deleted, repoint any default-color or per-section override that referenced it.
 function reconcilePaletteRefs(){
@@ -3067,19 +3104,23 @@ function renderThemeBlock(b, path){
   const RATIO = { square:'1/1', portrait:'3/4', landscape:'4/3', wide:'16/9' };
   const TXT = { small:'.9em', normal:'1em', large:'1.15rem' };
   const ta = a => (a==='center'||a==='right') ? `text-align:${a};` : '';
+  // PALETTE-MODE per-block colors: text color goes inline on the text element (beats the
+  // stylesheet's --c-* rules); background paints the .tb wrapper as a padded box.
+  const txt = s.text_color ? `color:${swatchHex(s.text_color)};` : '';
+  const bg  = (s.bg_on && s.bg_color!=null) ? `background:${swatchHex(s.bg_color)};padding:14px;border-radius:8px;` : '';
   switch(b.type){
     case 'group': {
       const dir = s.direction==='vertical' ? 'column' : 'row';
       const al  = s.alignment==='center' ? 'center' : (s.alignment==='right' ? 'flex-end' : 'flex-start');
       const gap = (s.gap!=null) ? s.gap : 16;
-      return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:${gap}px;align-items:${al}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
+      return `<div class="tb tb-group" data-bpath="${bp}" style="display:flex;flex-direction:${dir};gap:${gap}px;align-items:${al};${bg}">${renderThemeBlocks(b.blocks||[], path)}</div>`;
     }
-    case 'heading': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><${sz}>${s.text||''}</${sz}></div>`; }
-    case 'text':    return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%"><p style="font-size:${TXT[s.size]||'1em'}">${s.text||''}</p></div>`;
-    case 'button':  return `<div class="tb" data-bpath="${bp}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'} btn-${s.size||'medium'}">${s.label||'Button'}</a></div>`;
-    case 'image':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
-    case 'icon':    return `<div class="tb" data-bpath="${bp}"><span class="tb-icon ic">${svg(SI[s.icon]||SI.star,24)}</span></div>`;
-    case 'email_signup_form':    return `<div class="tb" data-bpath="${bp}"><form class="nl-form" onsubmit="return false"><input type="email" placeholder="${s.placeholder||'Enter your email'}" aria-label="Email"><button type="submit" class="btn btn-primary">${s.button_label||'Subscribe'}</button></form></div>`;
+    case 'heading': { const sz=s.size||'h3'; return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%;${bg}"><${sz} style="${txt}">${s.text||''}</${sz}></div>`; }
+    case 'text':    return `<div class="tb" data-bpath="${bp}" style="${ta(s.alignment)}width:100%;${bg}"><p style="font-size:${TXT[s.size]||'1em'};${txt}">${s.text||''}</p></div>`;
+    case 'button':  return `<div class="tb" data-bpath="${bp}" style="${bg}"><a class="btn btn-${s.style==='secondary'?'secondary':'primary'} btn-${s.size||'medium'}" style="${txt}">${s.label||'Button'}</a></div>`;
+    case 'image':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%;${bg}"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
+    case 'icon':    return `<div class="tb" data-bpath="${bp}" style="${bg}"><span class="tb-icon ic" style="${txt}">${svg(SI[s.icon]||SI.star,24)}</span></div>`;
+    case 'email_signup_form':    return `<div class="tb" data-bpath="${bp}" style="${bg}"><form class="nl-form" onsubmit="return false"><input type="email" placeholder="${s.placeholder||'Enter your email'}" aria-label="Email"><button type="submit" class="btn btn-primary">${s.button_label||'Subscribe'}</button></form></div>`;
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
@@ -3971,6 +4012,7 @@ function renderSectionControls(){
       renderSettingsList(bb, bSchema.settings,
         s => (s.id in bvals) ? bvals[s.id] : s.default,
         (s,v) => { bvals[s.id] = v; renderSectionContent(section); highlightBlockEl(section, path); });
+      if(STATE.colorMode==='palette') appendBlockColors(bb, section, path, inst);
       // a container block can hold children → offer "Add block" here too (Shopify shows this)
       if(acceptsChildren(inst.type) && path.length < 8){
         const addc = el(`<button type="button" class="lyr-add" style="width:100%;margin:8px 0 0">${svg('<path d="M5 12h14"/><path d="M12 5v14"/>',12)}<span>Add block</span></button>`);
@@ -4193,13 +4235,14 @@ function initCanvasHover(){
 function hasSetting(schema, id){ return (schema.settings||[]).some(s=>s.id===id); }
 function acceptsTheme(schema){ return (schema.blocks||[]).some(b=>b.type==='@theme'); }
 // A schema entry → the Shopify {% schema %} object (adds presets so it's editor-addable).
-function shopifySchema(schema){
+function shopifySchema(schema, extra){
   const out = { name: schema.name };
   let settings = schema.settings ? schema.settings.slice() : [];
-  // Palette mode: a section that had a color_scheme picker instead exposes individual color /
-  // color_background settings (bound to the palette as defaults) — mirror that in the export.
-  if(STATE.colorMode==='palette' && settings.some(s=>s.type==='color_scheme')){
-    settings = settings.filter(s=>s.type!=='color_scheme').concat(paletteColorSettings());
+  // Palette mode: drop the color_scheme picker and append palette-driven color settings
+  // (sections → a Background color; blocks → Appearance text/background colors).
+  if(STATE.colorMode==='palette'){
+    settings = settings.filter(s=>s.type!=='color_scheme');
+    if(extra && extra.length) settings = settings.concat(extra);
   }
   if(settings.length) out.settings = settings;
   if(schema.blocks && schema.blocks.length)     out.blocks   = schema.blocks;
@@ -4219,14 +4262,14 @@ function sectionLiquid(type){
   }
   return `{%- comment -%} Generated by the style-guide prototype {%- endcomment -%}\n`
     + `<section class="sg-${type}"${pad}>\n  <div class="page-width">${inner}\n  </div>\n</section>\n\n`
-    + `{% schema %}\n${JSON.stringify(shopifySchema(schema), null, 2)}\n{% endschema %}\n`;
+    + `{% schema %}\n${JSON.stringify(shopifySchema(schema, sectionBgSetting()), null, 2)}\n{% endschema %}\n`;
 }
 function blockLiquid(type){
   const schema = BLOCK_SCHEMAS[type];
   const body = acceptsChildren(type)
     ? `<div {{ block.shopify_attributes }}>\n  {% content_for 'blocks' %}\n</div>`
     : `<div {{ block.shopify_attributes }}>\n  {%- comment -%} render ${type} from block.settings {%- endcomment -%}\n</div>`;
-  return `${body}\n\n{% schema %}\n${JSON.stringify(shopifySchema(schema), null, 2)}\n{% endschema %}\n`;
+  return `${body}\n\n{% schema %}\n${JSON.stringify(shopifySchema(schema, blockPaletteSettings(type)), null, 2)}\n{% endschema %}\n`;
 }
 // Nested block tree → JSON-template { blocks:{id:{type,settings,blocks?,block_order?}}, block_order:[...] }
 function blocksToJson(list, counter){
@@ -4245,8 +4288,8 @@ function sectionInstanceJson(key){
   const obj = { type: secType(key) };
   const settings = Object.assign({}, STATE.sectionSettings[key] || {});
   if(STATE.colorMode==='palette'){
-    const ov = STATE.sectionColors[key];
-    if(ov) Object.keys(ov).forEach(k=>{ settings['color_'+k] = exportColorVal(ov[k]); });
+    const bg = (STATE.sectionColors[key] || {}).background;
+    if(bg != null) settings.background = exportColorVal(bg);
   } else if(STATE.sectionSchemes[key]){
     settings.color_scheme = schemeId(STATE.sectionSchemes[key]);
   }
@@ -4297,16 +4340,14 @@ function colorPaletteSetting(){
   const colors = {}; STATE.palette.forEach(c=>{ colors[c.id] = c.hex; });
   return { type:'color_palette', id:'color_palette', default: colors };
 }
-// The role color settings authored onto every section (and the global Colors group) in palette
-// mode, each defaulting to the baseline palette binding. bg/surface export as color_background.
-function paletteColorSettings(){
-  const out = []; let lastGroup = null;
-  STATE.colorRoles.forEach(r=>{
-    if(r.group && r.group!==lastGroup){ out.push({ type:'header', content:r.group }); lastGroup=r.group; }
-    if(!r.group) lastGroup=null;
-    const isBg = (r.key==='bg' || r.key==='surface' || r.key==='iconBg');
-    out.push({ type: isBg?'color_background':'color', id:'color_'+r.key, label:r.label, default: exportColorVal(STATE.paletteDefaults[r.key]) });
-  });
+// Palette mode authors a single Background color onto each section…
+function sectionBgSetting(){ return [{ type:'color_background', id:'background', label:'Background color', default:'' }]; }
+// …and per-block Appearance colors (text color on text-bearing blocks; a Background toggle + color).
+function blockPaletteSettings(type){
+  const out = [{ type:'header', content:'Appearance' }];
+  if(TEXT_COLOR_BLOCKS.includes(type)) out.push({ type:'color', id:'text_color', label:'Text color', default:'' });
+  out.push({ type:'checkbox', id:'bg_on', label:'Background', default:false });
+  out.push({ type:'color_background', id:'bg_color', label:'Background color', default:'' });
   return out;
 }
 function settingsSchemaJson(){
@@ -4314,7 +4355,7 @@ function settingsSchemaJson(){
   const fontOpt = { Inter:'assistant_n4' };  // demo handle; map to your real fonts on import
   const schema = [
     { name:'theme_info', theme_name:'NOIR (prototype)', theme_version:'1.0.0', theme_author:'Style-guide prototype', theme_documentation_url:'', theme_support_url:'' },
-    { name:'Colors', settings: (STATE.colorMode==='palette' ? [ colorPaletteSetting(), ...paletteColorSettings() ] : [ colorSchemeGroup() ]) },
+    { name:'Colors', settings: (STATE.colorMode==='palette' ? [ colorPaletteSetting() ] : [ colorSchemeGroup() ]) },
     { name:'Typography', settings: [
       { type:'font_picker', id:'heading_font', label:'Heading font', default: fontOpt[t.headingFont]||'assistant_n4' },
       { type:'font_picker', id:'body_font',    label:'Body font',    default: fontOpt[t.bodyFont]||'assistant_n4' },
@@ -4533,13 +4574,9 @@ function switchSetup(id){
 function seedSetups(){
   const base = serializeDoc();
   const paletteDoc = clone(base); paletteDoc.state.colorMode = 'palette';
-  // Make palette mode start visually identical to schemes mode: translate each section's assigned
-  // scheme into a per-section color override (schemes are role→palette maps — the same shape).
+  // Palette mode starts from a clean baseline (no per-section/-block color overrides). The merchant
+  // colors sections (background) and text elements (text color) individually, Horizon-style.
   paletteDoc.state.sectionColors = {};
-  Object.keys(base.state.sectionSchemes || {}).forEach(secId=>{
-    const sc = base.state.schemes[base.state.sectionSchemes[secId]];
-    if(sc) paletteDoc.state.sectionColors[secId] = clone(sc);
-  });
   THEME_SETUPS = [
     { id:'schemes', name:'Color schemes', desc:'Reusable schemes assigned per section', doc: base },
     { id:'palette', name:'Color palette',  desc:'Flat palette + per-section colors',     doc: paletteDoc },

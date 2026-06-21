@@ -188,18 +188,23 @@ overrides from the schemes setup so it starts visually identical.
 - **`'schemes'`** (classic): `STATE.schemes` (role→palette maps) assigned per section via
   `STATE.sectionSchemes` + the `color_scheme` section setting; brand colors in the detached
   `openBrandModal`. Exports `color_scheme_group` + per-section `color_scheme`.
-- **`'palette'`** (Horizon-style): a flat editable palette (`STATE.palette`, now edited
-  **inline** in Theme settings → Colors via `renderPaletteGroup`, no detached modal) + a
-  baseline `STATE.paletteDefaults` (role→value binding) + per-section overrides
-  `STATE.sectionColors[id]`. A section role with no override **follows the palette** ("Default"
-  binding) so editing a palette/default color cascades; picking a color overrides locally.
-  Paint: `applyRoles` baselines from `paletteDefaults`; `applySectionColors` writes per-section
-  overrides inline. Inspector: `appendSectionColors`. Exports a real `color_palette` setting +
-  per-section `color`/`color_background` settings whose defaults are
-  `{{ settings.color_palette.<id> }}` palette references (`exportColorVal`/`paletteColorSettings`).
-The three color-model branches are: **paint** (`applySectionSchemes` → `applySectionColors`),
-**Colors panel** (`buildPanel`: `renderSchemesGroup` vs `renderPaletteGroup`) + the section
-inspector, and **export** (`settingsSchemaJson` / `sectionInstanceJson` / `settingsDataJson`).
+- **`'palette'`** (Horizon-style, matches the real Horizon 4.0 UX): **Theme settings → Colors**
+  is a **flat swatch grid** of `STATE.palette` (`renderPaletteGroup`: click a tile to edit,
+  `+` to add, right-click to remove — no names list, no role list). `STATE.paletteDefaults` is a
+  **hidden baseline** role→value map that paints `#store` so unstyled content looks right (not
+  surfaced in the panel). Color is set **granularly**: a **section** exposes a single
+  **Background color** (`appendSectionColors` → `STATE.sectionColors[id].background`,
+  `applySectionColors` sets `--c-bg`/`--c-surface`); **text/background colors live on the text
+  ELEMENT** — `appendBlockColors` adds **Text color** (on `TEXT_COLOR_BLOCKS`) + a **Background**
+  toggle/color to each block's own `settings` (`text_color`/`bg_on`/`bg_color`), read inline by
+  `renderThemeBlock`. The shared nullable control is **`paletteColorControl`** (null = "Default"
+  = inherit; else palette id | hex). Exports a real `color_palette` setting, a per-section
+  `background` `color_background`, and per-block `text_color`/`bg_color` settings
+  (`sectionBgSetting`/`blockPaletteSettings`; palette refs via `exportColorVal`).
+The color-model branches: **paint** (`applySectionSchemes` → `applySectionColors`; `renderThemeBlock`
+reads block colors), **Colors panel** (`buildPanel`: `renderSchemesGroup` vs `renderPaletteGroup`) +
+the section/block inspectors, and **export** (`shopifySchema` extra settings / `settingsSchemaJson` /
+`sectionInstanceJson` / `settingsDataJson`).
 Schemes-mode code is untouched and fully intact. (Switcher is desktop chrome; mobile hides the
 top bar, so it's desktop-only for now.)
 
