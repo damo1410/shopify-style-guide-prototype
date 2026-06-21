@@ -249,6 +249,14 @@ overrides from the schemes setup so it starts visually identical.
   = inherit; else palette id | hex). Exports a real `color_palette` setting, a per-section
   `background` `color_background`, and per-block `text_color`/`bg_color` settings
   (`sectionBgSetting`/`blockPaletteSettings`; palette refs via `exportColorVal`).
+  - **Contrast auto-flip:** a section whose Background resolves to a *dark* color flips its Default
+    text/icons/border to light (`isDarkColor` / `CONTRAST_FLIP_ROLES` in `applySectionColors`);
+    block `text_color` overrides are inline on the element so they still win. This is what "flicks
+    over" when you pick a dark color.
+  - **Color picker** (`openColorPicker(anchor, value, onChange, opts)`): no alpha; has an eyedropper.
+    Setting context passes `{palette:true, allowNone:true, onPick, onNone}` → an in-picker palette
+    swatch row + a None/Default swatch. Editing a palette swatch passes `{onDelete}` → a Delete
+    button (no right-click delete). The palette panel is a flush swatch **grid** (30px tiles).
 The color-model branches: **paint** (`applySectionSchemes` → `applySectionColors`; `renderThemeBlock`
 reads block colors), **Colors panel** (`buildPanel`: `renderSchemesGroup` vs `renderPaletteGroup`) +
 the section/block inspectors, and **export** (`shopifySchema` extra settings / `settingsSchemaJson` /
