@@ -454,31 +454,18 @@
   .brand-launch .bl-t { flex: 1 1 auto; font-size: 13px; font-weight: 600; color: var(--stone-900); }
   .brand-launch .bl-chev { width: 16px; height: 16px; color: var(--stone-400); }
 
-  /* palette-mode editor (Theme settings → Colors): palette list + reset-colors button */
-  .pal-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 16px 6px; }
-  .pal-row { display: flex; align-items: center; gap: 10px; }
-  .pal-row .cf { flex: 0 0 auto; width: 132px; }
-  .pal-name { flex: 1 1 auto; font-size: 12px; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pal-rm { width: 26px; height: 26px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-400); cursor: pointer; }
-  .pal-rm:hover { background: var(--stone-100); color: var(--stone-700); }
-  .pal-add { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px dashed var(--stone-300); background: none; border-radius: 8px; color: var(--stone-600); font: inherit; font-size: 12px; cursor: pointer; }
-  .pal-add:hover { background: var(--stone-50); color: var(--stone-900); }
-  .sf-reset-colors { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 10px; padding: 8px; border: 1px solid var(--stone-200); background: none; border-radius: 8px; color: var(--stone-600); font: inherit; font-size: 12px; cursor: pointer; }
-  .sf-reset-colors:hover { background: var(--stone-50); color: var(--stone-900); }
-  .sf-reset-colors svg { width: 14px; height: 14px; }
-  /* palette swatch grid (Theme settings → Color palette) */
-  .pal-grid { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 16px 4px; }
-  .pal-tile { width: 44px; height: 44px; border-radius: 10px; padding: 0; border: none; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); position: relative; }
+  /* palette swatch grid (Theme settings → Color palette) — flush with the panel's own padding */
+  .pal-grid { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 2px; }
+  .pal-tile { width: 30px; height: 30px; border-radius: 7px; padding: 0; border: none; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
   .pal-tile.add { background: var(--stone-100); color: var(--stone-500); display: inline-flex; align-items: center; justify-content: center; box-shadow: none; }
   .pal-tile.add:hover { background: var(--stone-200); color: var(--stone-800); }
   .pal-tile.sel { box-shadow: inset 0 0 0 1px rgba(0,0,0,.12), 0 0 0 2px #fff, 0 0 0 4px var(--sel); }
   /* nullable "Default"/color control (section background, per-block text/bg) */
   .pcc { display: flex; align-items: center; gap: 6px; }
   .pcc .field { flex: 1 1 auto; }
-  .cf-sw-none { position: relative; background: #fff; }
-  .cf-sw-none::after { content: ''; position: absolute; inset: 3px; border-radius: 3px; background: linear-gradient(to top left, transparent calc(50% - 1px), #e11d48 calc(50% - 1px), #e11d48 calc(50% + 1px), transparent calc(50% + 1px)); box-shadow: inset 0 0 0 1px var(--stone-300); }
-  .pcc-clear { width: 28px; height: 28px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-400); cursor: pointer; }
-  .pcc-clear:hover { background: var(--stone-100); color: var(--stone-700); }
+  /* "none / default" swatch — clean rounded square + one diagonal line, fully clipped to the corners */
+  .cf-sw-none { position: relative; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); }
+  .cf-sw-none::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top right, transparent calc(50% - .75px), var(--stone-400) calc(50% - .75px), var(--stone-400) calc(50% + .75px), transparent calc(50% + .75px)); }
 
   /* color field — raw hex variant (swatch + value, db icon on hover). Even 6px padding so
      the swatch and the db button sit with equal top/right/bottom/left padding. */
@@ -513,11 +500,27 @@
   .cp-alpha-grad { position: absolute; inset: 0; border-radius: 999px; }
   .cp-alpha-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.3); transform: translate(-50%,-50%); pointer-events: none; }
   .cp-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
-  .cp-hexbox { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--stone-300); }
-  .cp-hexbox span { color: var(--stone-400); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
-  .cp-hexbox input { flex: 1 1 auto; border: none; outline: none; background: transparent; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; text-transform: uppercase; color: var(--stone-800); min-width: 0; }
+  .cp-hexbox { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 4px 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--stone-300); }
+  /* hex field matches the regular text inputs: body font, 12px/400, no forced case */
+  .cp-hexbox span { color: var(--stone-400); font: inherit; font-size: 12px; }
+  .cp-hexbox input { flex: 1 1 auto; border: none; outline: none; background: transparent; font: inherit; font-size: 12px; color: var(--stone-900); min-width: 0; }
+  .cp-eyedrop { width: 26px; height: 26px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-500); cursor: pointer; }
+  .cp-eyedrop:hover { background: var(--stone-100); color: var(--stone-900); }
+  .cp-eyedrop svg { width: 15px; height: 15px; }
   .cp-prev { width: 32px; height: 32px; border-radius: 8px; flex: 0 0 auto; overflow: hidden; background-image: linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%); background-size: 10px 10px; background-position: 0 0,5px 5px; }
   .cp-prev i { display: block; width: 100%; height: 100%; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); }
+  .cp-prev.none i { background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); position: relative; }
+  .cp-prev.none i::after { content: ''; position: absolute; inset: 0; border-radius: 8px; background: linear-gradient(to top right, transparent calc(50% - .75px), var(--stone-400) calc(50% - .75px), var(--stone-400) calc(50% + .75px), transparent calc(50% + .75px)); }
+  /* palette swatch row inside the picker (setting context) */
+  .cp-pal-label { font-size: 12px; font-weight: 600; color: var(--stone-700); margin: 12px 0 7px; }
+  .cp-pal { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cp-pal-sw { width: 30px; height: 30px; border-radius: 7px; padding: 0; border: none; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+  .cp-pal-sw.none { position: relative; overflow: hidden; background: #fff; box-shadow: inset 0 0 0 1px var(--stone-300); }
+  .cp-pal-sw.none::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top right, transparent calc(50% - .75px), var(--stone-400) calc(50% - .75px), var(--stone-400) calc(50% + .75px), transparent calc(50% + .75px)); }
+  .cp-pal-sw.sel { box-shadow: inset 0 0 0 1px rgba(0,0,0,.12), 0 0 0 2px #fff, 0 0 0 4px var(--sel); }
+  /* delete button (palette-color editing) — neutral, full width, like Shopify */
+  .cp-delete { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 12px; padding: 9px; border: none; background: var(--stone-100); border-radius: 8px; color: var(--stone-800); font: inherit; font-size: 13px; cursor: pointer; }
+  .cp-delete:hover { background: var(--stone-200); }
 
   /* brand-color connect popover */
   .bc { width: 300px; background: #fff; border: 1px solid var(--stone-200); border-radius: 12px; box-shadow: 0 12px 40px -8px rgba(0,0,0,.28); z-index: 1100; overflow: hidden; }
@@ -1273,6 +1276,10 @@
    ============================================================================ */
 function hexToRgb(hex){ let h=(hex||'').replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); const n=parseInt(h,16); if(isNaN(n))return{r:128,g:128,b:128}; return {r:(n>>16)&255,g:(n>>8)&255,b:n&255}; }
 function rgba(hex,a){ const {r,g,b}=hexToRgb(hex); return `rgba(${r}, ${g}, ${b}, ${a})`; }
+// Relative luminance (sRGB) → is this color "dark"? Drives the contrast auto-flip: a section on a
+// dark background flips its Default text/icons to light, like Horizon derives a contrasting foreground.
+function relLuminance(hex){ const {r,g,b}=hexToRgb(hex); const f=c=>{ c/=255; return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }; return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b); }
+function isDarkColor(hex){ return relLuminance(hex) < 0.4; }
 const clone = (o)=>JSON.parse(JSON.stringify(o));
 
 /* Palette names are DERIVED from the hex (not user-editable): pick the nearest
@@ -1712,16 +1719,27 @@ function applySectionSchemes(){
    gets a fully-resolved set (baseline + its overrides) written inline + .sec-themed. A section
    with no overrides clears its inline vars and inherits the baseline — that's the "Default" link,
    so editing a palette/default color flows through to every section still on Default. */
+// Roles that auto-flip for contrast when a section's background goes dark (the "Default" colors
+// inside the section). Block-level text_color overrides are inline on the element, so they win.
+const CONTRAST_FLIP_ROLES = ['--c-heading','--c-body','--c-link','--c-link-hover','--c-icon'];
 function applySectionColors(){
   document.querySelectorAll('#store [data-sec]').forEach(elm=>{
     const id = elm.getAttribute('data-sec');
     const bg = (STATE.sectionColors[id] || {}).background;
-    elm.style.removeProperty('--c-bg'); elm.style.removeProperty('--c-surface');
+    elm.style.removeProperty('--c-bg'); elm.style.removeProperty('--c-surface'); elm.style.removeProperty('--c-border');
+    CONTRAST_FLIP_ROLES.forEach(v => elm.style.removeProperty(v));
     if(bg != null){
       const hex = swatchHex(bg);
       elm.style.setProperty('--c-bg', hex);
       elm.style.setProperty('--c-surface', hex);
       elm.classList.add('sec-themed');
+      // Contrast flip: on a dark background, Default text/icons/borders become light (and vice-versa
+      // they simply inherit the baseline dark). This is what "flicks over" when you pick a color.
+      if(isDarkColor(hex)){
+        CONTRAST_FLIP_ROLES.forEach(varName => elm.style.setProperty(varName, '#ffffff'));
+        elm.style.setProperty('--c-body', 'rgba(255,255,255,0.78)');
+        elm.style.setProperty('--c-border', 'rgba(255,255,255,0.16)');
+      }
     } else {
       elm.classList.remove('sec-themed');
     }
@@ -1923,6 +1941,10 @@ function colorInput(value, onChange){
 function paletteColorControl(value, onChange){
   const wrap = el('<div class="pcc"></div>');
   function set(v){ value = v; onChange(v); render(); }
+  // One picker for everything: pick a palette color, a custom color, or None/Default — all inside it.
+  function openPicker(anchor){
+    openColorPicker(anchor, value, h=>set(h), { palette:true, allowNone:true, onPick:id=>set(id), onNone:()=>set(null) });
+  }
   function render(){
     wrap.innerHTML = '';
     const isSet = value != null;
@@ -1930,16 +1952,11 @@ function paletteColorControl(value, onChange){
     const label = !isSet ? 'Default'
       : (isBrandRef(value) ? ((brandColor(value)||{}).name || 'Palette color')
         : (value==='transparent' ? 'Transparent' : swatchHex(value).toUpperCase()));
-    const f = el(`<div class="field cf-hex"><span class="cf-sw ${isSet?'':'cf-sw-none'}">${swInner}</span><span class="cf-val"></span><button type="button" class="cf-db" title="Use a palette color">${svg(DB_ICON,15)}</button></div>`);
+    const f = el(`<div class="field cf-hex"><span class="cf-sw ${isSet?'':'cf-sw-none'}">${swInner}</span><span class="cf-val"></span><button type="button" class="cf-db" title="Choose a color">${svg(DB_ICON,15)}</button></div>`);
     f.querySelector('.cf-val').textContent = label;
-    f.onclick = ()=> openColorPicker(f, isSet ? swatchHex(value) : '#888888', h=>set(h));
-    f.querySelector('.cf-db').onclick = (e)=>{ e.stopPropagation(); openBrandConnect(e.currentTarget, id=>set(id)); };
+    f.onclick = ()=> openPicker(f);
+    f.querySelector('.cf-db').onclick = (e)=>{ e.stopPropagation(); openPicker(e.currentTarget); };
     wrap.appendChild(f);
-    if(isSet){
-      const clr = el(`<button type="button" class="pcc-clear" title="Reset to default">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
-      clr.onclick = (e)=>{ e.stopPropagation(); set(null); };
-      wrap.appendChild(clr);
-    }
   }
   render();
   return wrap;
@@ -2019,41 +2036,70 @@ function openBrandConnect(anchor, onPick){
 // HSV color picker popover (SV square + hue slider + hex)
 function hexToHsv(hex){ const {r,g,b}=hexToRgb(hex); const r1=r/255,g1=g/255,b1=b/255; const mx=Math.max(r1,g1,b1),mn=Math.min(r1,g1,b1),d=mx-mn; let h=0; if(d){ if(mx===r1)h=((g1-b1)/d)%6; else if(mx===g1)h=(b1-r1)/d+2; else h=(r1-g1)/d+4; h*=60; if(h<0)h+=360; } return { h, s: mx?d/mx:0, v: mx }; }
 function hsvToHex(h,s,v){ const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c; let r=0,g=0,b=0; if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;} else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;} const to=n=>Math.round((n+m)*255).toString(16).padStart(2,'0'); return ('#'+to(r)+to(g)+to(b)); }
-function openColorPicker(anchor, value, onChange){
+// opts: { palette:bool (show the "Color palette" swatch row), allowNone:bool (offer a None/Default
+// swatch), onPick(id) (a palette swatch was chosen), onNone() (None chosen), onDelete() (show a
+// Delete button — used when editing a palette color). onChange(hex) fires for SV/hue/hex edits.
+function openColorPicker(anchor, value, onChange, opts={}){
   popover(anchor, (close)=>{
-    // parse incoming value: '#rrggbb', '#rrggbbaa', or 'transparent'
-    let a=1, base='#ffffff';
-    if(value==='transparent') a=0;
-    else if(/^#[0-9a-f]{8}$/i.test(value)){ a=parseInt(value.slice(7,9),16)/255; base=value.slice(0,7); }
-    else if(/^#[0-9a-f]{6}$/i.test(value)) base=value;
+    let base='#888888';
+    if(typeof value==='string' && value[0]==='#' && value.length>=7) base=value.slice(0,7);
+    else if(value!=null && value!=='transparent'){ const hx=swatchHex(value); if(/^#[0-9a-f]{6}$/i.test(hx)) base=hx; }
     let { h, s, v } = hexToHsv(base);
+    let isNone = !!(opts.allowNone && value==null);
     const p = el(`<div class="cp">
       <div class="cp-sv"><div class="cp-white"></div><div class="cp-black"></div><div class="cp-thumb"></div></div>
+      <div class="cp-foot">
+        <div class="cp-prev"><i></i></div>
+        <div class="cp-hexbox"><span>#</span><input type="text" maxlength="6" autocomplete="off"><button type="button" class="cp-eyedrop" title="Pick from screen">${svg(EYEDROP_ICON,15)}</button></div>
+      </div>
       <div class="cp-hue"><div class="cp-hue-thumb"></div></div>
-      <div class="cp-alpha"><div class="cp-alpha-grad"></div><div class="cp-alpha-thumb"></div></div>
-      <div class="cp-foot"><div class="cp-prev"><i></i></div><div class="cp-hexbox"><span>#</span><input type="text" maxlength="8" autocomplete="off"></div></div></div>`);
-    const sv=p.querySelector('.cp-sv'), svThumb=p.querySelector('.cp-thumb'), hue=p.querySelector('.cp-hue'), hueThumb=p.querySelector('.cp-hue-thumb'),
-          alpha=p.querySelector('.cp-alpha'), alphaGrad=p.querySelector('.cp-alpha-grad'), alphaThumb=p.querySelector('.cp-alpha-thumb'),
-          prevI=p.querySelector('.cp-prev i'), input=p.querySelector('input');
-    const a2hex = ()=> Math.round(a*255).toString(16).padStart(2,'0');
-    const out = ()=> { const b6=hsvToHex(h,s,v); return a>=0.999 ? b6 : b6 + a2hex(); };
+    </div>`);
+    const sv=p.querySelector('.cp-sv'), svThumb=p.querySelector('.cp-thumb'), hue=p.querySelector('.cp-hue'),
+          hueThumb=p.querySelector('.cp-hue-thumb'), prev=p.querySelector('.cp-prev'), prevI=p.querySelector('.cp-prev i'),
+          input=p.querySelector('input'), eyedrop=p.querySelector('.cp-eyedrop');
     function paint(emit){
       const b6 = hsvToHex(h,s,v);
       sv.style.background = hsvToHex(h,1,1);
       svThumb.style.left=(s*100)+'%'; svThumb.style.top=((1-v)*100)+'%';
       hueThumb.style.left=(h/360*100)+'%';
-      alphaGrad.style.background = `linear-gradient(to right, ${b6}00, ${b6})`;
-      alphaThumb.style.left=(a*100)+'%';
-      const cur = out();
-      prevI.style.background = cur;
-      if(document.activeElement!==input) input.value = cur.slice(1).toUpperCase();
-      if(emit) onChange(cur);
+      if(isNone){
+        prev.classList.add('none'); prevI.style.background='';
+        input.placeholder='None'; if(document.activeElement!==input) input.value='';
+      } else {
+        prev.classList.remove('none'); prevI.style.background=b6;
+        if(document.activeElement!==input) input.value = b6.slice(1).toUpperCase();
+      }
+      if(emit){ isNone=false; onChange(b6); }
     }
     function svFromEvent(e){ const r=sv.getBoundingClientRect(); s=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); v=Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height)); paint(true); }
     function hueFromEvent(e){ const r=hue.getBoundingClientRect(); h=Math.min(360,Math.max(0,(e.clientX-r.left)/r.width*360)); paint(true); }
-    function alphaFromEvent(e){ const r=alpha.getBoundingClientRect(); a=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); paint(true); }
-    drag(sv, svFromEvent); drag(hue, hueFromEvent); drag(alpha, alphaFromEvent);
-    input.addEventListener('input', ()=>{ let val=input.value.trim().replace(/[^0-9a-fA-F]/g,''); if(val.length===6 || val.length===8){ a = val.length===8 ? parseInt(val.slice(6,8),16)/255 : 1; const o=hexToHsv('#'+val.slice(0,6)); h=o.h;s=o.s;v=o.v; paint(true); } });
+    drag(sv, svFromEvent); drag(hue, hueFromEvent);
+    input.addEventListener('input', ()=>{ let val=input.value.trim().replace(/[^0-9a-fA-F]/g,''); if(val.length===6){ const o=hexToHsv('#'+val); h=o.h;s=o.s;v=o.v; paint(true); } });
+    eyedrop.onclick = (e)=>{ e.stopPropagation(); if(window.EyeDropper){ new window.EyeDropper().open().then(r=>{ const o=hexToHsv(r.sRGBHex); h=o.h;s=o.s;v=o.v; paint(true); }).catch(()=>{}); } };
+    // palette swatch row (setting context) — pick a palette color (or None) directly in the picker
+    if(opts.palette){
+      p.appendChild(el('<div class="cp-pal-label">Color palette</div>'));
+      const row = el('<div class="cp-pal"></div>');
+      if(opts.allowNone){
+        const none = el('<button type="button" class="cp-pal-sw none" title="Default"></button>');
+        if(isNone) none.classList.add('sel');
+        none.onclick = ()=>{ close(); opts.onNone && opts.onNone(); };
+        row.appendChild(none);
+      }
+      STATE.palette.forEach(c=>{
+        const sw = el(`<button type="button" class="cp-pal-sw" title="${c.name}"></button>`);
+        sw.style.background = c.hex;
+        if(isBrandRef(value) && value===c.id) sw.classList.add('sel');
+        sw.onclick = ()=>{ close(); opts.onPick && opts.onPick(c.id); };
+        row.appendChild(sw);
+      });
+      p.appendChild(row);
+    }
+    if(opts.onDelete){
+      const del = el('<button type="button" class="cp-delete">Delete</button>');
+      del.onclick = ()=>{ close(); opts.onDelete(); };
+      p.appendChild(del);
+    }
     paint(false);
     return p;
   });
@@ -2188,25 +2234,28 @@ function reconcileSchemes(){
    detached Brand-colors modal when colorMode==='palette'. */
 function renderPaletteGroup(body){
   schemesHost = null;   // no schemes grid in palette mode — keep renderSchemes() a no-op
-  body.appendChild(el('<p class="subgroup-hint" style="margin:0 0 10px">Brand colors available throughout the theme. Pick from these on any section or text element.</p>'));
   const grid = el('<div class="pal-grid"></div>');
   body.appendChild(grid);
+  const repaint = ()=>{ applyRoles(); applyAllSectionSettings(); renderSectionControls(); };
+  function removeAt(i){ STATE.palette.splice(i,1); reconcilePaletteRefs(); draw(); repaint(); }
+  function editAt(i, anchor){
+    const c = STATE.palette[i];
+    openColorPicker(anchor, c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); anchor.style.background=hex; anchor.title=c.name; repaint(); },
+      { onDelete: STATE.palette.length>1 ? ()=>removeAt(i) : null });
+  }
   function draw(){
     grid.innerHTML = '';
     STATE.palette.forEach((c,i)=>{
       const tile = el(`<button type="button" class="pal-tile" title="${c.name}"></button>`);
       tile.style.background = c.hex;
-      tile.onclick = ()=> openColorPicker(tile, c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); tile.style.background=hex; tile.title=c.name; applyRoles(); applyAllSectionSettings(); renderSectionControls(); });
-      // right-click / long-press isn't wired; removal lives in the picker-adjacent menu via the ⋯? keep simple: shift-click removes
-      tile.oncontextmenu = (e)=>{ e.preventDefault(); if(STATE.palette.length>1){ STATE.palette.splice(i,1); reconcilePaletteRefs(); draw(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); } };
+      tile.onclick = ()=> editAt(i, tile);
       grid.appendChild(tile);
     });
-    const add = el(`<button type="button" class="pal-tile add" title="Add color">${svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',18)}</button>`);
-    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'pal'+Date.now().toString(36), name:colorName(hex), hex }); draw(); const idx=STATE.palette.length-1; openColorPicker(grid.children[idx], hex, h=>{ const c=STATE.palette[idx]; c.hex=h; c.name=colorName(h); draw(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); }); };
+    const add = el(`<button type="button" class="pal-tile add" title="Add color">${svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',16)}</button>`);
+    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'pal'+Date.now().toString(36), name:colorName(hex), hex }); draw(); editAt(STATE.palette.length-1, grid.children[STATE.palette.length-1]); };
     grid.appendChild(add);
   }
   draw();
-  body.appendChild(el('<p class="subgroup-hint" style="margin:8px 16px 0;font-size:11px">Tip: right-click a color to remove it.</p>'));
 }
 // If a palette color is deleted, repoint any default-color or per-section override that referenced it.
 function reconcilePaletteRefs(){
