@@ -253,10 +253,12 @@ overrides from the schemes setup so it starts visually identical.
     text/icons/border to light (`isDarkColor` / `CONTRAST_FLIP_ROLES` in `applySectionColors`);
     block `text_color` overrides are inline on the element so they still win. This is what "flicks
     over" when you pick a dark color.
-  - **Color picker** (`openColorPicker(anchor, value, onChange, opts)`): no alpha; has an eyedropper.
-    Setting context passes `{palette:true, allowNone:true, onPick, onNone}` → an in-picker palette
-    swatch row + a None/Default swatch. Editing a palette swatch passes `{onDelete}` → a Delete
-    button (no right-click delete). The palette panel is a flush swatch **grid** (30px tiles).
+  - **Color picker** (`openColorPicker(anchor, value, onChange, opts)`): no alpha; has an eyedropper;
+    hex/value text uses the body font (not monospace/uppercase). Setting context passes
+    `{palette:true, onPick}` → an in-picker palette swatch row (no None swatch — clearing to Default
+    is the FIELD's job). `paletteColorControl` shows a hover **×** to clear when a color is set, else
+    a database icon to connect a palette color (same slot/size). Editing a palette swatch passes
+    `{onDelete}` → a Delete button (no right-click delete). Palette panel = flush swatch **grid** (30px).
 The color-model branches: **paint** (`applySectionSchemes` → `applySectionColors`; `renderThemeBlock`
 reads block colors), **Colors panel** (`buildPanel`: `renderSchemesGroup` vs `renderPaletteGroup`) +
 the section/block inspectors, and **export** (`shopifySchema` extra settings / `settingsSchemaJson` /
