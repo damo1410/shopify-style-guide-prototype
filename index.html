@@ -454,6 +454,19 @@
   .brand-launch .bl-t { flex: 1 1 auto; font-size: 13px; font-weight: 600; color: var(--stone-900); }
   .brand-launch .bl-chev { width: 16px; height: 16px; color: var(--stone-400); }
 
+  /* palette-mode editor (Theme settings → Colors): palette list + reset-colors button */
+  .pal-list { display: flex; flex-direction: column; gap: 8px; padding: 4px 16px 6px; }
+  .pal-row { display: flex; align-items: center; gap: 10px; }
+  .pal-row .cf { flex: 0 0 auto; width: 132px; }
+  .pal-name { flex: 1 1 auto; font-size: 12px; color: var(--stone-700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pal-rm { width: 26px; height: 26px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--stone-400); cursor: pointer; }
+  .pal-rm:hover { background: var(--stone-100); color: var(--stone-700); }
+  .pal-add { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px dashed var(--stone-300); background: none; border-radius: 8px; color: var(--stone-600); font: inherit; font-size: 12px; cursor: pointer; }
+  .pal-add:hover { background: var(--stone-50); color: var(--stone-900); }
+  .sf-reset-colors { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 10px; padding: 8px; border: 1px solid var(--stone-200); background: none; border-radius: 8px; color: var(--stone-600); font: inherit; font-size: 12px; cursor: pointer; }
+  .sf-reset-colors:hover { background: var(--stone-50); color: var(--stone-900); }
+  .sf-reset-colors svg { width: 14px; height: 14px; }
+
   /* color field — raw hex variant (swatch + value, db icon on hover). Even 6px padding so
      the swatch and the db button sit with equal top/right/bottom/left padding. */
   .cf { width: 100%; position: relative; }
@@ -519,6 +532,16 @@
   .cmenu-check { margin-left: auto; display: inline-flex; }
   .cmenu-check svg { color: var(--sel); }
   .cmenu-sep { height: 1px; background: var(--stone-100); margin: 5px 4px; }
+  /* theme-setup switcher (anchored on the black brand mark) */
+  .setup-menu { min-width: 248px; }
+  .setup-menu-hd { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--stone-400); padding: 4px 10px 6px; }
+  .setup-item { align-items: flex-start; }
+  .setup-item.active { background: var(--stone-50); }
+  .setup-item-tx { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; }
+  .setup-item-name { font-size: 13px; font-weight: 600; color: var(--stone-900); }
+  .setup-item-desc { font-size: 11px; color: var(--stone-500); line-height: 1.3; }
+  .setup-item-chk { margin-left: auto; display: inline-flex; flex: 0 0 auto; }
+  .setup-item-chk svg { color: var(--sel); width: 16px; height: 16px; }
 
   /* brand colors modal */
   .bm-ov { position: fixed; inset: 0; background: rgba(12,10,9,.45); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
@@ -1374,6 +1397,20 @@ const DEFAULTS = {
   // paints its own background + role colors from that scheme; others inherit the baseline.
   // Newsletter ships dark, expressed cleanly as the Dark scheme on that one section.
   sectionSchemes: { email_signup:'Dark' },
+  // THEME-SETUP color model. 'schemes' = reusable color schemes assigned per section (the
+  // classic model); 'palette' = a flat color palette with per-section/block color settings
+  // bound to palette entries (Shopify's newer Horizon-style model). Lives in STATE so it's
+  // captured by each theme setup's document snapshot. The switcher (black brand mark) flips it.
+  colorMode: 'schemes',
+  // PALETTE-MODE state (only consulted when colorMode==='palette'):
+  //  • paletteDefaults: the store's BASELINE role→value binding (one map, like a single scheme).
+  //    Each value is a palette-color id | '#hex' | 'transparent', resolved by swatchHex. Seeded
+  //    from the Light scheme just below the DEFAULTS literal.
+  //  • sectionColors: per-section role OVERRIDES { sectionId -> { roleKey -> value } }. A role not
+  //    listed inherits paletteDefaults (the "Default" binding); editing a palette color updates
+  //    every section still on Default for that role. Mirrors Horizon's color/color_background defaults.
+  paletteDefaults: {},
+  sectionColors: {},
   // Per-section setting VALUES (Shopify: section.settings → { settingId: value }). Lazily
   // filled as you edit; color scheme is NOT stored here (it lives in sectionSchemes, which
   // already drives the scheme wiring). Survives Reset because it's part of DEFAULTS.
@@ -1425,6 +1462,9 @@ const DEFAULTS = {
   productCard:    { style:'standard', ratio:'Landscape', radius:10, align:'left', padding:0, overlayPos:'bottom', overlayColor:'#000000', overlayOpacity:35, hover:'zoom' },
   collectionCard: { style:'overlay',  ratio:'Portrait',  radius:10, align:'left', padding:0, overlayPos:'bottom', overlayColor:'#000000', overlayOpacity:35, hover:'zoom' },
 };
+// Seed the palette-mode baseline from the Light scheme (defined inside the literal above), so
+// palette mode starts visually identical to schemes mode's default and diverges only as edited.
+DEFAULTS.paletteDefaults = clone(DEFAULTS.schemes.Light);
 let STATE = clone(DEFAULTS);
 
 /* Dummy homepage data for the sunglasses store. */
@@ -1485,7 +1525,9 @@ function computeHeadingSizes(){
 }
 function applyRoles(){
   const s = document.getElementById('store').style;
-  const scheme = STATE.schemes[STATE.activeScheme];
+  // BASELINE colors: palette mode paints from the single paletteDefaults binding; schemes mode
+  // from the store's active scheme. Both share the colorRoles shape, so the loop is identical.
+  const scheme = (STATE.colorMode==='palette') ? STATE.paletteDefaults : STATE.schemes[STATE.activeScheme];
 
   // 1) COLOR roles — each maps directly to a palette swatch.
   STATE.colorRoles.forEach(r => s.setProperty(r.cssVar, swatchHex(scheme[r.key])));
@@ -1637,6 +1679,7 @@ function setSchemeButtonVars(style, scheme){
    A themed section gets the role colors written inline (overriding the inherited
    baseline) plus a .sec-themed class so its background follows the scheme too. */
 function applySectionSchemes(){
+  if(STATE.colorMode==='palette') return applySectionColors();
   document.querySelectorAll('#store [data-sec]').forEach(elm=>{
     const name = STATE.sectionSchemes[elm.getAttribute('data-sec')];
     STATE.colorRoles.forEach(r => elm.style.removeProperty(r.cssVar));
@@ -1650,6 +1693,50 @@ function applySectionSchemes(){
       elm.classList.remove('sec-themed');
     }
   });
+}
+/* PALETTE MODE per-section paint. Each section inherits the store baseline (paletteDefaults,
+   written onto #store by applyRoles); a section that OVERRIDES any role in STATE.sectionColors
+   gets a fully-resolved set (baseline + its overrides) written inline + .sec-themed. A section
+   with no overrides clears its inline vars and inherits the baseline — that's the "Default" link,
+   so editing a palette/default color flows through to every section still on Default. */
+function applySectionColors(){
+  document.querySelectorAll('#store [data-sec]').forEach(elm=>{
+    const id = elm.getAttribute('data-sec');
+    const ov = STATE.sectionColors[id];
+    STATE.colorRoles.forEach(r => elm.style.removeProperty(r.cssVar));
+    ['--c-accent','--c-accent-soft','--c-btn-bg-eff','--c-btn2-bg-eff'].forEach(v => elm.style.removeProperty(v));
+    if(ov && Object.keys(ov).length){
+      const resolved = Object.assign({}, STATE.paletteDefaults, ov);
+      STATE.colorRoles.forEach(r => elm.style.setProperty(r.cssVar, swatchHex(resolved[r.key])));
+      setSchemeButtonVars(elm.style, resolved);
+      elm.classList.add('sec-themed');
+    } else {
+      elm.classList.remove('sec-themed');
+    }
+  });
+}
+/* PALETTE MODE — render a section's individual color settings into the inspector. Each role
+   defaults to the palette (paletteDefaults binding, shown as a linked palette chip = "Default");
+   choosing a color stores a per-section override in STATE.sectionColors. Mirrors Horizon's
+   per-section color / color_background settings. Defined here so it sits next to applySectionColors;
+   called from the section inspector. */
+function appendSectionColors(host, secId){
+  host.appendChild(el('<div class="set-header">Colors</div>'));
+  host.appendChild(el('<p class="sf-scheme-hint">Each color follows the palette by default. Pick a color to override it for just this section.</p>'));
+  const ov = () => (STATE.sectionColors[secId] || (STATE.sectionColors[secId] = {}));
+  const resolved = (key) => { const o = STATE.sectionColors[secId]; return (o && (key in o)) ? o[key] : STATE.paletteDefaults[key]; };
+  const buckets = []; STATE.colorRoles.forEach(r=>{ const g=r.group||''; let bk=buckets.find(x=>x.name===g); if(!bk){bk={name:g,roles:[]};buckets.push(bk);} bk.roles.push(r); });
+  buckets.forEach(bk=>{
+    if(bk.name) host.appendChild(el(`<div class="set-header">${bk.name}</div>`));
+    bk.roles.forEach(r=>{
+      host.appendChild(controlRow(r.label, colorField(resolved(r.key), v=>{ ov()[r.key]=v; applySectionColors(); })));
+    });
+  });
+  if(STATE.sectionColors[secId] && Object.keys(STATE.sectionColors[secId]).length){
+    const reset = el(`<button type="button" class="sf-reset-colors">${svg('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',14)}<span>Reset colors to palette</span></button>`);
+    reset.onclick = (e)=>{ e.stopPropagation(); delete STATE.sectionColors[secId]; applySectionColors(); renderSectionControls(); };
+    host.appendChild(reset);
+  }
 }
 
 /* ============================================================================
@@ -2041,6 +2128,56 @@ function reconcileSchemes(){
   const valid = new Set([...STATE.palette.map(c=>c.id), 'transparent']);
   const fallback = STATE.palette[0].id;
   Object.values(STATE.schemes).forEach(sc => { STATE.colorRoles.forEach(r=>{ if(!valid.has(sc[r.key])) sc[r.key]=fallback; }); });
+}
+
+/* PALETTE MODE — Theme settings → Colors. Two parts: the editable PALETTE (the theme's
+   color_palette: a flat list of named colors) and the DEFAULT COLORS (the baseline role→color
+   bindings every section follows unless overridden). This replaces the schemes grid + the
+   detached Brand-colors modal when colorMode==='palette'. */
+function renderPaletteGroup(body){
+  schemesHost = null;   // no schemes grid in palette mode — keep renderSchemes() a no-op
+  // ---- Palette: the theme's editable color set ----
+  body.appendChild(el('<div class="subgroup-label" style="margin-bottom:2px">Palette</div>'));
+  body.appendChild(el('<p class="subgroup-hint" style="margin-bottom:10px">Brand colors available throughout the theme. Change one here and every color that follows it updates.</p>'));
+  const palHost = el('<div class="pal-list"></div>');
+  body.appendChild(palHost);
+  function drawPal(){
+    palHost.innerHTML='';
+    STATE.palette.forEach((c,i)=>{
+      const row = el('<div class="pal-row"></div>');
+      const name = el('<span class="pal-name"></span>'); name.textContent = c.name;
+      row.appendChild(colorField(c.hex, hex=>{ c.hex=hex; c.name=colorName(hex); name.textContent=c.name; applyRoles(); applyAllSectionSettings(); renderSectionControls(); }));
+      row.appendChild(name);
+      if(STATE.palette.length > 1){
+        const rm = el(`<button type="button" class="pal-rm" title="Remove color">${svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',14)}</button>`);
+        rm.onclick = ()=>{ STATE.palette.splice(i,1); reconcilePaletteRefs(); drawPal(); applyRoles(); applyAllSectionSettings(); renderSectionControls(); };
+        row.appendChild(rm);
+      }
+      palHost.appendChild(row);
+    });
+    const add = el(`<button type="button" class="pal-add">${svg('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',14)}<span>Add color</span></button>`);
+    add.onclick = ()=>{ const hex='#888888'; STATE.palette.push({ id:'pal'+Date.now().toString(36), name:colorName(hex), hex }); drawPal(); };
+    palHost.appendChild(add);
+  }
+  drawPal();
+  // ---- Default colors: the store-wide baseline role bindings ----
+  body.appendChild(el('<div class="set-header" style="margin-top:14px">Default colors</div>'));
+  body.appendChild(el('<p class="subgroup-hint" style="margin-bottom:10px">Store-wide defaults. Every section follows these unless you override a color on the section itself.</p>'));
+  const buckets=[]; STATE.colorRoles.forEach(r=>{ const g=r.group||''; let bk=buckets.find(x=>x.name===g); if(!bk){bk={name:g,roles:[]};buckets.push(bk);} bk.roles.push(r); });
+  buckets.forEach(bk=>{
+    if(bk.name) body.appendChild(el(`<div class="set-header">${bk.name}</div>`));
+    bk.roles.forEach(r=>{
+      body.appendChild(controlRow(r.label, colorField(STATE.paletteDefaults[r.key], v=>{ STATE.paletteDefaults[r.key]=v; applyRoles(); applyAllSectionSettings(); renderSectionControls(); })));
+    });
+  });
+}
+// If a palette color is deleted, repoint any default-color or per-section override that referenced it.
+function reconcilePaletteRefs(){
+  const valid = new Set([...STATE.palette.map(c=>c.id), 'transparent']);
+  const fallback = STATE.palette[0].id;
+  const fix = (obj)=>{ if(!obj) return; Object.keys(obj).forEach(k=>{ const v=obj[k]; if(typeof v==='string' && v[0]!=='#' && v!=='transparent' && !valid.has(v)) obj[k]=fallback; }); };
+  fix(STATE.paletteDefaults);
+  Object.values(STATE.sectionColors).forEach(fix);
 }
 
 // Small visual square: scheme background, "Aa" in heading color, accent bar.
@@ -3873,7 +4010,13 @@ function renderSectionControls(){
     vals[s.id] = v; applySectionSettings(selectedSection);
   };
   const b = el('<div class="sf-body"></div>');
-  renderSettingsList(b, schema.settings, getVal, setVal);
+  // In palette mode the per-section color_scheme dropdown is replaced by individual color
+  // settings (rendered below), so filter it out of the schema-driven list.
+  const settingsToRender = (STATE.colorMode==='palette')
+    ? schema.settings.filter(s=> s.type!=='color_scheme')
+    : schema.settings;
+  renderSettingsList(b, settingsToRender, getVal, setVal);
+  if(STATE.colorMode==='palette') appendSectionColors(b, selectedSection);
   // Duplicate / Hide live in the header ⋯ menu; Remove also gets a button at the bottom (Shopify)
   const secRm = el(`<button type="button" class="sf-remove">${svg(ICON_TRASH,14)}<span>Remove section</span></button>`);
   secRm.onclick = (e)=>{ e.stopPropagation(); removeSection(secId); };
@@ -4052,7 +4195,13 @@ function acceptsTheme(schema){ return (schema.blocks||[]).some(b=>b.type==='@the
 // A schema entry → the Shopify {% schema %} object (adds presets so it's editor-addable).
 function shopifySchema(schema){
   const out = { name: schema.name };
-  if(schema.settings && schema.settings.length) out.settings = schema.settings;
+  let settings = schema.settings ? schema.settings.slice() : [];
+  // Palette mode: a section that had a color_scheme picker instead exposes individual color /
+  // color_background settings (bound to the palette as defaults) — mirror that in the export.
+  if(STATE.colorMode==='palette' && settings.some(s=>s.type==='color_scheme')){
+    settings = settings.filter(s=>s.type!=='color_scheme').concat(paletteColorSettings());
+  }
+  if(settings.length) out.settings = settings;
   if(schema.blocks && schema.blocks.length)     out.blocks   = schema.blocks;
   if(schema.max_blocks)                          out.max_blocks = schema.max_blocks;
   out.presets = [{ name: schema.name }];
@@ -4095,7 +4244,12 @@ function blocksToJson(list, counter){
 function sectionInstanceJson(key){
   const obj = { type: secType(key) };
   const settings = Object.assign({}, STATE.sectionSettings[key] || {});
-  if(STATE.sectionSchemes[key]) settings.color_scheme = schemeId(STATE.sectionSchemes[key]);
+  if(STATE.colorMode==='palette'){
+    const ov = STATE.sectionColors[key];
+    if(ov) Object.keys(ov).forEach(k=>{ settings['color_'+k] = exportColorVal(ov[k]); });
+  } else if(STATE.sectionSchemes[key]){
+    settings.color_scheme = schemeId(STATE.sectionSchemes[key]);
+  }
   if(Object.keys(settings).length) obj.settings = settings;
   const list = STATE.sectionBlocks[key] || [];
   if(list.length){ const j = blocksToJson(list, { n:1 }); obj.blocks = j.blocks; obj.block_order = j.order; }
@@ -4129,12 +4283,38 @@ function colorSchemeGroup(){
   });
   return { type:'color_scheme_group', id:'color_schemes', definition, role: SCHEME_ROLE_MAP };
 }
+/* ---- color palette: faithful Shopify color_palette + color/color_background settings ---- */
+// A stored color value (palette id | '#hex' | 'transparent') → a Shopify schema/data value. A
+// palette id becomes a live Liquid reference ({{ settings.color_palette.<id> }}) — that's the
+// "Default" binding that updates with the palette; a hex/transparent stays a literal value.
+function exportColorVal(v){
+  if(v==='transparent') return 'rgba(0,0,0,0)';
+  if(typeof v==='string' && v[0]==='#') return v;
+  return `{{ settings.color_palette.${v} }}`;
+}
+// The theme's color_palette setting (one per theme): { id -> default hex }.
+function colorPaletteSetting(){
+  const colors = {}; STATE.palette.forEach(c=>{ colors[c.id] = c.hex; });
+  return { type:'color_palette', id:'color_palette', default: colors };
+}
+// The role color settings authored onto every section (and the global Colors group) in palette
+// mode, each defaulting to the baseline palette binding. bg/surface export as color_background.
+function paletteColorSettings(){
+  const out = []; let lastGroup = null;
+  STATE.colorRoles.forEach(r=>{
+    if(r.group && r.group!==lastGroup){ out.push({ type:'header', content:r.group }); lastGroup=r.group; }
+    if(!r.group) lastGroup=null;
+    const isBg = (r.key==='bg' || r.key==='surface' || r.key==='iconBg');
+    out.push({ type: isBg?'color_background':'color', id:'color_'+r.key, label:r.label, default: exportColorVal(STATE.paletteDefaults[r.key]) });
+  });
+  return out;
+}
 function settingsSchemaJson(){
   const t = STATE.typography, sp = STATE.spacing, bt = STATE.buttons, inp = STATE.inputs, ic = STATE.icons;
   const fontOpt = { Inter:'assistant_n4' };  // demo handle; map to your real fonts on import
   const schema = [
     { name:'theme_info', theme_name:'NOIR (prototype)', theme_version:'1.0.0', theme_author:'Style-guide prototype', theme_documentation_url:'', theme_support_url:'' },
-    { name:'Colors', settings: [ colorSchemeGroup() ]},
+    { name:'Colors', settings: (STATE.colorMode==='palette' ? [ colorPaletteSetting(), ...paletteColorSettings() ] : [ colorSchemeGroup() ]) },
     { name:'Typography', settings: [
       { type:'font_picker', id:'heading_font', label:'Heading font', default: fontOpt[t.headingFont]||'assistant_n4' },
       { type:'font_picker', id:'body_font',    label:'Body font',    default: fontOpt[t.bodyFont]||'assistant_n4' },
@@ -4167,20 +4347,28 @@ function settingsSchemaJson(){
 // half of settings_schema.json).
 function settingsDataJson(){
   const t = STATE.typography, sp = STATE.spacing, bt = STATE.buttons, inp = STATE.inputs, ic = STATE.icons;
-  const color_schemes = {};
-  Object.keys(STATE.schemes).forEach(name=>{
-    const settings = {}; STATE.colorRoles.forEach(r=>{ settings[r.key] = colorHex(name, r.key); });
-    color_schemes[schemeId(name)] = { settings };
-  });
-  const current = {
-    color_schemes,
+  // Palette mode stores a concrete color_palette ({id->hex}); the role defaults live in the schema
+  // (as palette bindings), so they're omitted here and inherited. Schemes mode stores color_schemes.
+  let colorData;
+  if(STATE.colorMode==='palette'){
+    const color_palette = {}; STATE.palette.forEach(c=>{ color_palette[c.id] = c.hex; });
+    colorData = { color_palette };
+  } else {
+    const color_schemes = {};
+    Object.keys(STATE.schemes).forEach(name=>{
+      const settings = {}; STATE.colorRoles.forEach(r=>{ settings[r.key] = colorHex(name, r.key); });
+      color_schemes[schemeId(name)] = { settings };
+    });
+    colorData = { color_schemes };
+  }
+  const current = Object.assign({}, colorData, {
     heading_font:'assistant_n4', body_font:'assistant_n4',
     base_size: t.baseSize, type_scale: t.ratio,
     page_width: sp.containerMax, section_padding: sp.sectionPadding, grid_gutter: sp.gutter, corner_radius: STATE.radius,
     button_border: bt.borderWidth, button_radius: bt.radius,
     input_border: inp.borderWidth, input_radius: inp.radius,
     icon_size: ic.size, icon_style: ic.container,
-  };
+  });
   return JSON.stringify({ current }, null, 2) + '\n';
 }
 function buildThemeFiles(){
@@ -4262,13 +4450,18 @@ function closeExport(){ const ov=document.getElementById('ex-ov'); if(ov) ov.rem
    ============================================================================ */
 function buildPanel(){
   const host=document.getElementById('groups'); host.innerHTML='';
-  // Brand colors live in a detached modal (Shopify manages brand outside the theme editor).
-  const brandBtn = el(`<button type="button" class="brand-launch"><span class="bl-sw"></span><span class="bl-t">Brand colors</span><span class="bl-chev">${svg('<polyline points="9 18 15 12 9 6"/>',16)}</span></button>`);
-  const sw = brandBtn.querySelector('.bl-sw'); STATE.palette.slice(0,4).forEach(c=>{ const s=el('<span></span>'); s.style.background=c.hex; sw.appendChild(s); });
-  brandBtn.onclick = openBrandModal;
-  host.appendChild(brandBtn);
+  const palMode = STATE.colorMode==='palette';
+  // Schemes mode: brand colors live in a detached modal (Shopify manages brand outside the theme
+  // editor; the theme connects to them). Palette mode: the palette IS in the theme, edited inline
+  // in the Colors group below — so the detached launcher is hidden.
+  if(!palMode){
+    const brandBtn = el(`<button type="button" class="brand-launch"><span class="bl-sw"></span><span class="bl-t">Brand colors</span><span class="bl-chev">${svg('<polyline points="9 18 15 12 9 6"/>',16)}</span></button>`);
+    const sw = brandBtn.querySelector('.bl-sw'); STATE.palette.slice(0,4).forEach(c=>{ const s=el('<span></span>'); s.style.background=c.hex; sw.appendChild(s); });
+    brandBtn.onclick = openBrandModal;
+    host.appendChild(brandBtn);
+  }
   [
-    ['Colors','palette',false,renderSchemesGroup],
+    ['Colors','palette',false, palMode ? renderPaletteGroup : renderSchemesGroup],
     ['Typography','type',false,renderTypography],
     ['Radius','square',false,renderShape],
     ['Spacing','layout',false,renderSpacing],
@@ -4280,8 +4473,103 @@ function buildPanel(){
   ].forEach(([title,icon,open,fn])=>{ const g=group(title,icon,open); fn(g.body); host.appendChild(g.wrap); });
   host.appendChild(el('<div style="height:32px"></div>'));
 }
-function doReset(){ STATE=clone(DEFAULTS); refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); renderBlockSections(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); }
+function doReset(){ const cm=STATE.colorMode; STATE=clone(DEFAULTS); STATE.colorMode=cm; refreshNames(); expandedScheme=STATE.activeScheme; seedBlocks(); renderBlockSections(); deselectSection(); buildPanel(); applyRoles(); applyAllSectionSettings(); }
 ['reset-btn','tb-reset'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=doReset; });
+
+/* ============================================================================
+   THEME SETUPS  —  switch between fully-independent theme "documents". Each setup
+   owns its own complete editor state (sections, blocks, content, every setting AND
+   its color model). The switcher is the black brand mark (top-left). This is an
+   experiment harness: today it ships a 'schemes' setup and a 'palette' setup, but
+   any number of named documents can be registered. State that must round-trip:
+     • STATE              (all data: palette, schemes, sectionBlocks/Settings, type…)
+     • SECTION_GROUPS     (which sections exist + their order, per group)
+     • sectionTypes       (instanceId → type, for added/duplicated sections)
+     • hiddenLayers       (hidden sections/blocks)
+     • the #store innerHTML (the live section DOM shells — selection is delegated off
+       #store itself, so swapping innerHTML preserves listeners)
+   ---------------------------------------------------------------------------- */
+let THEME_SETUPS = [];
+let activeSetupId = null;
+function serializeDoc(){
+  return {
+    state: clone(STATE),
+    groups: clone(SECTION_GROUPS),
+    types: clone(sectionTypes),
+    hidden: [...hiddenLayers],
+    storeHTML: document.getElementById('store').innerHTML,
+  };
+}
+function restoreDoc(doc){
+  STATE = clone(doc.state);
+  // SECTION_GROUPS / sectionTypes / hiddenLayers are const bindings — restore IN PLACE.
+  Object.keys(SECTION_GROUPS).forEach(k=>{ if(!doc.groups[k]) delete SECTION_GROUPS[k]; });
+  Object.keys(doc.groups).forEach(k=>{ SECTION_GROUPS[k] = clone(doc.groups[k]); });
+  Object.keys(sectionTypes).forEach(k=> delete sectionTypes[k]);
+  Object.assign(sectionTypes, clone(doc.types));
+  hiddenLayers.clear(); doc.hidden.forEach(h=> hiddenLayers.add(h));
+  // Swap the live section DOM, then re-derive everything that lives outside the markup.
+  document.getElementById('store').innerHTML = doc.storeHTML;
+  refreshNames();
+  renderBlockSections();          // re-render block content from the restored STATE
+  applyRoles();                   // CSS vars on #store itself aren't in the captured innerHTML
+  applyAllSectionSettings();
+  applyHidden();
+  buildPanel();                   // rebuild the theme-settings panel (palette vs schemes UI)
+  deselectSection();              // clears selection + rebuilds layers + inspector
+}
+function switchSetup(id){
+  if(id===activeSetupId) return;
+  const cur = THEME_SETUPS.find(s=>s.id===activeSetupId);
+  if(cur) cur.doc = serializeDoc();        // persist the live document into the outgoing setup
+  const tgt = THEME_SETUPS.find(s=>s.id===id);
+  if(!tgt) return;
+  activeSetupId = id;
+  restoreDoc(tgt.doc);
+  updateSetupBrand();
+}
+// Seed the registry from the freshly-built default document. Both setups start from identical
+// content; only the color model differs, and they diverge independently as the user edits.
+function seedSetups(){
+  const base = serializeDoc();
+  const paletteDoc = clone(base); paletteDoc.state.colorMode = 'palette';
+  // Make palette mode start visually identical to schemes mode: translate each section's assigned
+  // scheme into a per-section color override (schemes are role→palette maps — the same shape).
+  paletteDoc.state.sectionColors = {};
+  Object.keys(base.state.sectionSchemes || {}).forEach(secId=>{
+    const sc = base.state.schemes[base.state.sectionSchemes[secId]];
+    if(sc) paletteDoc.state.sectionColors[secId] = clone(sc);
+  });
+  THEME_SETUPS = [
+    { id:'schemes', name:'Color schemes', desc:'Reusable schemes assigned per section', doc: base },
+    { id:'palette', name:'Color palette',  desc:'Flat palette + per-section colors',     doc: paletteDoc },
+  ];
+  activeSetupId = 'schemes';
+  updateSetupBrand();
+}
+// Reflect the active setup on the brand mark (tooltip) so it's discoverable.
+function updateSetupBrand(){
+  const brand = document.querySelector('.topbar .tb-brand');
+  const cur = THEME_SETUPS.find(s=>s.id===activeSetupId);
+  if(brand && cur){ brand.setAttribute('title', 'Theme setup: ' + cur.name + ' — click to switch'); brand.style.cursor='pointer'; }
+}
+function openSetupSwitcher(anchor){
+  popover(anchor, (close)=>{
+    const m = el('<div class="cmenu setup-menu"></div>');
+    m.appendChild(el('<div class="setup-menu-hd">Theme setup</div>'));
+    THEME_SETUPS.forEach(s=>{
+      const active = s.id===activeSetupId;
+      const b = el(`<button type="button" class="cmenu-item setup-item${active?' active':''}">
+        <span class="setup-item-tx"><span class="setup-item-name">${s.name}</span><span class="setup-item-desc">${s.desc||''}</span></span></button>`);
+      if(active) b.appendChild(el(`<span class="setup-item-chk">${svg('<polyline points="20 6 9 17 4 12"/>',16)}</span>`));
+      b.onclick = ()=>{ close(); switchSetup(s.id); };
+      m.appendChild(b);
+    });
+    return m;
+  });
+}
+// Wire the brand mark as the switcher trigger.
+(function(){ const brand=document.querySelector('.topbar .tb-brand'); if(brand) brand.addEventListener('click', e=>{ e.stopPropagation(); openSetupSwitcher(brand); }); })();
 
 refreshNames();   // derive palette names from their hex values
 captureSectionTemplates();   // snapshot each section's empty shell for Add/Duplicate (before content fills it)
@@ -4303,6 +4591,8 @@ document.querySelectorAll('.tb-dev').forEach(t => t.onclick = ()=>{
   hideCanvasHover();
 });
 ['export-btn','tb-export'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=openExport; });
+
+seedSetups();   // register the theme setups (Color schemes / Color palette) from the built default doc
 
 /* ============================================================================
    MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
