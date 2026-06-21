@@ -4905,6 +4905,7 @@ document.querySelectorAll('.tb-dev').forEach(t => t.onclick = ()=>{
 ['export-btn','tb-export'].forEach(id=>{ const b=document.getElementById(id); if(b) b.onclick=openExport; });
 
 seedSetups();   // register the theme setups (Color schemes / Color palette) from the built default doc
+switchSetup('palette');   // default the prototype to the Color palette setup (Horizon-style)
 
 /* ============================================================================
    MOBILE BOTTOM SHEET — controls slide up over a full-screen preview.
