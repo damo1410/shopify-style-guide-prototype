@@ -990,6 +990,47 @@
   .pay { display: flex; gap: 8px; flex-wrap: wrap; }
   .pay span { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 5px; padding: 4px 8px; font-size: .68rem; font-weight: 700; color: var(--c-body); letter-spacing: .03em; }
 
+  /* ===== Layer 1 & 2 sections/blocks (rebuilt library) ===== */
+  /* Announcement bar */
+  .announce-bar .announce { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 14px; }
+  .announce .an-item { display: inline-flex; align-items: center; gap: 6px; }
+  .announce .an-ic { display: inline-flex; }
+  .announce .an-sep { opacity: .5; }
+  /* Header layout + CTA */
+  .nav .nav-cta { padding: 8px 16px; font-size: .8rem; }
+  .nav.hdr-center .container { justify-content: center; position: relative; }
+  .nav.hdr-center .nav-links { position: static; }
+  .nav.hdr-split .container { justify-content: space-between; }
+  .nav.hdr-transparent { background: transparent; border-color: transparent; }
+  .btn.btn-link { background: transparent; border: none; color: var(--c-link); padding-left: 0; padding-right: 0; text-decoration: underline; }
+  /* Hero content positioning (container is flex via JS wiring) */
+  .hero .container { gap: 1rem; }
+  /* Trust strip (in hero / split) */
+  .trust-strip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: .85rem; color: var(--c-body); margin-top: .25rem; }
+  .trust-strip .stars { color: var(--c-accent); }
+  .trust-strip .ts-stat { font-weight: 700; color: var(--c-heading); }
+  .trust-strip .ts-stat + .ts-stat { border-left: 1px solid var(--c-border); padding-left: 16px; }
+  .trust-strip .ts-logo { font-family: var(--font-heading); font-weight: 700; opacity: .6; letter-spacing: .04em; }
+  /* Hero split */
+  .hero-split .hsplit { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+  .hero-split .hs-media { background-size: cover; background-position: center; aspect-ratio: 3/4; border-radius: var(--radius); min-height: 280px; }
+  .hero-split .hs-content { display: flex; flex-direction: column; gap: .9rem; }
+  /* Hero slideshow */
+  .hero-slideshow { padding: 0 !important; }
+  .hero-slideshow .hs-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .hero-slideshow .hs-slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; min-height: var(--slide-h, 80vh); background-size: cover; background-position: center; display: flex; padding: clamp(2rem, 6vw, 6rem); color: #fff; }
+  .hero-slideshow .hs-slide::before { content: ""; position: absolute; inset: 0; background: #000; opacity: var(--ov, .2); }
+  .hero-slideshow .hs-slide-inner { position: relative; z-index: 1; max-width: 560px; display: flex; flex-direction: column; gap: 1rem; }
+  .hero-slideshow .hs-slide-inner h2 { color: #fff; font-size: clamp(2rem, 5vw, 3.5rem); }
+  .hero-slideshow .hs-slide.pos-top-left{align-items:flex-start;justify-content:flex-start} .hero-slideshow .hs-slide.pos-top-center{align-items:flex-start;justify-content:center} .hero-slideshow .hs-slide.pos-top-right{align-items:flex-start;justify-content:flex-end}
+  .hero-slideshow .hs-slide.pos-middle-left{align-items:center;justify-content:flex-start} .hero-slideshow .hs-slide.pos-middle-center{align-items:center;justify-content:center} .hero-slideshow .hs-slide.pos-middle-right{align-items:center;justify-content:flex-end}
+  .hero-slideshow .hs-slide.pos-bottom-left{align-items:flex-end;justify-content:flex-start} .hero-slideshow .hs-slide.pos-bottom-center{align-items:flex-end;justify-content:center} .hero-slideshow .hs-slide.pos-bottom-right{align-items:flex-end;justify-content:flex-end}
+  /* Page header banner */
+  .page-header { background-size: cover; background-position: center; }
+  .page-header .container { display: flex; flex-direction: column; gap: .5rem; }
+  .page-header.ph-image { color: #fff; }
+  .page-header.ph-image :is(h1,h2,h3,h4,p) { color: #fff; }
+
   /* container queries: adapt the store to the PREVIEW width (not the viewport) */
   @container store (max-width: 920px) {
     .collections { grid-template-columns: repeat(2, 1fr); }
@@ -1180,14 +1221,14 @@
       <div class="store-frame">
         <div class="store" id="store">
 
-          <!-- ANNOUNCEMENT BAR -->
-          <div class="announce">Free shipping over $75 · 30-day risk-free returns · 2-year warranty</div>
+          <!-- ANNOUNCEMENT BAR (Layer 1) -->
+          <section class="announce-bar" data-sec="announcement_bar"><div class="announce" data-blocks><!-- announcement blocks injected by JS --></div></section>
 
-          <!-- NAV -->
-          <nav class="nav" data-sec="header"><div class="container" data-blocks><!-- header blocks: logo / menu / icons --></div></nav>
+          <!-- HEADER / NAV (Layer 1) -->
+          <nav class="nav" data-sec="header"><div class="container" data-blocks><!-- header blocks: logo / menu / icons / cta --></div></nav>
 
-          <!-- HERO -->
-          <header class="hero" id="hero" data-sec="image_banner" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
+          <!-- HERO (Layer 2) -->
+          <header class="hero" id="hero" data-sec="hero" style="background-image:url('https://picsum.photos/seed/noir-hero/1600/1000')">
             <div class="container">
               <div class="tb-root hero-blocks" data-blocks><!-- heading/text/button blocks injected by JS --></div>
             </div>
@@ -2502,7 +2543,9 @@ function buildHomepage(){
    global style guide. The blue frame marks the hovered / selected section.
    ============================================================================ */
 const SECTION_TITLES = {
-  header:'Navigation', image_banner:'Hero', multicolumn:'Value Props', collection_list:'Collections',
+  announcement_bar:'Announcement', header:'Navigation', hero:'Hero',
+  hero_split:'Hero (split)', hero_slideshow:'Hero (slideshow)', page_header:'Page header',
+  multicolumn:'Value Props', collection_list:'Collections',
   featured_collection:'Best Sellers', image_with_text:'Home Try-On', testimonials:'Reviews', logo_list:'Press',
   image_gallery:'Instagram', blog_posts:'Journal', email_signup:'Newsletter', footer:'Footer',
 };
@@ -2663,22 +2706,58 @@ const PAD = (id,label,def)=>({ type:'range', id, label, min:0, max:160, step:4, 
 const PADDING_BLOCK = [ {type:'header', content:'Section padding'}, PAD('padding_top','Top padding',80), PAD('padding_bottom','Bottom padding',80) ];
 const SCHEME_SETTING = { type:'color_scheme', id:'color_scheme', label:'Color scheme' };
 
+/* ----------------------------------------------------------------------------
+   DESIGN TOKENS (mirror of the Notion "Design Tokens" DB). The no-raw-values
+   rule: section/block dimensional settings are SELECTs over these named steps —
+   never a freeform px/range. The concrete values live ONLY here (theme settings).
+   ---------------------------------------------------------------------------- */
+const SPACING_TOKENS = { none:0, s:24, m:48, l:80, xl:120 };                 // px
+const WIDTH_TOKENS   = { narrow:'720px', standard:'1080px', wide:'1280px', full:'100%' };
+const MEDIA_H_TOKENS = { short:'40vh', medium:'60vh', tall:'80vh', fullscreen:'100vh' };
+const OVERLAY_TOKENS = { none:0, light:.2, medium:.4, strong:.6 };
+const ASPECT_TOKENS  = { square:'1/1', portrait:'3/4', landscape:'4/3', wide:'16/9', original:'auto' };
+const RATIO_TOKENS   = { '50-50':'1fr 1fr', '40-60':'2fr 3fr', '60-40':'3fr 2fr' };
+// Resolve a padding value: a spacing-token step → px, else a legacy numeric px, else null.
+const padPx = v => { if(v==null||v==='') return null; if(v in SPACING_TOKENS) return SPACING_TOKENS[v]; const n=Number(v); return isNaN(n)?null:n; };
+// Shared option lists for token-bound selects.
+const SPACE_OPTS  = [{value:'none',label:'None'},{value:'s',label:'S'},{value:'m',label:'M'},{value:'l',label:'L'},{value:'xl',label:'XL'}];
+const WIDTH_OPTS  = [{value:'narrow',label:'Narrow'},{value:'standard',label:'Standard'},{value:'wide',label:'Wide'},{value:'full',label:'Full'}];
+const HEIGHT_OPTS = [{value:'short',label:'Short'},{value:'medium',label:'Medium'},{value:'tall',label:'Tall'},{value:'fullscreen',label:'Fullscreen'}];
+const OVERLAY_OPTS= [{value:'none',label:'None'},{value:'light',label:'Light'},{value:'medium',label:'Medium'},{value:'strong',label:'Strong'}];
+const ALIGN_OPTS  = [{value:'left',label:'Left'},{value:'center',label:'Center'},{value:'right',label:'Right'}];
+const ASPECT_OPTS = [{value:'square',label:'Square'},{value:'portrait',label:'Portrait'},{value:'landscape',label:'Landscape'},{value:'wide',label:'Wide'},{value:'original',label:'Original'}];
+const POS9_OPTS   = ['top-left','top-center','top-right','middle-left','middle-center','middle-right','bottom-left','bottom-center','bottom-right']
+                      .map(v=>({value:v, label:v.replace('-',' ').replace(/\b\w/g,c=>c.toUpperCase())}));
+const BTNSTYLE_OPTS = [{value:'primary',label:'Primary'},{value:'secondary',label:'Secondary'},{value:'link',label:'Link'}];
+const TPAD = (id,label,def)=>({ type:'select', id, label, default:def, options:SPACE_OPTS });
+const TPADDING_BLOCK = [ {type:'header', content:'Section padding'}, TPAD('padding_top','Top padding','m'), TPAD('padding_bottom','Bottom padding','m') ];
+
 const SECTION_SCHEMAS = {
-  header: { name:'Header', category:'Header', blocks:[{type:'header_logo'},{type:'header_menu'},{type:'header_icons'}], max_blocks:20, settings:[
+  // ── Layer 1 · Header (Navbar). Every researched header variant is reachable
+  //    via these settings + blocks (no structural splits). ──
+  header: { name:'Header', category:'Header & Footer', blocks:[{type:'header_logo'},{type:'header_menu'},{type:'header_icons'},{type:'button'}], max_blocks:20, settings:[
     SCHEME_SETTING,
-    {type:'checkbox', id:'sticky', label:'Stick to top on scroll', default:false},
+    {type:'select', id:'layout', label:'Layout', default:'logo-left', options:[
+      {value:'logo-left',label:'Logo left'},{value:'logo-center',label:'Logo center'},{value:'split',label:'Split'}]},
+    {type:'select', id:'sticky', label:'Sticky', default:'sticky', options:[
+      {value:'none',label:'None'},{value:'sticky',label:'Sticky'},{value:'shrink',label:'Sticky + shrink'}]},
+    {type:'checkbox', id:'transparent', label:'Transparent over hero', default:false},
+    {type:'select', id:'logo_size', label:'Logo size', default:'m', options:[{value:'s',label:'S'},{value:'m',label:'M'},{value:'l',label:'L'}]},
+    {type:'select', id:'cart_behaviour', label:'Cart behaviour', default:'drawer', options:[{value:'drawer',label:'Drawer'},{value:'page',label:'Page'}]},
+    ...TPADDING_BLOCK,
   ]},
-  image_banner: { name:'Image banner', category:'Image', blocks:[{type:'@theme'}], max_blocks:50, settings:[
+  // ── Layer 2 · Hero (overlay): full-bleed media, content overlaid. ──
+  hero: { name:'Hero', category:'Banners & Hero', blocks:[{type:'@theme'},{type:'trust_strip'}], max_blocks:50, settings:[
     SCHEME_SETTING,
-    {type:'image_picker', id:'image', label:'Background image'},
-    {type:'select', id:'height', label:'Banner height', default:'large', options:[
-      {value:'small',label:'Small'},{value:'medium',label:'Medium'},{value:'large',label:'Large'},{value:'full',label:'Full screen'}]},
-    {type:'range', id:'overlay_opacity', label:'Image overlay', min:0, max:90, step:5, unit:'%', default:55},
-    {type:'select', id:'content_width', label:'Content width', default:'medium', options:[
-      {value:'narrow',label:'Narrow'},{value:'medium',label:'Medium'},{value:'wide',label:'Wide'}]},
-    {type:'select', id:'content_alignment', label:'Content alignment', default:'left', options:[
-      {value:'left',label:'Left'},{value:'center',label:'Center'}]},
-    ...PADDING_BLOCK,
+    {type:'select', id:'media_type', label:'Media type', default:'image', options:[
+      {value:'image',label:'Image'},{value:'video',label:'Video'},{value:'gradient',label:'Gradient'}]},
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'select', id:'height', label:'Height', default:'tall', options:HEIGHT_OPTS},
+    {type:'select', id:'overlay', label:'Overlay', default:'light', options:OVERLAY_OPTS},
+    {type:'select', id:'content_position', label:'Content position', default:'bottom-left', options:POS9_OPTS},
+    {type:'select', id:'content_alignment', label:'Content alignment', default:'left', options:ALIGN_OPTS},
+    {type:'select', id:'content_width', label:'Content width', default:'standard', options:WIDTH_OPTS},
+    ...TPADDING_BLOCK,
   ]},
   multicolumn: { name:'Multicolumn', category:'Layout', blocks:[{type:'@theme'}], max_blocks:6, settings:[
     SCHEME_SETTING,
@@ -2752,14 +2831,43 @@ const ALIGN_ITEMS = a => a==='center' ? 'center' : (a==='right' ? 'flex-end' : '
 // Per-section live wiring: read settings → set CSS vars / classes / inline styles on the section.
 const SECTION_WIRE = {
   multicolumn: gridCols, collection_list: gridCols, image_gallery: gridCols, blog_posts: gridCols, testimonials: gridCols,
-  image_banner(elm, sec){
-    elm.style.minHeight = HERO_HEIGHT[secSetting(sec,'height')] || '';
-    elm.style.setProperty('--hero-overlay', (Number(secSetting(sec,'overlay_opacity')) || 0) / 100);
+  hero(elm, sec){
+    elm.style.minHeight = MEDIA_H_TOKENS[secSetting(sec,'height')] || '';
+    elm.style.setProperty('--hero-overlay', OVERLAY_TOKENS[secSetting(sec,'overlay')] ?? 0);
+    const img = secSetting(sec,'image'), mt = secSetting(sec,'media_type');
+    elm.style.backgroundImage = (mt==='gradient') ? 'linear-gradient(135deg,var(--c-heading),var(--c-accent))'
+      : `url('${img||'https://picsum.photos/seed/noir-hero/1600/1000'}')`;
     const head = elm.querySelector('[data-blocks]'); if(head){
       const al = secSetting(sec,'content_alignment');
       head.style.alignItems = ALIGN_ITEMS(al); head.style.textAlign = al || 'left';
-      head.style.maxWidth = CONTENT_WIDTH[secSetting(sec,'content_width')] || '';
+      head.style.maxWidth = WIDTH_TOKENS[secSetting(sec,'content_width')] || '';
     }
+    const pos = (secSetting(sec,'content_position')||'bottom-left').split('-');
+    const cont = elm.querySelector('.container');
+    if(cont){ cont.style.display='flex'; cont.style.flexDirection='column';
+      cont.style.justifyContent = pos[0]==='top'?'flex-start':(pos[0]==='middle'?'center':'flex-end');
+      cont.style.alignItems = pos[1]==='left'?'flex-start':(pos[1]==='right'?'flex-end':'center'); }
+  },
+  announcement_bar(elm, sec){ const bar=elm.querySelector('[data-blocks]'); if(bar){ const al=secSetting(sec,'content_alignment'); bar.style.textAlign = al||'center'; } },
+  hero_split(elm, sec){
+    const grid = elm.querySelector('.hsplit'); if(!grid) return;
+    grid.style.gridTemplateColumns = RATIO_TOKENS[secSetting(sec,'split_ratio')] || '1fr 1fr';
+    grid.style.alignItems = ({top:'start',center:'center',bottom:'end'})[secSetting(sec,'vertical_alignment')] || 'center';
+    const media = elm.querySelector('.hs-media');
+    if(media){ media.style.order = secSetting(sec,'media_side')==='right' ? '2' : '0';
+      media.style.aspectRatio = ASPECT_TOKENS[secSetting(sec,'media_aspect')] || '3/4';
+      const img = secSetting(sec,'image'), mt = secSetting(sec,'media_type');
+      media.style.backgroundImage = (mt==='gradient') ? 'linear-gradient(135deg,var(--c-heading),var(--c-accent))'
+        : `url('${img||'https://picsum.photos/seed/noir-split/900/1100'}')`; }
+    const content = elm.querySelector('[data-blocks]'); if(content){ const al=secSetting(sec,'content_alignment'); content.style.textAlign=al||'left'; content.style.alignItems=ALIGN_ITEMS(al); }
+  },
+  hero_slideshow(elm, sec){ elm.style.setProperty('--slide-h', MEDIA_H_TOKENS[secSetting(sec,'height')]||'80vh'); },
+  page_header(elm, sec){
+    const bgt = secSetting(sec,'background'), img = secSetting(sec,'image');
+    elm.style.minHeight = MEDIA_H_TOKENS[secSetting(sec,'height')] || '';
+    elm.style.backgroundImage = (bgt==='image' && img) ? `url('${img}')` : '';
+    elm.classList.toggle('ph-image', bgt==='image');
+    const head=elm.querySelector('[data-blocks]'); if(head){ const al=secSetting(sec,'content_alignment'); head.style.textAlign=al||'center'; head.style.alignItems=ALIGN_ITEMS(al); }
   },
   image_with_text(elm, sec){ const gm=elm.querySelector('.gmedia'); if(gm) gm.style.order = secSetting(sec,'image_position')==='right' ? '2' : ''; },
   email_signup(elm, sec){
@@ -2768,15 +2876,18 @@ const SECTION_WIRE = {
     const head = elm.querySelector('[data-blocks]'); if(head) head.style.alignItems = ai;
   },
   featured_collection(elm, sec){ const btn=elm.querySelector('.rowhead > .btn'); if(btn) btn.style.display = secSetting(sec,'show_view_all')===false ? 'none' : ''; },
-  header(elm, sec){   // logo / menu / icons are blocks now; only the sticky toggle stays section-level
-    const st = !!secSetting(sec,'sticky');
-    elm.style.position = st?'sticky':''; elm.style.top = st?'0':''; elm.style.zIndex = st?'20':'';
+  header(elm, sec){   // logo / menu / icons / cta are blocks; layout + stickiness are section-level
+    const st = secSetting(sec,'sticky'), on = (st==='sticky'||st==='shrink');
+    elm.style.position = on?'sticky':''; elm.style.top = on?'0':''; elm.style.zIndex = on?'20':'';
+    elm.classList.toggle('hdr-center', secSetting(sec,'layout')==='logo-center');
+    elm.classList.toggle('hdr-split',  secSetting(sec,'layout')==='split');
+    elm.classList.toggle('hdr-transparent', !!secSetting(sec,'transparent'));
   },
 };
 // Apply ALL of a section's settings to its element (padding + per-type wiring).
 function applySectionSettings(sec){
   const elm = sectionEl(sec); if(!elm) return;
-  const pt = secSetting(sec,'padding_top'), pb = secSetting(sec,'padding_bottom');
+  const pt = padPx(secSetting(sec,'padding_top')), pb = padPx(secSetting(sec,'padding_bottom'));
   elm.style.paddingTop = (pt!=null) ? pt+'px' : '';
   elm.style.paddingBottom = (pb!=null) ? pb+'px' : '';
   const w = SECTION_WIRE[secType(sec)]; if(w) w(elm, sec);
@@ -2813,6 +2924,26 @@ const BLOCK_SCHEMAS = {
   post_card:      { name:'Post', settings:[
     {type:'blog', id:'blog', label:'Blog'},
     {type:'text', id:'title', label:'Title'} ]},
+  // ── Layer 1 & 2 bespoke blocks ──
+  announcement:   { name:'Announcement', settings:[
+    {type:'text', id:'text', label:'Text', default:'Free shipping over $75'},
+    {type:'url',  id:'link', label:'Link'},
+    {type:'select', id:'icon', label:'Icon', default:'none', options:[
+      {value:'none',label:'None'},{value:'truck',label:'Truck'},{value:'star',label:'Star'},{value:'sun',label:'Sun'},{value:'shield',label:'Shield'}]} ]},
+  trust_strip:    { name:'Trust strip', settings:[
+    {type:'select', id:'type', label:'Type', default:'stars', options:[
+      {value:'stars',label:'Stars'},{value:'stat',label:'Stat bar'},{value:'logos',label:'Logo row'}]},
+    {type:'textarea', id:'text', label:'Text', default:'9,000+ 5-star reviews'} ]},
+  slide:          { name:'Slide', settings:[
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'inline_richtext', id:'heading', label:'Heading', default:'New season'},
+    {type:'textarea', id:'text', label:'Text', default:'Shop the latest drop.'},
+    {type:'text', id:'button_label', label:'Button label', default:'Shop now'},
+    {type:'url',  id:'button_link', label:'Button link'},
+    {type:'select', id:'button_style', label:'Button style', default:'primary', options:BTNSTYLE_OPTS},
+    {type:'select', id:'content_position', label:'Content position', default:'middle-center', options:POS9_OPTS},
+    {type:'select', id:'content_alignment', label:'Content alignment', default:'center', options:ALIGN_OPTS},
+    {type:'select', id:'overlay', label:'Overlay', default:'light', options:OVERLAY_OPTS} ]},
 };
 // Which block types each section accepts (Shopify: section.blocks). Attach to the
 // schemas + give a max_blocks so the registry stays the single source of truth.
@@ -2836,10 +2967,16 @@ Object.entries(SECTION_BLOCK_TYPES).forEach(([k,types])=>{
 // while _demo lets the hardcoded markup keep rendering. Exports drop _demo.
 function buildDefaultBlocks(){
   return {
+    announcement_bar: [
+      { type:'announcement', name:'Free shipping', settings:{ text:'Free shipping over $75', icon:'truck' } },
+      { type:'announcement', name:'Returns', settings:{ text:'30-day risk-free returns' } },
+      { type:'announcement', name:'Warranty', settings:{ text:'2-year warranty' } },
+    ],
     header: [
       { type:'header_logo',  name:'Logo',  settings:{ text:'NOIR' } },
       { type:'header_menu',  name:'Menu',  settings:{ links:'New, Men, Women, Sport, Collections, Sale' } },
       { type:'header_icons', name:'Icons', settings:{ show_search:true, show_account:true, show_cart:true } },
+      { type:'button',       name:'Find your fit', settings:{ label:'Find your fit', style:'primary' } },
     ],
     footer: [
       { type:'footer_brand', name:'Brand', settings:{ title:'NOIR', text:'Premium polarized eyewear, handcrafted in Italy. Designed to last a lifetime.' } },
@@ -2849,7 +2986,7 @@ function buildDefaultBlocks(){
       { type:'footer_menu',  name:'Connect', settings:{ title:'Connect', links:'Instagram, TikTok, Newsletter, Contact' } },
       { type:'footer_bottom',name:'Bottom bar', settings:{ copyright:'© 2026 NOIR Eyewear. All rights reserved.', show_payment:true } },
     ],
-    image_banner: [
+    hero: [
       { type:'text',    name:"New · Summer '26", settings:{ text:"New · Summer '26" } },
       { type:'heading', name:'See the world in style.', settings:{ text:'See the world in style.', size:'h1' } },
       { type:'text',    name:'Subheading', settings:{ text:'Premium polarized sunglasses, handcrafted from Italian acetate — built to last a lifetime.' } },
@@ -2857,6 +2994,21 @@ function buildDefaultBlocks(){
         { type:'button', name:'Shop best sellers', settings:{ label:'Shop best sellers', style:'primary' } },
         { type:'button', name:'Explore collections', settings:{ label:'Explore collections', style:'secondary' } },
       ]},
+      { type:'trust_strip', name:'Trust strip', settings:{ type:'stars', text:'9,000+ 5-star reviews' } },
+    ],
+    hero_split: [
+      { type:'text',    name:'Eyebrow', settings:{ text:'The new shape' } },
+      { type:'heading', name:'Heading', settings:{ text:'Designed in Milan. Built to last.', size:'h2' } },
+      { type:'text',    name:'Body', settings:{ text:'Hand-finished Italian acetate, polarized lenses, and a lifetime of repairs.' } },
+      { type:'button',  name:'Shop now', settings:{ label:'Shop now', style:'primary' } },
+    ],
+    hero_slideshow: [
+      { type:'slide', name:'Slide 1', settings:{ heading:'Summer drop', text:'Polarized, all summer.', button_label:'Shop the drop', content_position:'middle-center', content_alignment:'center' }, _demo:{ seed:'noir-slide-1' } },
+      { type:'slide', name:'Slide 2', settings:{ heading:'Final few', text:'Last chance on best sellers.', button_label:'Shop sale', content_position:'bottom-left', content_alignment:'left' }, _demo:{ seed:'noir-slide-2' } },
+    ],
+    page_header: [
+      { type:'heading', name:'Page title', settings:{ text:'All sunglasses', size:'h2' } },
+      { type:'text',    name:'Subtitle', settings:{ text:'127 products' } },
     ],
     multicolumn:  VALUEPROPS.map(v => ({ type:'group', name:v.h, settings:{ direction:'vertical', alignment:'center', gap:10 }, blocks:[
       { type:'icon',    name:'Icon',    settings:{ icon:v.ic } },
@@ -3021,6 +3173,7 @@ function renderHeaderBlock(b,i){
       if(s.show_cart!==false)    ic+=`<span class="cart">${navSvg('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>')}<span class="dot">3</span></span>`;
       return `<div class="nav-actions" data-bpath="${i}">${ic}</div>`;
     }
+    case 'button': return `<a class="btn btn-${s.style==='secondary'?'secondary':'primary'} nav-cta" data-bpath="${i}">${s.label||'Take the quiz'}</a>`;
     default: return `<div class="tb" data-bpath="${i}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
@@ -3121,22 +3274,90 @@ function renderThemeBlock(b, path){
     case 'image':   return `<div class="tb" data-bpath="${bp}" style="width:${s.width!=null?s.width:100}%;${bg}"><div class="tb-img" style="aspect-ratio:${RATIO[s.ratio]||'4/3'};min-height:0"></div></div>`;
     case 'icon':    return `<div class="tb" data-bpath="${bp}" style="${bg}"><span class="tb-icon ic" style="${txt}">${svg(SI[s.icon]||SI.star,24)}</span></div>`;
     case 'email_signup_form':    return `<div class="tb" data-bpath="${bp}" style="${bg}"><form class="nl-form" onsubmit="return false"><input type="email" placeholder="${s.placeholder||'Enter your email'}" aria-label="Email"><button type="submit" class="btn btn-primary">${s.button_label||'Subscribe'}</button></form></div>`;
+    case 'trust_strip':   return `<div class="tb trust-strip" data-bpath="${bp}" style="${bg}">${trustStripInner(s)}</div>`;
     default:              return `<div class="tb" data-bpath="${bp}">${(BLOCK_SCHEMAS[b.type]||{}).name||b.type}</div>`;
   }
 }
 SECTION_RENDERERS.group   = bs => renderThemeBlocks(bs, []);
 SECTION_RENDERERS.multicolumn = bs => renderThemeBlocks(bs, []);   // multicolumn = generic blocks (group per column)
-SECTION_RENDERERS.image_banner       = bs => renderThemeBlocks(bs, []);   // image_banner content = theme blocks
+SECTION_RENDERERS.hero        = bs => renderThemeBlocks(bs, []);   // hero content = theme blocks (+ trust_strip)
+SECTION_RENDERERS.hero_split  = bs => renderThemeBlocks(bs, []);   // split-hero content side = theme blocks
+SECTION_RENDERERS.page_header = bs => renderThemeBlocks(bs, []);   // page header = theme blocks
 SECTION_RENDERERS.image_with_text  = bs => renderThemeBlocks(bs, []);   // image-with-text content = theme blocks
 SECTION_RENDERERS.email_signup = bs => renderThemeBlocks(bs, []);   // email-signup content = theme blocks
+
+/* ---- Layer 1 & 2 bespoke renderers ---- */
+const TRUST_LOGOS = ['VOGUE','GQ','ESQUIRE','WIRED'];
+function trustStripInner(s){
+  const t = s.type||'stars';
+  if(t==='stat')  return (s.text||'71K+ reviews · 70K+ customers · 45-day returns').split('·').map(x=>`<span class="ts-stat">${x.trim()}</span>`).join('');
+  if(t==='logos') return (s.text||TRUST_LOGOS.join(' · ')).split('·').map(x=>`<span class="ts-logo">${x.trim()}</span>`).join('');
+  return `<span class="stars">${stars(5)}</span><span class="ts-txt">${s.text||'9,000+ 5-star reviews'}</span>`;
+}
+// Announcement bar: one ordered list of announcement blocks (rotation is a later increment).
+function renderAnnouncement(b,i){ const s=b.settings||{}; const ic = (s.icon&&s.icon!=='none')?`<span class="an-ic">${svg(SI[s.icon]||SI.star,14)}</span>`:'';
+  return `<span class="an-item" data-bpath="${i}">${ic}${s.text||''}</span>`; }
+SECTION_RENDERERS.announcement_bar = list => (list||[]).map((b,i)=>renderAnnouncement(b,i)).join('<span class="an-sep">·</span>');
+// Slideshow: each top-level block is a slide card.
+function renderSlide(b,i){ const s=b.settings||{}, d=b._demo||{};
+  const ov = OVERLAY_TOKENS[s.overlay] ?? .2;
+  const img = s.image || `https://picsum.photos/seed/${d.seed||'noir-slide'}/1600/1000`;
+  const cta = s.button_label ? `<a class="btn btn-${s.button_style==='secondary'?'secondary':(s.button_style==='link'?'link':'primary')}">${s.button_label}</a>` : '';
+  return `<div class="hs-slide pos-${s.content_position||'middle-center'}" data-bpath="${i}" style="background-image:url('${img}');--ov:${ov};text-align:${s.content_alignment||'center'}">
+    <div class="hs-slide-inner">${s.heading?`<h2>${s.heading}</h2>`:''}${s.text?`<p>${s.text}</p>`:''}${cta}</div></div>`; }
+SECTION_RENDERERS.hero_slideshow = list => (list||[]).map((b,i)=>renderSlide(b,i)).join('');
 
 // The "Group" section: a generic host for theme blocks (add-only; built fresh on add).
 Object.assign(SECTION_SCHEMAS, {
   group: { name:'Group', category:'Layout', blocks:[{type:'@theme'}], max_blocks:50,
     settings:[ SCHEME_SETTING, {type:'inline_richtext', id:'heading', label:'Heading', default:'Build your layout'}, ...PADDING_BLOCK ] },
+  // ── Layer 1 · Announcement bar ──
+  announcement_bar: { name:'Announcement bar', category:'Header & Footer', blocks:[{type:'announcement'}], max_blocks:10, settings:[
+    SCHEME_SETTING,
+    {type:'select', id:'rotation', label:'Rotation', default:'off', options:[{value:'off',label:'Off'},{value:'auto',label:'Auto'},{value:'manual',label:'Manual'}]},
+    {type:'checkbox', id:'show_close', label:'Show close button', default:true},
+    {type:'select', id:'content_alignment', label:'Alignment', default:'center', options:ALIGN_OPTS},
+    {type:'header', content:'Section padding'}, TPAD('padding_top','Top padding','none'), TPAD('padding_bottom','Bottom padding','none') ] },
+  // ── Layer 2 · Hero (split) — different skeleton: media beside content ──
+  hero_split: { name:'Hero split', category:'Banners & Hero', blocks:[{type:'@theme'},{type:'trust_strip'}], max_blocks:50, settings:[
+    SCHEME_SETTING,
+    {type:'select', id:'media_side', label:'Media side', default:'left', options:[{value:'left',label:'Left'},{value:'right',label:'Right'}]},
+    {type:'select', id:'media_type', label:'Media type', default:'image', options:[{value:'image',label:'Image'},{value:'video',label:'Video'},{value:'gradient',label:'Gradient'}]},
+    {type:'image_picker', id:'image', label:'Image'},
+    {type:'select', id:'media_aspect', label:'Media aspect', default:'portrait', options:ASPECT_OPTS},
+    {type:'select', id:'split_ratio', label:'Split ratio', default:'50-50', options:[{value:'50-50',label:'50 / 50'},{value:'40-60',label:'40 / 60'},{value:'60-40',label:'60 / 40'}]},
+    {type:'select', id:'vertical_alignment', label:'Vertical alignment', default:'center', options:[{value:'top',label:'Top'},{value:'center',label:'Center'},{value:'bottom',label:'Bottom'}]},
+    {type:'select', id:'content_alignment', label:'Content alignment', default:'left', options:ALIGN_OPTS},
+    {type:'select', id:'content_width', label:'Content width', default:'standard', options:WIDTH_OPTS},
+    ...TPADDING_BLOCK ] },
+  // ── Layer 2 · Hero (slideshow) — content lives in per-slide blocks ──
+  hero_slideshow: { name:'Hero slideshow', category:'Banners & Hero', blocks:[{type:'slide'}], max_blocks:10, settings:[
+    SCHEME_SETTING,
+    {type:'select', id:'controls', label:'Controls', default:'arrows-dots', options:[{value:'arrows',label:'Arrows'},{value:'dots',label:'Dots'},{value:'arrows-dots',label:'Arrows + Dots'}]},
+    {type:'checkbox', id:'autoplay', label:'Autoplay', default:false},
+    {type:'select', id:'transition', label:'Transition', default:'slide', options:[{value:'slide',label:'Slide'},{value:'fade',label:'Fade'}]},
+    {type:'select', id:'height', label:'Height', default:'tall', options:HEIGHT_OPTS},
+    ...TPADDING_BLOCK ] },
+  // ── Layer 2 · Page header banner (collection/blog/page templates) ──
+  page_header: { name:'Page header banner', category:'Banners & Hero', blocks:[{type:'@theme'}], max_blocks:10, settings:[
+    SCHEME_SETTING,
+    {type:'select', id:'background', label:'Background', default:'color', options:[{value:'none',label:'None'},{value:'color',label:'Color'},{value:'image',label:'Image'}]},
+    {type:'image_picker', id:'image', label:'Background image'},
+    {type:'select', id:'height', label:'Height', default:'short', options:HEIGHT_OPTS},
+    {type:'checkbox', id:'show_breadcrumb', label:'Show breadcrumb', default:true},
+    {type:'select', id:'title_source', label:'Title source', default:'page-title', options:[{value:'page-title',label:'Page title'},{value:'custom',label:'Custom'}]},
+    {type:'text', id:'custom_title', label:'Custom title'},
+    {type:'select', id:'content_alignment', label:'Alignment', default:'center', options:ALIGN_OPTS},
+    {type:'select', id:'content_width', label:'Content width', default:'standard', options:WIDTH_OPTS},
+    ...TPADDING_BLOCK ] },
 });
 const SECTION_BUILDERS = {
   group: ()=> el('<section class="section" data-sec="group"><div class="container"><div class="tb-root" data-blocks></div></div></section>'),
+  announcement_bar: ()=> el('<section class="announce-bar" data-sec="announcement_bar"><div class="announce" data-blocks></div></section>'),
+  hero: ()=> el('<header class="hero" data-sec="hero" style="background-image:url(\'https://picsum.photos/seed/noir-hero/1600/1000\')"><div class="container"><div class="tb-root hero-blocks" data-blocks></div></div></header>'),
+  hero_split: ()=> el('<section class="section hero-split" data-sec="hero_split"><div class="container hsplit"><div class="hs-media"></div><div class="hs-content tb-root" data-blocks></div></div></section>'),
+  hero_slideshow: ()=> el('<section class="section hero-slideshow" data-sec="hero_slideshow"><div class="hs-track" data-blocks></div></section>'),
+  page_header: ()=> el('<section class="section page-header" data-sec="page_header"><div class="container tb-root" data-blocks></div></section>'),
 };
 function demoGroupBlocks(){
   return [
@@ -3159,6 +3380,7 @@ const BLOCK_CATEGORY = { testimonial:'Content', logo:'Content',
   collection_card:'Products', product_card:'Products', gallery_image:'Media', post_card:'Content',
   group:'Layout', heading:'Text', text:'Text', button:'Text', image:'Media',
   icon:'Media', email_signup_form:'Content',
+  announcement:'Text', trust_strip:'Content', slide:'Media',
   header_logo:'Header', header_menu:'Header', header_icons:'Header',
   footer_brand:'Footer', footer_menu:'Footer', footer_bottom:'Footer' };
 // placeholder _demo for a freshly-added block so media-backed types still render
@@ -3261,7 +3483,7 @@ function moveSection(gid, from, to){
 // kept after the (decorative) announcement bar at the top of the store.
 function reorderSectionDom(){
   const store=document.getElementById('store'); if(!store) return;
-  let anchor = store.querySelector('.announce') || null;   // keep the announce bar first
+  let anchor = null;   // announcement_bar is now the first header-group section, placed first
   allSectionIds().forEach(key=>{
     const e = store.querySelector(`[data-sec="${key}"]`); if(!e) return;
     if(anchor) anchor.after(e); else store.insertBefore(e, store.firstChild);
@@ -3496,7 +3718,7 @@ function toast(msg){
    re-adding restores its content. (True multi-instance duplication of a section
    type arrives with the model-driven section rewrite that backs export.)
    ---------------------------------------------------------------------------- */
-const TEMPLATE_SECTION_TYPES = ['image_banner','multicolumn','collection_list','featured_collection','image_with_text','testimonials','logo_list','image_gallery','blog_posts','email_signup','group'];
+const TEMPLATE_SECTION_TYPES = ['hero','hero_split','hero_slideshow','page_header','multicolumn','collection_list','featured_collection','image_with_text','testimonials','logo_list','image_gallery','blog_posts','email_signup','group'];
 
 /* INSTANCE MODEL — a section on the page is an INSTANCE with a unique id; its TYPE
    (schema/renderer key) is the id for originals, or looked up here for duplicates. */
@@ -3666,8 +3888,8 @@ function openSectionPicker(gid, index){
    section or block, opens its settings, and highlights it in the preview.
    ============================================================================ */
 const SECTION_GROUPS = {
-  header:   { name:'Header',   sections:['header'] },
-  template: { name:'Template', sections:['image_banner','multicolumn','collection_list','featured_collection','image_with_text','testimonials','logo_list','image_gallery','blog_posts','email_signup'] },
+  header:   { name:'Header',   sections:['announcement_bar','header'] },
+  template: { name:'Template', sections:['hero','multicolumn','collection_list','featured_collection','image_with_text','testimonials','logo_list','image_gallery','blog_posts','email_signup'] },
   footer:   { name:'Footer',   sections:['footer'] },
 };
 // Shopify uses ONE generic section icon for every section in the layers panel (only blocks
@@ -3679,7 +3901,8 @@ const BLOCK_ICON = {
   heading:'heading', text:'text', button:'click', image:'image',
   icon:'star', email_signup_form:'mail', group:'folder',
   collection_card:'tag', product_card:'box', testimonial:'quote', logo:'frame',
-  gallery_image:'image', post_card:'file', 
+  gallery_image:'image', post_card:'file',
+  announcement:'text', trust_strip:'star', slide:'image',
   header_logo:'frame', header_menu:'text', header_icons:'grid', footer_brand:'frame', footer_menu:'text', footer_bottom:'layout',
 };
 function blockTypeIcon(type){ return ICONS[BLOCK_ICON[type]] || ICONS.box; }
@@ -4251,8 +4474,15 @@ function shopifySchema(schema, extra){
   return out;
 }
 function sectionLiquid(type){
-  const schema = SECTION_SCHEMAS[type]; const pad = hasSetting(schema,'padding_top')
-    ? ` style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px"` : '';
+  const schema = SECTION_SCHEMAS[type];
+  let pad = '';
+  if(hasSetting(schema,'padding_top')){
+    const ptSetting = (schema.settings||[]).find(s=>s.id==='padding_top');
+    // token-bound padding (select over spacing steps) → theme spacing vars; legacy range → px
+    pad = (ptSetting && ptSetting.type==='select')
+      ? ` style="padding-top: var(--spacing-{{ section.settings.padding_top }}); padding-bottom: var(--spacing-{{ section.settings.padding_bottom }})"`
+      : ` style="padding-top: {{ section.settings.padding_top }}px; padding-bottom: {{ section.settings.padding_bottom }}px"`;
+  }
   let inner = '';
   if(hasSetting(schema,'heading')) inner += `\n    <h2>{{ section.settings.heading }}</h2>`;
   if(schema.blocks && schema.blocks.length){
