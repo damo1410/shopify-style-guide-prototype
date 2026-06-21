@@ -37,6 +37,54 @@ user rather than auto-resolved.
   global functions (they're plain function declarations on `window`) and assert
   on the DOM. Every feature this far was smoke-tested this way before shipping.
 
+## Section/block library (Notion) — source of truth for the build-out
+
+Curated in Notion: page **Shopify Theme Library** (`35d0334212f180a8a61fd2eb3cb75fdd`) with 3
+inline DBs — **Categories** (`29090c8c-ba01-4a9d-a333-70215b621959`, 44 research/purpose rows,
+**deferred/untouched**), **Sections** (`37203342-12f1-8035-b3c0-000ba5251299`, 13 rows),
+**Blocks** (`ca403342-12f1-839e-9709-0799f33e6467`, 19 rows). Synced to this prototype via each
+type's **`Type key`** (= the registry key / export filename — the Notion↔index.html join).
+
+**Model (matches Shopify + the registries):**
+- `Type key` = `snake_case(display name)`; prefix only on collisions (`header_logo`,
+  `footer_menu`). Exports as `sections/<key>.liquid` / `blocks/<key>.liquid`.
+- `Section Category` (8) / `Block category` (6) = Shopify's preset **`category`** (the Add-picker
+  grouping) — NOT the 44 Categories DB.
+- `@theme` / `@app` are **flags** (`Accepts @theme` / `Accepts @app`), not enumerations. The
+  `Recommended blocks` / `Recommended child blocks` relations = **named types only** (the
+  shortlist shown first). Any block is addable to any container; relations are recommendations
+  only. Only **`group`** is a container (accepts `@theme`); `@theme` ⇒ `THEME_BLOCK_TYPES` =
+  group, heading, text, button, image, icon, email_signup_form.
+- **Sections props:** Name, Type key, Section Category, Accepts @theme/@app, Recommended blocks
+  (→Blocks). *(No link to Categories DB — that relation was removed.)* **Blocks props:** Name,
+  Type key, Block category, Container?, Accepts @theme/@app, Recommended child blocks ↔
+  Recommended in blocks (self), Recommended in sections (back-ref).
+
+**Sections (13)** — `key` (category; @theme; recommended blocks): `header` (Header & Footer; —;
+header_logo/menu/icons) · `image_banner` (Banners & Hero; ✓) · `multicolumn` (Storytelling &
+Content; ✓) · `collection_list` (Products; ✓; collection_card) · `featured_collection` (Products;
+✓; product_card) · `image_with_text` (Storytelling & Content; ✓) · `testimonials` (Social Proof;
+✓; testimonial) · `logo_list` (Social Proof; ✓; logo) · `image_gallery` (Media & Gallery; ✓;
+gallery_image) · `blog_posts` (Storytelling & Content; ✓; post_card) · `email_signup` (Promotions
+& Capture; ✓) · `footer` (Header & Footer; —; footer_brand/menu/bottom) · `group` (Storytelling &
+Content; ✓). *Categories (8): Banners & Hero, Products, Storytelling & Content, Social Proof,
+Media & Gallery, Promotions & Capture, Trust & Support, Header & Footer.*
+
+**Blocks (19)** — `key` (category): `group` (Layout — container,@theme) · `heading` (Text) ·
+`text` (Text) · `button` (Actions) · `image` (Media) · `icon` (Media) · `email_signup_form`
+(Social Proof & Forms) · `collection_card` (Commerce) · `product_card` (Commerce) · `testimonial`
+(Social Proof & Forms) · `logo` (Social Proof & Forms) · `gallery_image` (Media) · `post_card`
+(Media) · `header_logo` (Media) · `header_menu` (Actions) · `header_icons` (Actions) ·
+`footer_brand` (Media) · `footer_menu` (Actions) · `footer_bottom` (Text). *Categories (6): Text,
+Media, Actions, Layout, Commerce, Social Proof & Forms.* (Header/footer keys keep their prefix;
+their index.html display names are short — "Logo"/"Menu" — so the `Type key` is the bridge.)
+
+**Notion ops gotchas:** creating/moving pages needs the connector's content-creation scope
+(schema-only edits worked before content did — a "MCP tool call requires approval" means it's
+off). **No hard page delete via MCP** — `notion-move-pages` a row to the `workspace` to remove it
+from a DB (then delete in the Notion UI). Orphans `icon_column`/`checklist_item` were removed this
+way + deleted from `index.html`.
+
 ## What this prototype is now
 
 A faithful, single-file (`index.html`, no build step) clone of **Shopify's
@@ -270,12 +318,16 @@ so CSS responsive defaults still win otherwise.)
 
 ## Known gaps / future work (the user's roadmap)
 
-- **Next up (separate session): build out the sections & blocks library** — the
-  exact set of section/block types and, critically, the **settings each exposes
-  when selected**, plus tightening how the global style guide connects through to
-  those per-section/block controls. The editor chrome (above) is the stable
-  surface this plugs into: add a type to the registries + a renderer and it's
-  selectable/editable/exportable.
+- **Library inventory + structure is DONE** (see **Section/block library (Notion)**
+  above): 13 sections + 19 blocks mirrored into Notion, type keys name-matched to the
+  registries, categories + container/@theme model in place. **Next up: per-type
+  SETTINGS** — the exact settings each section/block exposes when selected (Shopify's 36
+  setting types; `SHOPIFY_SPEC.md`), and tightening how the global style guide connects
+  through to those per-section/block controls. Then: a `Variant strategy` field on
+  Sections (same skeleton+data → presets of one file; different skeleton/data/template →
+  separate `.liquid`), the Categories-DB audit + picker-`category` mapping, and growing
+  the type set. The editor chrome is the stable surface this plugs into: add a type to
+  the registries + a renderer and it's selectable/editable/exportable.
 - The color picker is HSV square + hue + alpha (no eyedropper / recent-colors —
   intentionally skipped). Brand-color names are derived from hex (`colorName`).
 - Mobile editor is built out (see **Mobile**). Open tuning items: the touch-reorder
